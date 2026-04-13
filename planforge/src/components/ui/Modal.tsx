@@ -57,15 +57,15 @@ export function Modal({
       {/* Panel */}
       <div
         className={cn(
-          'relative z-10 w-full max-w-lg rounded-xl border border-[#334155] bg-[#1E293B] shadow-2xl shadow-black/50',
+          'relative z-10 w-full max-w-lg rounded-xl border border-gray-200 bg-white shadow-2xl shadow-black/50',
           'flex flex-col max-h-[90vh]',
           className
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#334155] px-6 py-4 flex-shrink-0">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 flex-shrink-0">
           {title ? (
-            <h2 id="modal-title" className="text-base font-semibold text-[#F8FAFC]">
+            <h2 id="modal-title" className="text-base font-semibold text-gray-900">
               {title}
             </h2>
           ) : (
@@ -73,7 +73,7 @@ export function Modal({
           )}
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-[#94A3B8] transition-colors hover:bg-[#334155] hover:text-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
             aria-label="Close modal"
           >
             <X className="h-4 w-4" />

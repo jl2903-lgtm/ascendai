@@ -24,7 +24,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={selectId}
-            className="text-sm font-medium text-[#F8FAFC]"
+            className="text-sm font-medium text-gray-900"
           >
             {label}
           </label>
@@ -34,13 +34,13 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={cn(
-              'w-full appearance-none rounded-lg border bg-[#1E293B] px-3.5 py-2.5 pr-10 text-sm text-[#F8FAFC]',
+              'w-full appearance-none rounded-lg border bg-white px-3.5 py-2.5 pr-10 text-sm text-gray-900',
               'transition-colors duration-200 cursor-pointer',
               'focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 focus:ring-offset-[#0F172A]',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               error
                 ? 'border-red-500 focus:ring-red-500'
-                : 'border-[#334155] hover:border-[#475569] focus:border-teal-500',
+                : 'border-gray-200 hover:border-gray-300 focus:border-teal-500',
               className
             )}
             {...props}
@@ -54,7 +54,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               <option
                 key={opt.value}
                 value={opt.value}
-                className="bg-[#1E293B] text-[#F8FAFC]"
+                className="bg-white text-gray-900"
               >
                 {opt.label}
               </option>
@@ -63,7 +63,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {/* Custom chevron */}
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
             <svg
-              className="h-4 w-4 text-[#94A3B8]"
+              className="h-4 w-4 text-gray-500"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -92,7 +92,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </p>
         )}
         {hint && !error && (
-          <p className="text-xs text-[#94A3B8]">{hint}</p>
+          <p className="text-xs text-gray-500">{hint}</p>
         )}
       </div>
     )

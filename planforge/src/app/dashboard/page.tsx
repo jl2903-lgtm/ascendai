@@ -70,10 +70,10 @@ export default function DashboardPage() {
       {/* Welcome */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#F8FAFC]">
+          <h1 className="text-2xl font-bold text-gray-900">
             Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
           </h1>
-          <p className="text-[#94A3B8] mt-1">
+          <p className="text-gray-500 mt-1">
             {isPro ? 'You have unlimited access to all tools.' : `${lessonsLeft} free lesson${lessonsLeft !== 1 ? 's' : ''} remaining this month.`}
           </p>
         </div>
@@ -91,10 +91,10 @@ export default function DashboardPage() {
               <TrendingUp className="w-5 h-5 text-teal-400" />
             </div>
             <div>
-              <div className="font-semibold text-[#F8FAFC] text-sm">
+              <div className="font-semibold text-gray-900 text-sm">
                 {lessonsLeft === 0 ? "You've used all free lessons this month" : `Only ${lessonsLeft} free lesson${lessonsLeft !== 1 ? 's' : ''} left`}
               </div>
-              <div className="text-xs text-[#94A3B8] mt-0.5">Upgrade to Pro for unlimited lessons, worksheets, and PDF export.</div>
+              <div className="text-xs text-gray-500 mt-0.5">Upgrade to Pro for unlimited lessons, worksheets, and PDF export.</div>
             </div>
           </div>
           <Link href="/pricing" className="flex-shrink-0 bg-teal-600 hover:bg-teal-500 text-white font-semibold px-5 py-2 rounded-xl text-sm transition-colors">
@@ -105,19 +105,19 @@ export default function DashboardPage() {
 
       {/* Tools grid — Eduaide-style cards */}
       <div>
-        <h2 className="text-base font-semibold text-[#94A3B8] uppercase tracking-wider mb-4">Your Tools</h2>
+        <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wider mb-4">Your Tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {tools.map(tool => (
             <Link
               key={tool.href}
               href={tool.href}
-              className="group bg-[#1E293B] border border-[#334155] hover:border-teal-600/50 rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-teal-900/20"
+              className="group bg-white border border-gray-200 hover:border-teal-600/50 rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-teal-200/60"
             >
               <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-4 ${colorMap[tool.color]}`}>
                 <tool.icon className="w-5 h-5" />
               </div>
-              <div className="font-semibold text-[#F8FAFC] text-sm mb-1">{tool.label}</div>
-              <div className="text-xs text-[#94A3B8]">{tool.desc}</div>
+              <div className="font-semibold text-gray-900 text-sm mb-1">{tool.label}</div>
+              <div className="text-xs text-gray-500">{tool.desc}</div>
               <div className="flex items-center gap-1 mt-4 text-teal-500 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                 Open tool <ArrowRight className="w-3 h-3" />
               </div>
@@ -134,13 +134,13 @@ export default function DashboardPage() {
           { label: 'Saved Lessons', value: recentLessons.length, icon: Star, sub: 'in library' },
           { label: 'Account Status', value: isPro ? 'Pro' : 'Free', icon: Zap, sub: isPro ? 'unlimited access' : '5/mo limit' },
         ].map(stat => (
-          <div key={stat.label} className="bg-[#1E293B] border border-[#334155] rounded-2xl p-4">
+          <div key={stat.label} className="bg-white border border-gray-200 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <stat.icon className="w-4 h-4 text-teal-500" />
-              <span className="text-xs text-[#94A3B8] font-medium">{stat.label}</span>
+              <span className="text-xs text-gray-500 font-medium">{stat.label}</span>
             </div>
-            <div className="text-2xl font-bold text-[#F8FAFC]">{stat.value}</div>
-            <div className="text-xs text-[#475569] mt-0.5">{stat.sub}</div>
+            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+            <div className="text-xs text-gray-400 mt-0.5">{stat.sub}</div>
           </div>
         ))}
       </div>
@@ -149,38 +149,38 @@ export default function DashboardPage() {
       {(recentLessons.length > 0 || recentWorksheets.length > 0) && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-[#94A3B8] uppercase tracking-wider">Recent Activity</h2>
+            <h2 className="text-base font-semibold text-gray-500 uppercase tracking-wider">Recent Activity</h2>
             <Link href="/dashboard/saved" className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
               View all →
             </Link>
           </div>
           <div className="space-y-2">
             {recentLessons.map(l => (
-              <div key={l.id} className="bg-[#1E293B] border border-[#334155] rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+              <div key={l.id} className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 bg-teal-600/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <BookOpen className="w-4 h-4 text-teal-400" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-[#F8FAFC] truncate">{l.title}</div>
-                    <div className="text-xs text-[#475569]">{l.student_level} · {l.topic}</div>
+                    <div className="text-sm font-medium text-gray-900 truncate">{l.title}</div>
+                    <div className="text-xs text-gray-400">{l.student_level} · {l.topic}</div>
                   </div>
                 </div>
-                <div className="text-xs text-[#475569] flex-shrink-0">{formatDate(l.created_at)}</div>
+                <div className="text-xs text-gray-400 flex-shrink-0">{formatDate(l.created_at)}</div>
               </div>
             ))}
             {recentWorksheets.map(w => (
-              <div key={w.id} className="bg-[#1E293B] border border-[#334155] rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+              <div key={w.id} className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 bg-blue-600/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText className="w-4 h-4 text-blue-400" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-[#F8FAFC] truncate">{w.title}</div>
-                    <div className="text-xs text-[#475569]">Worksheet</div>
+                    <div className="text-sm font-medium text-gray-900 truncate">{w.title}</div>
+                    <div className="text-xs text-gray-400">Worksheet</div>
                   </div>
                 </div>
-                <div className="text-xs text-[#475569] flex-shrink-0">{formatDate(w.created_at)}</div>
+                <div className="text-xs text-gray-400 flex-shrink-0">{formatDate(w.created_at)}</div>
               </div>
             ))}
           </div>

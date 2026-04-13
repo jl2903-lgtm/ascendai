@@ -46,7 +46,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
@@ -55,11 +55,11 @@ export default function LoginPage() {
             </div>
             <span className="text-2xl font-bold text-teal-400">PlanForge</span>
           </Link>
-          <h1 className="text-2xl font-bold text-[#F8FAFC]">Welcome back</h1>
-          <p className="text-[#94A3B8] mt-2">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+          <p className="text-gray-500 mt-2">Sign in to your account</p>
         </div>
 
-        <div className="bg-[#1E293B] border border-[#334155] rounded-2xl p-8">
+        <div className="bg-white border border-gray-200 rounded-2xl p-8">
           {errors.general && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm mb-6">
               {errors.general}
@@ -68,28 +68,28 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-[#94A3B8] mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-500 mb-2">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className={`w-full bg-[#0F172A] border rounded-lg px-4 py-3 text-[#F8FAFC] placeholder-[#475569] focus:outline-none focus:ring-1 transition-colors ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-[#334155] focus:border-teal-500 focus:ring-teal-500'}`}
+                className={`w-full bg-gray-50 border rounded-lg px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
               />
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#94A3B8] mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-500 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className={`w-full bg-[#0F172A] border rounded-lg px-4 py-3 pr-12 text-[#F8FAFC] placeholder-[#475569] focus:outline-none focus:ring-1 transition-colors ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-[#334155] focus:border-teal-500 focus:ring-teal-500'}`}
+                  className={`w-full bg-gray-50 border rounded-lg px-4 py-3 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] hover:text-[#94A3B8]">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-500">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-[#94A3B8] text-sm mt-6">
+        <p className="text-center text-gray-500 text-sm mt-6">
           Don&apos;t have an account?{' '}
           <Link href="/auth/signup" className="text-teal-400 hover:text-teal-300 font-medium">
             Sign up free
