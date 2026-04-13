@@ -93,28 +93,28 @@ export default function WorksheetBuilderPage() {
           <FileText className="w-5 h-5 text-blue-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-[#F8FAFC]">Worksheet Builder</h1>
-          <p className="text-sm text-[#94A3B8]">Custom exercises with answer keys at any level</p>
+          <h1 className="text-xl font-bold text-gray-900">Worksheet Builder</h1>
+          <p className="text-sm text-gray-500">Custom exercises with answer keys at any level</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Form */}
         <div className="lg:col-span-2">
-          <div className="bg-[#1E293B] border border-[#334155] rounded-2xl p-6 space-y-5 sticky top-6">
-            <h2 className="text-sm font-semibold text-[#94A3B8] uppercase tracking-wider">Worksheet Settings</h2>
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5 sticky top-6">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Worksheet Settings</h2>
 
             {/* Exercise Types */}
             <div>
-              <label className="block text-sm font-medium text-[#94A3B8] mb-2">Exercise Types</label>
+              <label className="block text-sm font-medium text-gray-500 mb-2">Exercise Types</label>
               <div className="grid grid-cols-2 gap-1.5">
                 {EXERCISE_TYPES.map(t => (
                   <button
                     key={t.value}
                     onClick={() => toggleExerciseType(t.value)}
-                    className={`flex items-center gap-2 text-xs px-3 py-2.5 rounded-xl border transition-all text-left ${form.exerciseTypes.includes(t.value) ? 'border-blue-500 bg-blue-500/10 text-blue-400' : 'border-[#334155] text-[#94A3B8] hover:border-[#475569]'}`}
+                    className={`flex items-center gap-2 text-xs px-3 py-2.5 rounded-xl border transition-all text-left ${form.exerciseTypes.includes(t.value) ? 'border-blue-500 bg-blue-500/10 text-blue-400' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
                   >
-                    <CheckSquare className={`w-3.5 h-3.5 flex-shrink-0 ${form.exerciseTypes.includes(t.value) ? 'text-blue-400' : 'text-[#475569]'}`} />
+                    <CheckSquare className={`w-3.5 h-3.5 flex-shrink-0 ${form.exerciseTypes.includes(t.value) ? 'text-blue-400' : 'text-gray-400'}`} />
                     {t.label}
                   </button>
                 ))}
@@ -124,41 +124,41 @@ export default function WorksheetBuilderPage() {
 
             {/* Topic */}
             <div>
-              <label className="block text-sm font-medium text-[#94A3B8] mb-2">Topic <span className="text-red-400">*</span></label>
+              <label className="block text-sm font-medium text-gray-500 mb-2">Topic <span className="text-red-400">*</span></label>
               <input
                 type="text"
                 value={form.topic}
                 onChange={e => { setForm(f => ({ ...f, topic: e.target.value })); setErrors({}) }}
                 placeholder="e.g. Past Simple, Adjectives, Shopping"
-                className={`w-full bg-[#0F172A] border rounded-xl px-4 py-2.5 text-sm text-[#F8FAFC] placeholder-[#475569] focus:outline-none focus:ring-1 ${errors.topic ? 'border-red-500 focus:ring-red-500' : 'border-[#334155] focus:border-teal-500 focus:ring-teal-500'}`}
+                className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${errors.topic ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
               />
               {errors.topic && <p className="text-red-400 text-xs mt-1">{errors.topic}</p>}
             </div>
 
             {/* Level */}
             <div>
-              <label className="block text-sm font-medium text-[#94A3B8] mb-2">Level</label>
+              <label className="block text-sm font-medium text-gray-500 mb-2">Level</label>
               <div className="relative">
                 <select
                   value={form.level}
                   onChange={e => setForm(f => ({ ...f, level: e.target.value }))}
-                  className="w-full appearance-none bg-[#0F172A] border border-[#334155] rounded-xl px-4 py-2.5 text-sm text-[#F8FAFC] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-9"
+                  className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 pr-9"
                 >
                   {STUDENT_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569] pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
             </div>
 
             {/* Question count */}
             <div>
-              <label className="block text-sm font-medium text-[#94A3B8] mb-2">Number of Questions</label>
+              <label className="block text-sm font-medium text-gray-500 mb-2">Number of Questions</label>
               <div className="grid grid-cols-4 gap-1.5">
                 {QUESTION_COUNTS.map(n => (
                   <button
                     key={n}
                     onClick={() => setForm(f => ({ ...f, questionCount: n }))}
-                    className={`py-2 rounded-lg text-xs font-semibold transition-all ${form.questionCount === n ? 'bg-teal-600 text-white' : 'bg-[#0F172A] border border-[#334155] text-[#94A3B8] hover:border-[#475569]'}`}
+                    className={`py-2 rounded-lg text-xs font-semibold transition-all ${form.questionCount === n ? 'bg-teal-600 text-white' : 'bg-gray-50 border border-gray-200 text-gray-500 hover:border-gray-300'}`}
                   >
                     {n}
                   </button>
@@ -168,10 +168,10 @@ export default function WorksheetBuilderPage() {
 
             {/* Answer key toggle */}
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-[#94A3B8]">Include Answer Key</label>
+              <label className="text-sm font-medium text-gray-500">Include Answer Key</label>
               <button
                 onClick={() => setForm(f => ({ ...f, includeAnswerKey: !f.includeAnswerKey }))}
-                className={`relative inline-flex w-10 h-6 rounded-full transition-colors ${form.includeAnswerKey ? 'bg-teal-600' : 'bg-[#334155]'}`}
+                className={`relative inline-flex w-10 h-6 rounded-full transition-colors ${form.includeAnswerKey ? 'bg-teal-600' : 'bg-gray-100'}`}
               >
                 <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transition-transform mt-1 ${form.includeAnswerKey ? 'translate-x-5' : 'translate-x-1'}`} />
               </button>
@@ -192,7 +192,7 @@ export default function WorksheetBuilderPage() {
         {/* Output */}
         <div className="lg:col-span-3">
           {loading ? (
-            <div className="bg-[#1E293B] border border-[#334155] rounded-2xl min-h-[500px] flex items-center justify-center">
+            <div className="bg-white border border-gray-200 rounded-2xl min-h-[500px] flex items-center justify-center">
               <ThinkingLoader />
             </div>
           ) : worksheet ? (
@@ -243,28 +243,28 @@ export default function WorksheetBuilderPage() {
               </div>
 
               {/* Actions */}
-              <div className="bg-[#1E293B] border border-[#334155] rounded-2xl p-4 flex flex-wrap gap-3">
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-wrap gap-3">
                 <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white transition-all">
                   <Save className="w-4 h-4" />
                   {saving ? 'Saving...' : 'Save'}
                 </button>
-                <button onClick={handleDownload} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-[#334155] hover:border-teal-500 text-[#94A3B8] hover:text-white transition-all">
+                <button onClick={handleDownload} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-white transition-all">
                   <Download className="w-4 h-4" />
                   Download PDF
                 </button>
-                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-[#334155] hover:border-teal-500 text-[#94A3B8] hover:text-white transition-all">
+                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-white transition-all">
                   <Copy className="w-4 h-4" />
                   Print View
                 </button>
               </div>
             </div>
           ) : (
-            <div className="bg-[#1E293B] border border-[#334155] rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+            <div className="bg-white border border-gray-200 rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center p-8">
               <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-blue-600/50" />
               </div>
-              <h3 className="text-lg font-semibold text-[#F8FAFC] mb-2">Your worksheet will appear here</h3>
-              <p className="text-sm text-[#94A3B8] max-w-xs">Select exercise types, enter a topic, and click Generate Worksheet. Your custom materials will be print-ready in seconds.</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Your worksheet will appear here</h3>
+              <p className="text-sm text-gray-500 max-w-xs">Select exercise types, enter a topic, and click Generate Worksheet. Your custom materials will be print-ready in seconds.</p>
             </div>
           )}
         </div>

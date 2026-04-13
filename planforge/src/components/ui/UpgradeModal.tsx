@@ -54,12 +54,12 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
 
         {/* Heading */}
         <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-bold text-[#F8FAFC]">
+          <h2 className="text-xl font-bold text-gray-900">
             You&apos;ve reached your free limit
           </h2>
-          <p className="text-sm text-[#94A3B8] leading-relaxed">
+          <p className="text-sm text-gray-500 leading-relaxed">
             You&apos;ve used all{' '}
-            <span className="font-semibold text-[#F8FAFC]">
+            <span className="font-semibold text-gray-900">
               {limit} free {toolName}
             </span>{' '}
             this month. Upgrade to Pro for unlimited access to every tool.
@@ -67,9 +67,9 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
         </div>
 
         {/* Benefits list */}
-        <ul className="w-full rounded-lg border border-[#334155] bg-[#0F172A]/60 p-4 text-left space-y-2.5">
+        <ul className="w-full rounded-lg border border-gray-200 bg-gray-100/80 p-4 text-left space-y-2.5">
           {PRO_BENEFITS.map((benefit) => (
-            <li key={benefit} className="flex items-start gap-2.5 text-sm text-[#94A3B8]">
+            <li key={benefit} className="flex items-start gap-2.5 text-sm text-gray-500">
               <Check className="h-4 w-4 flex-shrink-0 text-teal-400 mt-0.5" />
               <span>{benefit}</span>
             </li>
@@ -78,8 +78,8 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
 
         {/* Pricing callout */}
         <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-bold text-[#F8FAFC]">$19</span>
-          <span className="text-sm text-[#94A3B8]">/ month</span>
+          <span className="text-3xl font-bold text-gray-900">$19</span>
+          <span className="text-sm text-gray-500">/ month</span>
         </div>
 
         {/* CTA */}
@@ -98,7 +98,7 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
 
         <button
           onClick={onClose}
-          className="text-xs text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+          className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
         >
           Maybe later
         </button>

@@ -39,23 +39,23 @@ export default function AdminPage() {
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-[#1E293B] border border-[#334155] rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-6 h-6 text-[#94A3B8]" />
+            <div className="w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-6 h-6 text-gray-500" />
             </div>
-            <h1 className="text-xl font-bold text-[#F8FAFC]">Admin Access</h1>
+            <h1 className="text-xl font-bold text-gray-900">Admin Access</h1>
           </div>
-          <form onSubmit={login} className="bg-[#1E293B] border border-[#334155] rounded-2xl p-6 space-y-4">
+          <form onSubmit={login} className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
             {error && <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">{error}</div>}
             <div>
-              <label className="block text-sm font-medium text-[#94A3B8] mb-2">Admin Password</label>
+              <label className="block text-sm font-medium text-gray-500 mb-2">Admin Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full bg-[#0F172A] border border-[#334155] rounded-xl px-4 py-3 text-[#F8FAFC] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
               />
             </div>
             <button type="submit" disabled={loading} className="w-full bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors">
@@ -68,11 +68,11 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F172A] p-8">
+    <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#F8FAFC]">PlanForge Admin</h1>
-          <p className="text-[#94A3B8] text-sm mt-1">Overview dashboard</p>
+          <h1 className="text-2xl font-bold text-gray-900">PlanForge Admin</h1>
+          <p className="text-gray-500 text-sm mt-1">Overview dashboard</p>
         </div>
 
         {stats && (
@@ -94,13 +94,13 @@ export default function AdminPage() {
                 slate: 'text-slate-400 bg-slate-500/10',
               }
               return (
-                <div key={stat.label} className="bg-[#1E293B] border border-[#334155] rounded-2xl p-6">
+                <div key={stat.label} className="bg-white border border-gray-200 rounded-2xl p-6">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${colorMap[stat.color]}`}>
                     <stat.icon className="w-5 h-5" />
                   </div>
-                  <div className="text-3xl font-bold text-[#F8FAFC] mb-1">{stat.value}</div>
-                  <div className="text-sm font-medium text-[#94A3B8]">{stat.label}</div>
-                  <div className="text-xs text-[#475569] mt-1">{stat.sub}</div>
+                  <div className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</div>
+                  <div className="text-sm font-medium text-gray-500">{stat.label}</div>
+                  <div className="text-xs text-gray-400 mt-1">{stat.sub}</div>
                 </div>
               )
             })}

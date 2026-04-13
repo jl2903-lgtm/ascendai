@@ -60,10 +60,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-[#94A3B8]">Loading your workspace...</span>
+          <span className="text-gray-500">Loading your workspace...</span>
         </div>
       </div>
     )
@@ -71,9 +71,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!userProfile) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[#94A3B8] mb-4">Unable to load your profile.</p>
+          <p className="text-gray-500 mb-4">Unable to load your profile.</p>
           <button
             onClick={() => window.location.reload()}
             className="text-teal-400 hover:text-teal-300 text-sm underline"
@@ -86,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex">
+    <div className="min-h-screen bg-[#FAFAF8] flex">
       <Sidebar userProfile={userProfile} />
       <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
         <Header userProfile={userProfile} />

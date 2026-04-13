@@ -12,6 +12,7 @@ import {
   Library,
   Settings,
   Zap,
+  Globe,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -50,6 +51,11 @@ const NAV_LINKS = [
     icon: Library,
   },
   {
+    label: 'Shared Resources',
+    href: '/dashboard/shared-resources',
+    icon: Globe,
+  },
+  {
     label: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
@@ -65,9 +71,9 @@ export function Sidebar({ userProfile }: SidebarProps) {
   const progressPercent = Math.round((lessonsUsed / FREE_LESSON_LIMIT) * 100)
 
   return (
-    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-[#334155] bg-[#1E293B]">
+    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 border-b border-[#334155] px-6 py-5">
+      <div className="flex items-center gap-2.5 border-b border-gray-200 px-6 py-5">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600">
           <Zap className="h-4 w-4 text-white" />
         </div>
@@ -86,13 +92,13 @@ export function Sidebar({ userProfile }: SidebarProps) {
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
                 isActive
                   ? 'bg-teal-600 text-white shadow-sm shadow-teal-900/40'
-                  : 'text-[#94A3B8] hover:bg-[#334155]/60 hover:text-[#F8FAFC]'
+                  : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
               )}
             >
               <Icon
                 className={cn(
                   'h-4 w-4 flex-shrink-0',
-                  isActive ? 'text-white' : 'text-[#94A3B8]'
+                  isActive ? 'text-white' : 'text-gray-500'
                 )}
               />
               {label}
@@ -103,18 +109,18 @@ export function Sidebar({ userProfile }: SidebarProps) {
 
       {/* Upgrade banner — free users only */}
       {isFree && (
-        <div className="border-t border-[#334155] p-4">
-          <div className="rounded-lg border border-[#334155] bg-[#0F172A]/60 p-4 space-y-3">
+        <div className="border-t border-gray-200 p-4">
+          <div className="rounded-lg border border-gray-200 bg-gray-100/80 p-4 space-y-3">
             {/* Usage label */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#F8FAFC]">Free plan</span>
-              <span className="text-xs text-[#94A3B8]">
+              <span className="text-xs font-semibold text-gray-900">Free plan</span>
+              <span className="text-xs text-gray-500">
                 {lessonsUsed}/{FREE_LESSON_LIMIT} lessons used
               </span>
             </div>
 
             {/* Progress bar */}
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#334155]">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-500',

@@ -18,7 +18,7 @@ export function Navbar() {
       className={cn(
         'fixed top-0 inset-x-0 z-50 transition-all duration-300',
         scrolled
-          ? 'bg-[#0F172A]/90 backdrop-blur-md border-b border-[#334155] shadow-lg shadow-black/20'
+          ? 'bg-gray-50/90 backdrop-blur-md border-b border-gray-200 shadow-lg shadow-black/20'
           : 'bg-transparent'
       )}
     >
@@ -42,7 +42,7 @@ export function Navbar() {
           <li>
             <Link
               href="#features"
-              className="text-sm font-medium text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+              className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
             >
               Features
             </Link>
@@ -50,7 +50,7 @@ export function Navbar() {
           <li>
             <Link
               href="#pricing"
-              className="text-sm font-medium text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+              className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
             >
               Pricing
             </Link>
@@ -61,7 +61,7 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F172A] focus:ring-teal-500 px-3 py-1.5 text-sm text-[#94A3B8] hover:text-white hover:bg-[#1E293B]"
+            className="inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F172A] focus:ring-teal-500 px-3 py-1.5 text-sm text-gray-500 hover:text-white hover:bg-white"
           >
             Log in
           </Link>
