@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropic'
 import { checkRateLimit } from '@/lib/rate-limit'
 import type { WorksheetFormData, WorksheetContent } from '@/types'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
 
 function buildPrompt(data: WorksheetFormData): string {
   return `Create an ESL/EFL worksheet:
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       system: 'You are an expert ESL/EFL materials writer. Create engaging, pedagogically sound worksheets. Return valid JSON only, no markdown.',

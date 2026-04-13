@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { UserProfile, Lesson, Worksheet } from '@/types'
@@ -27,18 +27,21 @@ const colorMap: Record<string, string> = {
   slate: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
 }
 
-export default function DashboardPage() {
-  const supabase = createClient()
+function UpgradeToast() {
   const searchParams = useSearchParams()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [recentLessons, setRecentLessons] = useState<Lesson[]>([])
-  const [recentWorksheets, setRecentWorksheets] = useState<Worksheet[]>([])
-
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
       toast.success('Welcome to PlanForge Pro! All limits removed. 🎉')
     }
   }, [searchParams])
+  return null
+}
+
+export default function DashboardPage() {
+  const supabase = createClient()
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [recentLessons, setRecentLessons] = useState<Lesson[]>([])
+  const [recentWorksheets, setRecentWorksheets] = useState<Worksheet[]>([])
 
   useEffect(() => {
     const load = async () => {
@@ -61,6 +64,9 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
+      <Suspense fallback={null}>
+        <UpgradeToast />
+      </Suspense>
       {/* Welcome */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>

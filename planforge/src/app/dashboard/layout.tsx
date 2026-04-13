@@ -22,11 +22,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/auth/login')
         return
       }
-      const { data: profile } = await supabase
+
+      let { data: profile } = await supabase
         .from('users')
         .select('*')
         .eq('id', session.user.id)
         .single()
+
+      // If no row exists (trigger may not have fired), create it now
+      if (!profile) {
+        const { data: created } = await supabase
+          .from('users')
+          .upsert({
+            id: session.user.id,
+            email: session.user.email ?? '',
+            full_name: session.user.user_metadata?.full_name ?? '',
+          }, { onConflict: 'id' })
+          .select('*')
+          .single()
+        profile = created
+      }
+
       if (profile) {
         setUserProfile(profile)
         if (!profile.onboarding_completed) {
@@ -53,7 +69,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     )
   }
 
-  if (!userProfile) return null
+  if (!userProfile) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#94A3B8] mb-4">Unable to load your profile.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-teal-400 hover:text-teal-300 text-sm underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0F172A] flex">

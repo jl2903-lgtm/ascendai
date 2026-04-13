@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropic'
 import { checkRateLimit } from '@/lib/rate-limit'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const isCoverLetter = type === 'cover_letter'
     const docType = isCoverLetter ? 'cover letter' : 'motivation statement'
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
       system: 'You are an expert career coach specialising in TEFL/ESL job applications. Write genuine, human, compelling application materials. No corporate jargon. Return JSON only.',
