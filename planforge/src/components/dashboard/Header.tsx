@@ -21,7 +21,7 @@ export function Header({ userProfile }: HeaderProps) {
     setLoggingOut(true)
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push('/login')
+    router.push('/auth/login')
     router.refresh()
   }
 
