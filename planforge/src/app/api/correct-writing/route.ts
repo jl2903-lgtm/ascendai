@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropic'
 import { checkRateLimit } from '@/lib/rate-limit'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     if (!text || !level || !nationality) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     if (text.length > 5000) return NextResponse.json({ error: 'Text too long (max 5000 characters)' }, { status: 400 })
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       system: 'You are an expert EFL writing coach. Analyse student writing, identify errors, and provide clear constructive feedback. Return valid JSON only.',

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropic'
 import { checkRateLimit } from '@/lib/rate-limit'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const { schoolType, country, topic, level, demoLength, experienceLevel } = await req.json()
     if (!topic || !country) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       system: 'You are an expert TEFL trainer who helps teachers ace job interviews. Create polished, methodologically strong demo lesson plans with clear pedagogical explanations. Return valid JSON only.',
