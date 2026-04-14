@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { WorksheetContent, WorksheetFormData } from '@/types'
+import { WorksheetContent, WorksheetFormData, ClassProfile, ClassContext } from '@/types'
 import { STUDENT_LEVELS, EXERCISE_TYPES } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
+import { ClassSelector } from '@/components/dashboard/ClassSelector'
 import { generateWorksheetPDF } from '@/lib/pdf'
 import { formatDate } from '@/lib/utils'
 import { FileText, Zap, Download, Save, Copy, CheckSquare, ChevronDown } from 'lucide-react'
@@ -20,11 +21,30 @@ export default function WorksheetBuilderPage() {
     questionCount: 10,
     includeAnswerKey: true,
   })
+  const [classContext, setClassContext] = useState<ClassContext | null>(null)
   const [loading, setLoading] = useState(false)
   const [worksheet, setWorksheet] = useState<WorksheetContent | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const handleClassSelected = (profile: ClassProfile | null) => {
+    if (profile) {
+      setForm(f => ({ ...f, level: profile.cefr_level }))
+      setClassContext({
+        className: profile.class_name,
+        cefrLevel: profile.cefr_level,
+        studentAgeGroup: profile.student_age_group,
+        studentNationality: profile.student_nationality,
+        courseType: profile.course_type,
+        weakAreas: profile.weak_areas,
+        focusSkills: profile.focus_skills,
+        additionalNotes: profile.additional_notes ?? undefined,
+      })
+    } else {
+      setClassContext(null)
+    }
+  }
 
   const toggleExerciseType = (type: string) => {
     setForm(f => ({
@@ -44,7 +64,7 @@ export default function WorksheetBuilderPage() {
       const res = await fetch('/api/generate-worksheet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, classContext }),
       })
       const data = await res.json()
       if (res.status === 402) { setShowUpgrade(true); return }
@@ -88,15 +108,24 @@ export default function WorksheetBuilderPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-blue-600/15 border border-blue-600/30 rounded-xl flex items-center justify-center">
-          <FileText className="w-5 h-5 text-blue-400" />
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-600/15 border border-blue-600/30 rounded-xl flex items-center justify-center">
+            <FileText className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Worksheet Builder</h1>
+            <p className="text-sm text-gray-500">Custom exercises with answer keys at any level</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Worksheet Builder</h1>
-          <p className="text-sm text-gray-500">Custom exercises with answer keys at any level</p>
-        </div>
+        <ClassSelector onClassSelected={handleClassSelected} />
       </div>
+
+      {classContext && (
+        <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-700 font-medium">
+          Using class profile: <strong>{classContext.className}</strong> — {classContext.cefrLevel}, {classContext.courseType}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Form */}
@@ -112,14 +141,14 @@ export default function WorksheetBuilderPage() {
                   <button
                     key={t.value}
                     onClick={() => toggleExerciseType(t.value)}
-                    className={`flex items-center gap-2 text-xs px-3 py-2.5 rounded-xl border transition-all text-left ${form.exerciseTypes.includes(t.value) ? 'border-blue-500 bg-blue-500/10 text-blue-400' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                    className={`flex items-center gap-2 text-xs px-3 py-2.5 rounded-xl border transition-all text-left ${form.exerciseTypes.includes(t.value) ? 'border-blue-500 bg-blue-500/10 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
                   >
-                    <CheckSquare className={`w-3.5 h-3.5 flex-shrink-0 ${form.exerciseTypes.includes(t.value) ? 'text-blue-400' : 'text-gray-400'}`} />
+                    <CheckSquare className={`w-3.5 h-3.5 flex-shrink-0 ${form.exerciseTypes.includes(t.value) ? 'text-blue-600' : 'text-gray-400'}`} />
                     {t.label}
                   </button>
                 ))}
               </div>
-              {errors.exerciseTypes && <p className="text-red-400 text-xs mt-1">{errors.exerciseTypes}</p>}
+              {errors.exerciseTypes && <p className="text-red-500 text-xs mt-1">{errors.exerciseTypes}</p>}
             </div>
 
             {/* Topic */}
@@ -132,7 +161,7 @@ export default function WorksheetBuilderPage() {
                 placeholder="e.g. Past Simple, Adjectives, Shopping"
                 className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${errors.topic ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
               />
-              {errors.topic && <p className="text-red-400 text-xs mt-1">{errors.topic}</p>}
+              {errors.topic && <p className="text-red-500 text-xs mt-1">{errors.topic}</p>}
             </div>
 
             {/* Level */}
@@ -171,7 +200,7 @@ export default function WorksheetBuilderPage() {
               <label className="text-sm font-medium text-gray-500">Include Answer Key</label>
               <button
                 onClick={() => setForm(f => ({ ...f, includeAnswerKey: !f.includeAnswerKey }))}
-                className={`relative inline-flex w-10 h-6 rounded-full transition-colors ${form.includeAnswerKey ? 'bg-teal-600' : 'bg-gray-100'}`}
+                className={`relative inline-flex w-10 h-6 rounded-full transition-colors ${form.includeAnswerKey ? 'bg-teal-600' : 'bg-gray-200'}`}
               >
                 <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transition-transform mt-1 ${form.includeAnswerKey ? 'translate-x-5' : 'translate-x-1'}`} />
               </button>
@@ -237,7 +266,7 @@ export default function WorksheetBuilderPage() {
                   ))}
                 </div>
                 <div className="mt-8 pt-4 border-t border-gray-200 flex justify-between text-xs text-gray-400">
-                  <span>PlanForge Worksheet</span>
+                  <span>Tyoutor Pro Worksheet</span>
                   <span>{worksheet.level} · {worksheet.topic}</span>
                 </div>
               </div>
@@ -248,11 +277,11 @@ export default function WorksheetBuilderPage() {
                   <Save className="w-4 h-4" />
                   {saving ? 'Saving...' : 'Save'}
                 </button>
-                <button onClick={handleDownload} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-white transition-all">
+                <button onClick={handleDownload} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-600 hover:text-teal-600 transition-all">
                   <Download className="w-4 h-4" />
                   Download PDF
                 </button>
-                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-white transition-all">
+                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-600 hover:text-teal-600 transition-all">
                   <Copy className="w-4 h-4" />
                   Print View
                 </button>

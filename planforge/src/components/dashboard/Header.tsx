@@ -29,11 +29,11 @@ export function Header({ userProfile }: HeaderProps) {
     <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6">
       {/* Left — user info */}
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-50 border border-teal-200 text-teal-600">
           <User className="h-4 w-4" />
         </div>
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">
+          <span className="text-sm font-bold text-gray-900 truncate max-w-[200px]">
             {displayName}
           </span>
           {userProfile.full_name?.trim() && (
@@ -44,12 +44,11 @@ export function Header({ userProfile }: HeaderProps) {
         </div>
       </div>
 
-      {/* Right — subscription badge + logout */}
+      {/* Right — badge + logout */}
       <div className="flex items-center gap-3">
         <Badge variant={userProfile.subscription_status === 'pro' ? 'pro' : 'free'}>
           {userProfile.subscription_status === 'pro' ? 'Pro' : 'Free'}
         </Badge>
-
         <Button
           variant="ghost"
           size="sm"

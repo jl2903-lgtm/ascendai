@@ -21,6 +21,34 @@ export interface UserProfile {
   main_goal: string | null
 }
 
+export interface ClassProfile {
+  id: string
+  user_id: string
+  class_name: string
+  student_nationality: string
+  student_age_group: string
+  class_size: number
+  cefr_level: string
+  course_type: string
+  textbook: string | null
+  weak_areas: string[]
+  focus_skills: string[]
+  additional_notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ClassContext {
+  className: string
+  cefrLevel: string
+  studentAgeGroup: string
+  studentNationality: string
+  courseType: string
+  weakAreas: string[]
+  focusSkills: string[]
+  additionalNotes?: string
+}
+
 export interface LessonContent {
   title: string
   overview: {

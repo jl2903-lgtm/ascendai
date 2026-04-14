@@ -34,6 +34,7 @@ export async function middleware(request: NextRequest) {
   // Redirect unauthenticated users away from protected routes
   const isProtected =
     pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/onboarding') ||
     pathname.startsWith('/generator') ||
     pathname.startsWith('/library')
 

@@ -3,13 +3,23 @@ import { createRouteClient } from '@/lib/supabase/route-handler'
 
 import { getAnthropicClient } from '@/lib/anthropic'
 import { checkRateLimit } from '@/lib/rate-limit'
-import type { LessonFormData, LessonContent } from '@/types'
+import type { LessonFormData, LessonContent, ClassContext } from '@/types'
 
 
 
 const SYSTEM_PROMPT = `You are an expert TEFL/EFL curriculum designer with 15 years of experience teaching English as a Foreign Language across Asia, Europe, and Latin America. You create highly practical, communicative, student-centred lesson plans that follow best practices in ELT methodology. You understand the specific linguistic challenges that learners from different L1 backgrounds face when learning English. Always return your response as a valid JSON object only, with no additional text.`
 
-function buildPrompt(data: LessonFormData): string {
+function buildClassContextNote(ctx: ClassContext): string {
+  const lines: string[] = [`\n\nCLASS PROFILE — "${ctx.className}":`]
+  lines.push(`- Course type: ${ctx.courseType}`)
+  if (ctx.weakAreas.length > 0) lines.push(`- Known weak areas: ${ctx.weakAreas.join(', ')}`)
+  if (ctx.focusSkills.length > 0) lines.push(`- Priority skills: ${ctx.focusSkills.join(', ')}`)
+  if (ctx.additionalNotes) lines.push(`- Additional context: ${ctx.additionalNotes}`)
+  lines.push('Please tailor activities, examples, and teacher notes to address these specifics.')
+  return lines.join('\n')
+}
+
+function buildPrompt(data: LessonFormData, classContext?: ClassContext | null): string {
   return `Create a complete EFL lesson plan with these parameters:
 - CEFR Level: ${data.level}
 - Topic: ${data.topic}
@@ -86,7 +96,7 @@ Return a JSON object with this exact structure:
     "optional": true,
     "instructions": "clear homework task"
   }
-}`
+}${classContext ? buildClassContextNote(classContext) : ''}`
 }
 
 export async function POST(req: NextRequest) {
@@ -113,7 +123,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
     }
 
-    const body: LessonFormData = await req.json()
+    const body: LessonFormData & { classContext?: ClassContext } = await req.json()
     if (!body.level || !body.topic || !body.length || !body.ageGroup || !body.nationality) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -122,7 +132,7 @@ export async function POST(req: NextRequest) {
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildPrompt(body) }],
+      messages: [{ role: 'user', content: buildPrompt(body, body.classContext) }],
     })
 
     const rawText = response.content[0].type === 'text' ? response.content[0].text : ''

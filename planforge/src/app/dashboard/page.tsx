@@ -31,7 +31,7 @@ function UpgradeToast() {
   const searchParams = useSearchParams()
   useEffect(() => {
     if (searchParams.get('upgraded') === 'true') {
-      toast.success('Welcome to PlanForge Pro! All limits removed. 🎉')
+      toast.success('Welcome to Tyoutor Pro! All limits removed. 🎉')
     }
   }, [searchParams])
   return null

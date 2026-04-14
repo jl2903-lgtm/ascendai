@@ -30,9 +30,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
     }
 
-    const { text, level, nationality } = await req.json()
+    const { text, level, nationality, classContext } = await req.json()
     if (!text || !level || !nationality) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     if (text.length > 5000) return NextResponse.json({ error: 'Text too long (max 5000 characters)' }, { status: 400 })
+
+    const classNote = classContext
+      ? `\n\nClass profile — "${classContext.className}": ${classContext.courseType}${classContext.weakAreas?.length ? `, known weak areas: ${classContext.weakAreas.join(', ')}` : ''}. Factor these into your focus recommendation.`
+      : ''
 
     const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -40,7 +44,7 @@ export async function POST(req: NextRequest) {
       system: 'You are an expert EFL writing coach. Analyse student writing, identify errors, and provide clear constructive feedback. Return valid JSON only.',
       messages: [{
         role: 'user',
-        content: `Analyse this ${level} student writing from a ${nationality} learner:
+        content: `Analyse this ${level} student writing from a ${nationality} learner:${classNote}
 
 """
 ${text}

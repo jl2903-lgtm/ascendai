@@ -30,8 +30,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
     }
 
-    const { schoolType, country, topic, level, demoLength, experienceLevel } = await req.json()
+    const { schoolType, country, topic, level, demoLength, experienceLevel, classContext } = await req.json()
     if (!topic || !country) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+
+    const classNote = classContext
+      ? `\n\nClass profile context — "${classContext.className}": ${classContext.courseType}, ${classContext.studentNationality} students${classContext.weakAreas?.length ? `, weak areas: ${classContext.weakAreas.join(', ')}` : ''}. Design the demo lesson with these students in mind.`
+      : ''
 
     const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -39,7 +43,7 @@ export async function POST(req: NextRequest) {
       system: 'You are an expert TEFL trainer who helps teachers ace job interviews. Create polished, methodologically strong demo lesson plans with clear pedagogical explanations. Return valid JSON only.',
       messages: [{
         role: 'user',
-        content: `Create an interview-ready ${demoLength}-minute demo lesson for a ${schoolType} in ${country}:
+        content: `Create an interview-ready ${demoLength}-minute demo lesson for a ${schoolType} in ${country}:${classNote}
 - Topic: ${topic}
 - Level: ${level}
 - Teacher experience: ${experienceLevel}

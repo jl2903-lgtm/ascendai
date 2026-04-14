@@ -21,7 +21,7 @@ const steps = [
 const GOALS = [
   { value: 'Daily lesson planning', label: '📚 Daily lesson planning', desc: 'I need regular lesson plans for my classes' },
   { value: 'Job interview prep', label: '🎯 Job interview prep', desc: 'I have an interview and need a demo lesson' },
-  { value: 'Just exploring', label: '🔍 Just exploring', desc: "I'm curious about what PlanForge can do" },
+  { value: 'Just exploring', label: '🔍 Just exploring', desc: "I'm curious about what Tyoutor Pro can do" },
 ]
 
 export function OnboardingModal({ isOpen, onClose, userId, onComplete }: Props) {
