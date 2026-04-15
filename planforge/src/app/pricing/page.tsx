@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BookOpen, CheckCircle, X } from 'lucide-react'
 import type { Metadata } from 'next'
+import { PricingUpgradeButton } from '@/components/pricing/PricingUpgradeButton'
 
 export const metadata: Metadata = {
   title: 'Pricing — PlanForge',
@@ -118,9 +119,12 @@ export default function PricingPage() {
               ))}
             </ul>
 
-            <Link href="/auth/signup" className="block w-full text-center bg-teal-600 hover:bg-teal-500 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25">
+            <PricingUpgradeButton
+              trial
+              className="block w-full text-center bg-teal-600 hover:bg-teal-500 disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
+            >
               Start 7-Day Free Trial
-            </Link>
+            </PricingUpgradeButton>
             <p className="text-xs text-center text-gray-400 mt-3">No charge until trial ends</p>
           </div>
         </div>
