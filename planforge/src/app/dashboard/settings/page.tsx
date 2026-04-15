@@ -78,7 +78,7 @@ export default function SettingsPage() {
   const openBillingPortal = async () => {
     setPortalLoading(true)
     try {
-      const res = await fetch('/api/stripe/create-portal', { method: 'POST' })
+      const res = await fetch('/api/create-portal-session', { method: 'POST' })
       const data = await res.json()
       if (data.url) window.location.href = data.url
       else toast.error('Failed to open billing portal.')

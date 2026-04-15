@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -53,10 +54,26 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
 
 export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const [upgradeLoading, setUpgradeLoading] = useState(false)
   const isFree = userProfile.subscription_status === 'free'
   const lessonsUsed = Math.min(userProfile.lessons_used_this_month, FREE_LESSON_LIMIT)
   const progressPercent = Math.round((lessonsUsed / FREE_LESSON_LIMIT) * 100)
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true)
+    try {
+      const res = await fetch('/api/checkout', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch {
+      // silently fail — user can try again
+    } finally {
+      setUpgradeLoading(false)
+    }
+  }
 
   const navItem = (href: string, Icon: React.ElementType, label: string) => {
     const active = isActive(href)
@@ -161,13 +178,21 @@ export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) 
                 }}
               />
             </div>
-            <Link
-              href="/dashboard/upgrade"
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white bg-white/15 hover:bg-white/25 transition-colors"
+            <button
+              onClick={handleUpgrade}
+              disabled={upgradeLoading}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white bg-white/15 hover:bg-white/25 transition-colors disabled:opacity-60"
             >
-              <Sparkles className="h-3.5 w-3.5" />
-              Upgrade to Pro
-            </Link>
+              {upgradeLoading ? (
+                <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <Sparkles className="h-3.5 w-3.5" />
+              )}
+              {upgradeLoading ? 'Redirecting...' : 'Upgrade to Pro'}
+            </button>
           </div>
         </div>
       )}
