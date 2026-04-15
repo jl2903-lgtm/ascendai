@@ -108,7 +108,11 @@ export default function LessonGeneratorPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="relative isolate max-w-5xl mx-auto space-y-6">
+      {/* Background decorations */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div aria-hidden style={{ position:'absolute',width:350,height:350,top:-80,right:-80,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8D0,#A7C4A0)',opacity:0.18,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
+      <div aria-hidden style={{ position:'absolute',width:280,height:280,bottom:60,left:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.15,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
@@ -133,7 +137,7 @@ export default function LessonGeneratorPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Form panel */}
         <div className="lg:col-span-2">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5 sticky top-6">
+          <div className="glass-card p-6 space-y-5 sticky top-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Class Details</h2>
 
             {/* Level */}
@@ -244,7 +248,7 @@ export default function LessonGeneratorPage() {
             <button
               onClick={() => generate()}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-teal-600/20 text-sm mt-2"
+              className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -267,7 +271,7 @@ export default function LessonGeneratorPage() {
         {/* Output panel */}
         <div className="lg:col-span-3 min-h-[400px]">
           {loading ? (
-            <div className="bg-white border border-gray-200 rounded-2xl h-full min-h-[500px] flex items-center justify-center">
+            <div className="glass-card h-full min-h-[500px] flex items-center justify-center">
               <ThinkingLoader />
             </div>
           ) : lesson ? (
@@ -278,7 +282,7 @@ export default function LessonGeneratorPage() {
               adjusting={adjusting}
             />
           ) : (
-            <div className="bg-white border border-gray-200 rounded-2xl h-full min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+            <div className="glass-card h-full min-h-[400px] flex flex-col items-center justify-center text-center p-8">
               <div className="w-16 h-16 bg-teal-600/10 rounded-2xl flex items-center justify-center mb-4">
                 <BookOpen className="w-8 h-8 text-teal-600/50" />
               </div>

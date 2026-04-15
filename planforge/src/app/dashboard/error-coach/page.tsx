@@ -148,7 +148,11 @@ export default function ErrorCoachPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="relative isolate max-w-6xl mx-auto space-y-6">
+      {/* Background decorations */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div aria-hidden style={{ position:'absolute',width:350,height:350,top:-80,right:-80,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#E8DFF5,#D0BFFF)',opacity:0.16,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
+      <div aria-hidden style={{ position:'absolute',width:280,height:280,bottom:60,left:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8D0,#A7C4A0)',opacity:0.15,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-purple-600/15 border border-purple-600/30 rounded-xl flex items-center justify-center">
@@ -245,7 +249,7 @@ Yesterday I go to the market and I buyed a lot of food. The weather was very goo
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-2">
+          <div className="glass-card p-4 space-y-2">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Error Types</div>
             {Object.entries(ERROR_LABELS).map(([key, label]) => (
               <div key={key} className="flex items-center gap-2">
@@ -258,7 +262,7 @@ Yesterday I go to the market and I buyed a lot of food. The weather was very goo
           <button
             onClick={analyse}
             disabled={loading || transcribing}
-            className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all text-sm"
+            className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Analysing...</>
@@ -269,7 +273,7 @@ Yesterday I go to the market and I buyed a lot of food. The weather was very goo
 
       {/* Loading */}
       {loading && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-12 flex items-center justify-center">
+        <div className="glass-card p-12 flex items-center justify-center">
           <ThinkingLoader />
         </div>
       )}

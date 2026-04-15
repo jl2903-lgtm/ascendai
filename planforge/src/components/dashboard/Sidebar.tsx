@@ -11,130 +11,167 @@ import {
   Briefcase,
   Library,
   Settings,
-  Zap,
   Globe,
   Users,
+  Sparkles,
 } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 interface SidebarProps {
   userProfile: UserProfile
+  isOpen?: boolean
+  onClose?: () => void
 }
 
-const CLASS_SECTION = [
+const CLASS_LINKS = [
   { label: 'My Classes', href: '/dashboard/classes', icon: Users },
 ]
 
-const NAV_LINKS = [
+const CREATE_LINKS = [
   { label: 'Lesson Generator',  href: '/dashboard/lesson-generator',  icon: BookOpen },
   { label: 'Worksheet Builder', href: '/dashboard/worksheet-builder', icon: FileText },
   { label: 'Error Coach',       href: '/dashboard/error-coach',       icon: AlertCircle },
   { label: 'Demo Lesson',       href: '/dashboard/demo-lesson',       icon: Presentation },
   { label: 'Job Assistant',     href: '/dashboard/job-assistant',     icon: Briefcase },
-  { label: 'Saved Library',     href: '/dashboard/saved',             icon: Library },
-  { label: 'Shared Resources',  href: '/dashboard/shared-resources',  icon: Globe },
-  { label: 'Settings',          href: '/dashboard/settings',          icon: Settings },
+]
+
+const LIBRARY_LINKS = [
+  { label: 'Saved Library',    href: '/dashboard/saved',            icon: Library },
+  { label: 'Shared Resources', href: '/dashboard/shared-resources', icon: Globe },
+  { label: 'Settings',         href: '/dashboard/settings',         icon: Settings },
 ]
 
 const FREE_LESSON_LIMIT = 5
 
-export function Sidebar({ userProfile }: SidebarProps) {
+const SECTION_LABEL_STYLE: React.CSSProperties = {
+  fontSize: 9,
+  fontWeight: 700,
+  color: '#BBB',
+  letterSpacing: '1.2px',
+  textTransform: 'uppercase',
+}
+
+export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const isFree = userProfile.subscription_status === 'free'
   const lessonsUsed = Math.min(userProfile.lessons_used_this_month, FREE_LESSON_LIMIT)
   const progressPercent = Math.round((lessonsUsed / FREE_LESSON_LIMIT) * 100)
-
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
+  const navItem = (href: string, Icon: React.ElementType, label: string) => {
+    const active = isActive(href)
+    return (
+      <Link
+        key={href}
+        href={href}
+        className={cn(
+          'flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13.5px] font-semibold transition-all duration-150',
+          active ? 'border text-[#2D6A4F]' : 'text-[#6B6B6B] hover:bg-gray-50 hover:text-gray-900'
+        )}
+        style={active ? { background: 'linear-gradient(135deg, #E8F5E9, #F0FFF4)', borderColor: '#C6F6D5' } : {}}
+      >
+        <Icon className={cn('h-4 w-4 flex-shrink-0', active ? 'text-[#2D6A4F]' : 'text-gray-400')} />
+        {label}
+      </Link>
+    )
+  }
+
   return (
-    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-gray-200 bg-white">
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          aria-hidden
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+    <aside
+      className={cn(
+        'flex h-screen w-64 flex-shrink-0 flex-col border-r border-[#EDEBE8] transition-transform duration-300',
+        isOpen
+          ? 'fixed inset-y-0 left-0 z-50 shadow-2xl'
+          : 'hidden lg:flex sticky top-0'
+      )}
+      style={{ background: 'linear-gradient(180deg, #FFFFFF, #FAFDF8)' }}
+    >
       {/* Logo */}
-      <div className="flex items-center gap-2.5 border-b border-gray-200 px-6 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600">
-          <Zap className="h-4 w-4 text-white" />
-        </div>
-        <span className="text-lg font-extrabold text-gray-900 tracking-tight">
-          Tyoutor <span className="text-teal-600">Pro</span>
-        </span>
+      <div className="px-5 py-5 border-b border-[#EDEBE8]">
+        <Logo showSubtitle href="/dashboard" />
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
-        {/* My Classes section */}
         <div>
-          <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">My Classes</p>
-          {CLASS_SECTION.map(({ label, href, icon: Icon }) => {
-            const active = isActive(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150',
-                  active
-                    ? 'bg-teal-50 text-teal-700 border border-teal-200'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                )}
-              >
-                <Icon className={cn('h-4 w-4 flex-shrink-0', active ? 'text-teal-600' : 'text-gray-400')} />
-                {label}
-              </Link>
-            )
-          })}
+          <p className="px-3 mb-1.5" style={SECTION_LABEL_STYLE}>My Classes</p>
+          {CLASS_LINKS.map(({ label, href, icon: Icon }) => navItem(href, Icon, label))}
         </div>
 
-        {/* Tools section */}
         <div>
-          <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">Tools</p>
+          <p className="px-3 mb-1.5" style={SECTION_LABEL_STYLE}>Create</p>
           <div className="space-y-0.5">
-            {NAV_LINKS.map(({ label, href, icon: Icon }) => {
-              const active = isActive(href)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150',
-                    active
-                      ? 'bg-teal-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  )}
-                >
-                  <Icon className={cn('h-4 w-4 flex-shrink-0', active ? 'text-white' : 'text-gray-400')} />
-                  {label}
-                </Link>
-              )
-            })}
+            {CREATE_LINKS.map(({ label, href, icon: Icon }) => navItem(href, Icon, label))}
+          </div>
+        </div>
+
+        <div>
+          <p className="px-3 mb-1.5" style={SECTION_LABEL_STYLE}>Library</p>
+          <div className="space-y-0.5">
+            {LIBRARY_LINKS.map(({ label, href, icon: Icon }) => navItem(href, Icon, label))}
           </div>
         </div>
       </nav>
 
-      {/* Upgrade banner — free users only */}
+      {/* Upgrade card — free users only */}
       {isFree && (
-        <div className="border-t border-gray-200 p-4">
-          <div className="rounded-xl border border-warm-200 bg-warm-50 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-900">Free plan</span>
-              <span className="text-xs text-gray-500">{lessonsUsed}/{FREE_LESSON_LIMIT} lessons</span>
+        <div className="p-4">
+          <div
+            className="relative overflow-hidden rounded-2xl p-4 space-y-3"
+            style={{ background: 'linear-gradient(135deg, #2D6A4F, #1B4332)' }}
+          >
+            {/* Decorative circle */}
+            <div
+              style={{
+                position: 'absolute',
+                top: -20,
+                right: -20,
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.05)',
+              }}
+            />
+            <div>
+              <p className="text-white font-extrabold text-sm">Go Pro ✨</p>
+              <p className="mt-0.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {lessonsUsed}/{FREE_LESSON_LIMIT} lessons used
+              </p>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full"
+              style={{ background: 'rgba(255,255,255,0.2)' }}
+            >
               <div
-                className={cn(
-                  'h-full rounded-full transition-all duration-500',
-                  progressPercent >= 100 ? 'bg-red-500' : progressPercent >= 80 ? 'bg-amber-500' : 'bg-teal-500'
-                )}
-                style={{ width: `${progressPercent}%` }}
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, #52B788, #95D5B2)',
+                  boxShadow: '0 2px 8px rgba(82,183,136,0.4)',
+                }}
               />
             </div>
             <Link
               href="/dashboard/upgrade"
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-teal-600 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-teal-500"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white bg-white/15 hover:bg-white/25 transition-colors"
             >
-              <Zap className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" />
               Upgrade to Pro
             </Link>
           </div>
         </div>
       )}
     </aside>
+    </>
   )
 }

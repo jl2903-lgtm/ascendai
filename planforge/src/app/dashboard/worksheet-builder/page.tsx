@@ -107,7 +107,11 @@ export default function WorksheetBuilderPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="relative isolate max-w-5xl mx-auto space-y-6">
+      {/* Background decorations */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div aria-hidden style={{ position:'absolute',width:350,height:350,top:-80,right:-80,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.16,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
+      <div aria-hidden style={{ position:'absolute',width:280,height:280,bottom:60,left:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8D0,#A7C4A0)',opacity:0.15,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600/15 border border-blue-600/30 rounded-xl flex items-center justify-center">
@@ -130,7 +134,7 @@ export default function WorksheetBuilderPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Form */}
         <div className="lg:col-span-2">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5 sticky top-6">
+          <div className="glass-card p-6 space-y-5 sticky top-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Worksheet Settings</h2>
 
             {/* Exercise Types */}
@@ -209,7 +213,7 @@ export default function WorksheetBuilderPage() {
             <button
               onClick={generate}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all text-sm"
+              className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Generating...</>
@@ -221,7 +225,7 @@ export default function WorksheetBuilderPage() {
         {/* Output */}
         <div className="lg:col-span-3">
           {loading ? (
-            <div className="bg-white border border-gray-200 rounded-2xl min-h-[500px] flex items-center justify-center">
+            <div className="glass-card min-h-[500px] flex items-center justify-center">
               <ThinkingLoader />
             </div>
           ) : worksheet ? (
@@ -272,7 +276,7 @@ export default function WorksheetBuilderPage() {
               </div>
 
               {/* Actions */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-wrap gap-3">
+              <div className="glass-card p-4 flex flex-wrap gap-3">
                 <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white transition-all">
                   <Save className="w-4 h-4" />
                   {saving ? 'Saving...' : 'Save'}
@@ -288,7 +292,7 @@ export default function WorksheetBuilderPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-white border border-gray-200 rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+            <div className="glass-card min-h-[400px] flex flex-col items-center justify-center text-center p-8">
               <div className="w-16 h-16 bg-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-blue-600/50" />
               </div>

@@ -1,48 +1,26 @@
 import Link from 'next/link'
 import { BookOpen, FileText, MessageSquare, Briefcase, GraduationCap, Zap, CheckCircle, Clock, Download, Star, Users } from 'lucide-react'
+import { Navbar } from '@/components/landing/Navbar'
+import { Logo } from '@/components/ui/Logo'
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-gray-900 overflow-x-hidden">
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-xl font-extrabold text-gray-900">
-              Tyoutor <span className="text-teal-600">Pro</span>
-            </span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm">
-            <a href="#features" className="font-semibold text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-            <a href="#how-it-works" className="font-semibold text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
-            <Link href="/pricing" className="font-semibold text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/auth/login" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors px-4 py-2">
-              Log in
-            </Link>
-            <Link href="/auth/signup" className="bg-teal-600 hover:bg-teal-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all hover:scale-105 shadow-sm">
-              Start Free
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-24 px-6 overflow-hidden">
+      <section className="relative isolate pt-24 pb-24 px-6 overflow-hidden">
         {/* Decorative blobs */}
         <div className="blob-peach w-[600px] h-[400px] -top-20 -right-40" />
         <div className="blob-lavender w-[500px] h-[400px] top-40 -left-32" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
 
         <div className="relative max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-full px-4 py-1.5 text-teal-700 text-sm font-bold mb-8">
-            <Zap className="w-3.5 h-3.5" />
+            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
             Built for TEFL teachers worldwide
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight text-gray-900">
+          <h1 className="text-[2rem] sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight text-gray-900">
             Set up your class once.{' '}
             <span className="text-gradient">
               Get perfect lessons
@@ -53,10 +31,10 @@ export default function LandingPage() {
             Tyoutor Pro remembers your students — their level, nationality, weak areas, and goals. Every lesson, worksheet, and material is automatically tailored to them.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signup" className="bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-4 rounded-2xl text-lg transition-all hover:scale-105 shadow-lg shadow-teal-600/20">
+            <Link href="/auth/signup" className="btn-primary w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-lg">
               Start Free — No Credit Card
             </Link>
-            <a href="#how-it-works" className="border border-gray-300 hover:border-teal-500 hover:bg-teal-50 text-gray-700 hover:text-teal-700 font-bold px-8 py-4 rounded-2xl text-lg transition-all">
+            <a href="#how-it-works" className="w-full sm:w-auto inline-flex items-center justify-center border border-gray-300 hover:border-teal-500 hover:bg-teal-50 text-gray-700 hover:text-teal-700 font-bold px-8 py-4 rounded-full text-lg transition-all">
               See How It Works
             </a>
           </div>
@@ -289,7 +267,7 @@ export default function LandingPage() {
             <span className="text-gradient">Sundays?</span>
           </h2>
           <p className="text-xl text-gray-600 mb-10 font-medium">Join thousands of TEFL teachers who plan smarter with Tyoutor Pro.</p>
-          <Link href="/auth/signup" className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-bold px-10 py-5 rounded-2xl text-xl transition-all hover:scale-105 shadow-lg shadow-teal-600/20">
+          <Link href="/auth/signup" className="btn-primary inline-flex items-center gap-2 px-10 py-5 text-xl">
             Start Free Today
             <Zap className="w-5 h-5" />
           </Link>
@@ -299,12 +277,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-200 py-12 px-6 bg-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-extrabold text-gray-900">Tyoutor <span className="text-teal-600">Pro</span></span>
-          </div>
+          <Logo size="sm" href="/" />
           <div className="flex gap-8 text-sm font-semibold text-gray-600">
             <Link href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link>
             <Link href="/auth/login" className="hover:text-gray-900 transition-colors">Log in</Link>

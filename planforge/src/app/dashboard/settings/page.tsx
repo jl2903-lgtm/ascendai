@@ -103,7 +103,10 @@ export default function SettingsPage() {
   const isPro = profile?.subscription_status === 'pro'
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="relative isolate max-w-2xl mx-auto space-y-6">
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div aria-hidden style={{ position:'absolute',width:300,height:300,top:-60,right:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8D0,#A7C4A0)',opacity:0.15,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
+      <div aria-hidden style={{ position:'absolute',width:250,height:250,bottom:40,left:-40,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.13,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center">
           <Settings className="w-5 h-5 text-gray-500" />

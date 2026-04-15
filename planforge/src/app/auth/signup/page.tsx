@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Zap, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 
 export default function SignupPage() {
   const supabase = createClient()
@@ -76,21 +77,17 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
-      {/* Subtle blobs */}
-      <div className="blob-peach w-80 h-80 top-10 right-0 opacity-60" style={{ position: 'fixed' }} />
-      <div className="blob-mint w-72 h-72 bottom-10 -left-10 opacity-50" style={{ position: 'fixed' }} />
+    <div className="relative isolate min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
+      {/* Background decorations */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div className="blob-peach w-80 h-80 top-10 right-0 opacity-60" style={{ position: 'fixed', zIndex: -1 }} />
+      <div className="blob-mint w-72 h-72 bottom-10 -left-10 opacity-50" style={{ position: 'fixed', zIndex: -1 }} />
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-extrabold text-gray-900">
-              Tyoutor <span className="text-teal-600">Pro</span>
-            </span>
-          </Link>
+          <div className="mb-6 flex justify-center">
+            <Logo size="lg" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
           <p className="text-gray-600 mt-2 font-medium">5 free lessons every month. No credit card needed.</p>
         </div>
@@ -147,7 +144,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-teal-600 hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="btn-primary w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

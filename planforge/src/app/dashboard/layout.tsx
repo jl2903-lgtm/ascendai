@@ -12,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const supabase = createClient()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -86,9 +87,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex">
-      <Sidebar userProfile={userProfile} />
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-64">
-        <Header userProfile={userProfile} />
+      <Sidebar userProfile={userProfile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header userProfile={userProfile} onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-6 overflow-auto">
           {children}
         </main>
