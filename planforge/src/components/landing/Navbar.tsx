@@ -18,56 +18,46 @@ export function Navbar() {
       className={cn(
         'fixed top-0 inset-x-0 z-50 transition-all duration-300',
         scrolled
-          ? 'bg-gray-50/90 backdrop-blur-md border-b border-gray-200 shadow-lg shadow-black/20'
+          ? 'bg-white/93 backdrop-blur-md border-b border-gray-200 shadow-sm'
           : 'bg-transparent'
       )}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 group"
-          aria-label="PlanForge home"
-        >
+        <Link href="/" className="flex items-center gap-2 group" aria-label="Tyoutor Pro home">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 transition-colors group-hover:bg-teal-500">
             <Zap className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-bold text-teal-400 tracking-tight group-hover:text-teal-300 transition-colors">
-            PlanForge
+          <span className="text-lg font-extrabold text-gray-900 tracking-tight group-hover:text-teal-700 transition-colors">
+            Tyoutor <span className="text-teal-600">Pro</span>
           </span>
         </Link>
 
-        {/* Center nav links */}
+        {/* Center nav */}
         <ul className="hidden md:flex items-center gap-8">
           <li>
-            <Link
-              href="#features"
-              className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-            >
+            <a href="#features" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
               Features
-            </Link>
+            </a>
           </li>
           <li>
-            <Link
-              href="#pricing"
-              className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-            >
+            <a href="#pricing" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors">
               Pricing
-            </Link>
+            </a>
           </li>
         </ul>
 
-        {/* Right CTAs */}
+        {/* CTAs */}
         <div className="flex items-center gap-3">
           <Link
-            href="/login"
-            className="inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F172A] focus:ring-teal-500 px-3 py-1.5 text-sm text-gray-500 hover:text-white hover:bg-white"
+            href="/auth/login"
+            className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors px-3 py-1.5"
           >
             Log in
           </Link>
           <Link
-            href="/signup"
-            className="inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0F172A] focus:ring-teal-500 px-3 py-1.5 text-sm bg-teal-600 hover:bg-teal-500 text-white"
+            href="/auth/signup"
+            className="bg-teal-600 hover:bg-teal-500 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all hover:scale-105 shadow-sm"
           >
             Start Free
           </Link>

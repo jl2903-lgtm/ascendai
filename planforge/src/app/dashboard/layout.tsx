@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { Header } from '@/components/dashboard/Header'
-import { OnboardingModal } from '@/components/dashboard/OnboardingModal'
 import { UserProfile } from '@/types'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -13,7 +12,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const supabase = createClient()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -44,10 +42,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       if (profile) {
-        setUserProfile(profile)
         if (!profile.onboarding_completed) {
-          setShowOnboarding(true)
+          router.push('/onboarding')
+          return
         }
+        setUserProfile(profile)
       }
       setLoading(false)
     }
@@ -76,7 +75,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <p className="text-gray-500 mb-4">Unable to load your profile.</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-teal-400 hover:text-teal-300 text-sm underline"
+            className="text-teal-600 hover:text-teal-500 text-sm underline"
           >
             Try again
           </button>
@@ -94,17 +93,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
-      {showOnboarding && (
-        <OnboardingModal
-          isOpen={showOnboarding}
-          onClose={() => setShowOnboarding(false)}
-          userId={userProfile.id}
-          onComplete={(prefs) => {
-            setUserProfile(p => p ? { ...p, ...prefs, onboarding_completed: true } : p)
-            setShowOnboarding(false)
-          }}
-        />
-      )}
     </div>
   )
 }

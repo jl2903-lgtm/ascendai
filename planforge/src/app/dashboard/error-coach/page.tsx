@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import { STUDENT_LEVELS, NATIONALITIES } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
+import { ClassSelector } from '@/components/dashboard/ClassSelector'
+import { ClassProfile, ClassContext } from '@/types'
 import { CheckCircle, AlertTriangle, Zap, ChevronDown, Camera, X, ImageIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -42,12 +44,32 @@ export default function ErrorCoachPage() {
   const [text, setText] = useState('')
   const [level, setLevel] = useState('B1')
   const [nationality, setNationality] = useState('Chinese (Mandarin)')
+  const [classContext, setClassContext] = useState<ClassContext | null>(null)
   const [loading, setLoading] = useState(false)
   const [transcribing, setTranscribing] = useState(false)
   const [result, setResult] = useState<ErrorResult | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleClassSelected = (profile: ClassProfile | null) => {
+    if (profile) {
+      setLevel(profile.cefr_level)
+      setNationality(profile.student_nationality)
+      setClassContext({
+        className: profile.class_name,
+        cefrLevel: profile.cefr_level,
+        studentAgeGroup: profile.student_age_group,
+        studentNationality: profile.student_nationality,
+        courseType: profile.course_type,
+        weakAreas: profile.weak_areas,
+        focusSkills: profile.focus_skills,
+        additionalNotes: profile.additional_notes ?? undefined,
+      })
+    } else {
+      setClassContext(null)
+    }
+  }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -59,11 +81,8 @@ export default function ErrorCoachPage() {
     reader.onload = async (ev) => {
       const dataUrl = ev.target?.result as string
       setPhotoPreview(dataUrl)
-
-      // Strip the data URL prefix to get raw base64
       const base64 = dataUrl.split(',')[1]
       const mediaType = file.type
-
       setTranscribing(true)
       try {
         const res = await fetch('/api/transcribe-handwriting', {
@@ -82,7 +101,6 @@ export default function ErrorCoachPage() {
       }
     }
     reader.readAsDataURL(file)
-    // Reset input so same file can be re-selected
     e.target.value = ''
   }
 
@@ -99,7 +117,7 @@ export default function ErrorCoachPage() {
       const res = await fetch('/api/correct-writing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, level, nationality }),
+        body: JSON.stringify({ text, level, nationality, classContext }),
       })
       const data = await res.json()
       if (res.status === 402) { setShowUpgrade(true); return }
@@ -131,15 +149,24 @@ export default function ErrorCoachPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-purple-600/15 border border-purple-600/30 rounded-xl flex items-center justify-center">
-          <CheckCircle className="w-5 h-5 text-purple-400" />
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-purple-600/15 border border-purple-600/30 rounded-xl flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Error Correction Coach</h1>
+            <p className="text-sm text-gray-500">Analyse student writing, categorise errors, get focus recommendations</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Error Correction Coach</h1>
-          <p className="text-sm text-gray-500">Analyse student writing, categorise errors, get focus recommendations</p>
-        </div>
+        <ClassSelector onClassSelected={handleClassSelected} />
       </div>
+
+      {classContext && (
+        <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-700 font-medium">
+          Using class profile: <strong>{classContext.className}</strong> — {classContext.cefrLevel}, {classContext.studentNationality}
+        </div>
+      )}
 
       {/* Input section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -254,7 +281,7 @@ Yesterday I go to the market and I buyed a lot of food. The weather was very goo
           <div className="bg-white border border-gray-200 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
               <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400" />
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
                 <span className="font-semibold text-gray-900">{result.summary.total} Error{result.summary.total !== 1 ? 's' : ''} Found</span>
               </div>
               <div className="flex flex-wrap gap-2">

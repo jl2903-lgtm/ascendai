@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { STUDENT_LEVELS, SCHOOL_TYPES, EXPERIENCE_LEVELS, DEMO_LENGTHS } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
-import { generateLessonPDF } from '@/lib/pdf'
+import { ClassSelector } from '@/components/dashboard/ClassSelector'
+import { ClassProfile, ClassContext } from '@/types'
 import { Star, Zap, Download, Copy, ChevronDown, Info, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -14,7 +15,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
     <div>
       <label className="block text-sm font-medium text-gray-500 mb-2">{label}</label>
       {children}
-      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   )
 }
@@ -37,10 +38,29 @@ export default function DemoLessonPage() {
     demoLength: 20,
     experienceLevel: '1-3 years',
   })
+  const [classContext, setClassContext] = useState<ClassContext | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<DemoLesson | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const handleClassSelected = (profile: ClassProfile | null) => {
+    if (profile) {
+      setForm(f => ({ ...f, level: profile.cefr_level }))
+      setClassContext({
+        className: profile.class_name,
+        cefrLevel: profile.cefr_level,
+        studentAgeGroup: profile.student_age_group,
+        studentNationality: profile.student_nationality,
+        courseType: profile.course_type,
+        weakAreas: profile.weak_areas,
+        focusSkills: profile.focus_skills,
+        additionalNotes: profile.additional_notes ?? undefined,
+      })
+    } else {
+      setClassContext(null)
+    }
+  }
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -58,7 +78,7 @@ export default function DemoLessonPage() {
       const res = await fetch('/api/generate-demo-lesson', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, classContext }),
       })
       const data = await res.json()
       if (res.status === 402) { setShowUpgrade(true); return }
@@ -80,20 +100,29 @@ export default function DemoLessonPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-amber-600/15 border border-amber-600/30 rounded-xl flex items-center justify-center">
-          <Star className="w-5 h-5 text-amber-400" />
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-600/15 border border-amber-600/30 rounded-xl flex items-center justify-center">
+            <Star className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Demo Lesson Builder</h1>
+            <p className="text-sm text-gray-500">Interview-ready lesson plans that impress hiring panels</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Demo Lesson Builder</h1>
-          <p className="text-sm text-gray-500">Interview-ready lesson plans that impress hiring panels</p>
-        </div>
+        <ClassSelector onClassSelected={handleClassSelected} />
       </div>
 
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl px-5 py-4 flex items-start gap-3">
-        <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-amber-200 leading-relaxed">
-          Every stage includes a <strong className="text-amber-300">"Why this works"</strong> sidebar — so you can speak confidently about your methodology in the interview. Impress with substance, not just presentation.
+      {classContext && (
+        <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-700 font-medium">
+          Using class profile: <strong>{classContext.className}</strong> — {classContext.cefrLevel}, {classContext.studentNationality}
+        </div>
+      )}
+
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+        <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-amber-800 leading-relaxed font-medium">
+          Every stage includes a <strong>&quot;Why this works&quot;</strong> sidebar — so you can speak confidently about your methodology in the interview. Impress with substance, not just presentation.
         </p>
       </div>
 
@@ -183,11 +212,11 @@ export default function DemoLessonPage() {
           ) : result ? (
             <div className="space-y-4">
               {/* Title */}
-              <div className="bg-gradient-to-br from-amber-600/20 to-white border border-amber-600/40 rounded-2xl p-6">
+              <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-200 rounded-2xl p-6">
                 <h2 className="text-xl font-bold text-gray-900">{result.title}</h2>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {[result.targetSchool, result.overview.level, result.overview.duration].map(t => (
-                    <span key={t} className="text-xs px-2.5 py-1 bg-gray-100/80 border border-gray-200 rounded-lg text-gray-500">{t}</span>
+                    <span key={t} className="text-xs px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-gray-600 font-medium">{t}</span>
                   ))}
                 </div>
                 <div className="mt-3">
@@ -195,7 +224,7 @@ export default function DemoLessonPage() {
                   <ul className="space-y-1">
                     {result.overview.objectives.map((o, i) => (
                       <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                        <span className="text-amber-400 flex-shrink-0">•</span> {o}
+                        <span className="text-amber-500 flex-shrink-0">•</span> {o}
                       </li>
                     ))}
                   </ul>
@@ -220,12 +249,12 @@ export default function DemoLessonPage() {
                         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Activities</div>
                         <p className="text-sm text-gray-700 leading-relaxed">{stage.activities}</p>
                       </div>
-                      <div className="p-5 bg-amber-500/5">
+                      <div className="p-5 bg-amber-50/50">
                         <div className="flex items-center gap-1.5 mb-2">
-                          <Info className="w-3.5 h-3.5 text-amber-400" />
-                          <div className="text-xs font-semibold text-amber-400">Why This Works</div>
+                          <Info className="w-3.5 h-3.5 text-amber-500" />
+                          <div className="text-xs font-semibold text-amber-600">Why This Works</div>
                         </div>
-                        <p className="text-sm text-gray-500 leading-relaxed italic">{stage.whyItWorks}</p>
+                        <p className="text-sm text-gray-600 leading-relaxed italic">{stage.whyItWorks}</p>
                       </div>
                     </div>
                   </div>
@@ -239,7 +268,7 @@ export default function DemoLessonPage() {
                   <ul className="space-y-2">
                     {result.interviewTips.map((tip, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                        <span className="text-amber-400 flex-shrink-0">💡</span>
+                        <span className="text-amber-500 flex-shrink-0">💡</span>
                         {tip}
                       </li>
                     ))}
@@ -253,9 +282,9 @@ export default function DemoLessonPage() {
                   <Copy className="w-4 h-4" />
                   Copy Lesson
                 </button>
-                <button className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-white transition-all">
+                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-amber-400 text-gray-600 hover:text-amber-700 transition-all">
                   <Download className="w-4 h-4" />
-                  Download PDF
+                  Print View
                 </button>
               </div>
             </div>

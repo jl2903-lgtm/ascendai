@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { LessonContent, LessonFormData } from '@/types'
+import { LessonContent, LessonFormData, ClassProfile, ClassContext } from '@/types'
 import { STUDENT_LEVELS, LESSON_LENGTHS, AGE_GROUPS, NATIONALITIES, CLASS_SIZES, SPECIAL_FOCUS_OPTIONS } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
 import { LessonOutput } from '@/components/dashboard/LessonOutput'
+import { ClassSelector } from '@/components/dashboard/ClassSelector'
 import { BookOpen, Zap, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -21,11 +22,35 @@ const defaultForm: LessonFormData = {
 
 export default function LessonGeneratorPage() {
   const [form, setForm] = useState<LessonFormData>(defaultForm)
+  const [classContext, setClassContext] = useState<ClassContext | null>(null)
   const [loading, setLoading] = useState(false)
   const [lesson, setLesson] = useState<LessonContent | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [adjusting, setAdjusting] = useState(false)
+
+  const handleClassSelected = (profile: ClassProfile | null) => {
+    if (profile) {
+      setForm(f => ({
+        ...f,
+        level: profile.cefr_level,
+        ageGroup: profile.student_age_group,
+        nationality: profile.student_nationality,
+      }))
+      setClassContext({
+        className: profile.class_name,
+        cefrLevel: profile.cefr_level,
+        studentAgeGroup: profile.student_age_group,
+        studentNationality: profile.student_nationality,
+        courseType: profile.course_type,
+        weakAreas: profile.weak_areas,
+        focusSkills: profile.focus_skills,
+        additionalNotes: profile.additional_notes ?? undefined,
+      })
+    } else {
+      setClassContext(null)
+    }
+  }
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -43,7 +68,7 @@ export default function LessonGeneratorPage() {
       const res = await fetch('/api/generate-lesson', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, classContext }),
       })
       const data = await res.json()
       if (res.status === 402) { setShowUpgrade(true); return }
@@ -85,15 +110,25 @@ export default function LessonGeneratorPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-teal-600/15 border border-teal-600/30 rounded-xl flex items-center justify-center">
-          <BookOpen className="w-5 h-5 text-teal-400" />
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-teal-600/15 border border-teal-600/30 rounded-xl flex items-center justify-center">
+            <BookOpen className="w-5 h-5 text-teal-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Lesson Generator</h1>
+            <p className="text-sm text-gray-500">Complete, communicative lesson plans in 60 seconds</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Lesson Generator</h1>
-          <p className="text-sm text-gray-500">Complete, communicative lesson plans in 60 seconds</p>
-        </div>
+        <ClassSelector onClassSelected={handleClassSelected} />
       </div>
+
+      {classContext && (
+        <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-700 font-medium">
+          Using class profile: <strong>{classContext.className}</strong> — {classContext.cefrLevel}, {classContext.courseType}
+          {classContext.weakAreas.length > 0 && <> · Weak areas: {classContext.weakAreas.slice(0, 3).join(', ')}</>}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Form panel */}
@@ -126,7 +161,7 @@ export default function LessonGeneratorPage() {
                 placeholder="e.g. Present Perfect, Job interviews, Travel"
                 className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors ${errors.topic ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
               />
-              {errors.topic && <p className="text-red-400 text-xs mt-1">{errors.topic}</p>}
+              {errors.topic && <p className="text-red-500 text-xs mt-1">{errors.topic}</p>}
             </div>
 
             {/* Length */}
@@ -198,7 +233,7 @@ export default function LessonGeneratorPage() {
                   <button
                     key={o.value}
                     onClick={() => toggleFocus(o.value)}
-                    className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${form.specialFocus.includes(o.value) ? 'border-teal-500 bg-teal-500/10 text-teal-400' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                    className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${form.specialFocus.includes(o.value) ? 'border-teal-500 bg-teal-500/10 text-teal-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}
                   >
                     {o.label}
                   </button>
@@ -252,7 +287,7 @@ export default function LessonGeneratorPage() {
               <div className="mt-6 grid grid-cols-2 gap-2 w-full max-w-xs">
                 {['Warmer Activity', 'Language Focus', 'Main Task', 'Exit Ticket'].map(s => (
                   <div key={s} className="bg-gray-50 rounded-xl p-3 text-xs text-gray-400 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-teal-700" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-teal-600" />
                     {s}
                   </div>
                 ))}
