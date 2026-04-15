@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Zap, ChevronRight, BookOpen, Users, BarChart2, Target, Layers, CheckCircle } from 'lucide-react'
+import { ChevronRight, BookOpen, Users, BarChart2, Target, Layers, CheckCircle } from 'lucide-react'
+import { Logo } from '@/components/ui/Logo'
 import { NATIONALITIES, AGE_GROUPS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
@@ -125,22 +126,16 @@ export default function OnboardingPage() {
   const Icon = current.icon
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6 py-12">
-      {/* Blobs */}
-      <div className="blob-peach w-72 h-72 top-0 right-0 opacity-50" style={{ position: 'fixed' }} />
-      <div className="blob-mint w-64 h-64 bottom-0 -left-10 opacity-40" style={{ position: 'fixed' }} />
+    <div className="relative isolate min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6 py-12">
+      {/* Background decorations */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div className="blob-peach w-72 h-72 top-0 right-0 opacity-50" style={{ position: 'fixed', zIndex: -1 }} />
+      <div className="blob-mint w-64 h-64 bottom-0 -left-10 opacity-40" style={{ position: 'fixed', zIndex: -1 }} />
 
       <div className="relative w-full max-w-lg">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-2xl font-extrabold text-gray-900">
-              Tyoutor <span className="text-teal-600">Pro</span>
-            </span>
-          </div>
+        <div className="flex justify-center mb-8">
+          <Logo size="lg" href="/" />
         </div>
 
         <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-soft">
@@ -342,7 +337,7 @@ export default function OnboardingPage() {
               <button
                 onClick={() => canAdvance() && setStep(s => s + 1)}
                 disabled={!canAdvance()}
-                className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold px-6 py-2.5 rounded-xl transition-all text-sm"
+                className="btn-primary flex items-center gap-2 px-6 py-2.5 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Next <ChevronRight className="w-4 h-4" />
               </button>
@@ -350,7 +345,7 @@ export default function OnboardingPage() {
               <button
                 onClick={handleFinish}
                 disabled={saving}
-                className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-xl transition-all text-sm"
+                className="btn-primary flex items-center gap-2 px-6 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>
@@ -362,7 +357,7 @@ export default function OnboardingPage() {
                   </>
                 ) : (
                   <>
-                    <Zap className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4" />
                     Start teaching!
                   </>
                 )}

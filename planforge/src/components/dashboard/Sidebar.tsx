@@ -19,6 +19,8 @@ import { Logo } from '@/components/ui/Logo'
 
 interface SidebarProps {
   userProfile: UserProfile
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 const CLASS_LINKS = [
@@ -49,7 +51,7 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
   textTransform: 'uppercase',
 }
 
-export function Sidebar({ userProfile }: SidebarProps) {
+export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const isFree = userProfile.subscription_status === 'free'
   const lessonsUsed = Math.min(userProfile.lessons_used_this_month, FREE_LESSON_LIMIT)
@@ -75,8 +77,23 @@ export function Sidebar({ userProfile }: SidebarProps) {
   }
 
   return (
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          aria-hidden
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
     <aside
-      className="flex h-full w-64 flex-shrink-0 flex-col border-r border-[#EDEBE8]"
+      className={cn(
+        'flex h-screen w-64 flex-shrink-0 flex-col border-r border-[#EDEBE8] transition-transform duration-300',
+        isOpen
+          ? 'fixed inset-y-0 left-0 z-50 shadow-2xl'
+          : 'hidden lg:flex sticky top-0'
+      )}
       style={{ background: 'linear-gradient(180deg, #FFFFFF, #FAFDF8)' }}
     >
       {/* Logo */}
@@ -155,5 +172,6 @@ export function Sidebar({ userProfile }: SidebarProps) {
         </div>
       )}
     </aside>
+    </>
   )
 }

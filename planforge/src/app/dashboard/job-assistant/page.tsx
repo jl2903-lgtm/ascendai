@@ -162,7 +162,11 @@ export default function JobAssistantPage() {
     score >= 8 ? 'bg-teal-500' : score >= 6 ? 'bg-amber-500' : 'bg-red-500'
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="relative isolate max-w-5xl mx-auto space-y-6">
+      {/* Background decorations */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div aria-hidden style={{ position:'absolute',width:350,height:350,top:-80,right:-80,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.16,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
+      <div aria-hidden style={{ position:'absolute',width:280,height:280,bottom:60,left:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#F9D5D3,#F4A9A8)',opacity:0.14,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-rose-600/15 border border-rose-600/30 rounded-xl flex items-center justify-center">
           <Briefcase className="w-5 h-5 text-rose-400" />
@@ -174,7 +178,7 @@ export default function JobAssistantPage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-1 flex w-fit">
+      <div className="glass-card p-1 flex w-fit">
         {[
           { key: 'cover_letter', label: 'Cover Letter' },
           { key: 'cv_review', label: 'CV Review' },
@@ -193,7 +197,7 @@ export default function JobAssistantPage() {
       {tab === 'cover_letter' && (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5 sticky top-6">
+            <div className="glass-card p-6 space-y-5 sticky top-6">
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Your Details</h2>
 
               <SelectField label="Type of School" value={form.schoolType} onChange={v => setForm(f => ({ ...f, schoolType: v }))} options={SCHOOL_TYPES} />
@@ -222,7 +226,7 @@ export default function JobAssistantPage() {
                 <textarea value={form.motivation} onChange={e => setForm(f => ({ ...f, motivation: e.target.value }))} placeholder="Any personal reasons, goals, or relevant experience..." rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 resize-none" />
               </div>
 
-              <button onClick={generateCoverLetter} disabled={coverLoading} className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all text-sm">
+              <button onClick={generateCoverLetter} disabled={coverLoading} className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 {coverLoading ? <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Writing...</> : <><Zap className="w-4 h-4" />Generate Cover Letter</>}
               </button>
             </div>
@@ -230,10 +234,10 @@ export default function JobAssistantPage() {
 
           <div className="lg:col-span-3">
             {coverLoading ? (
-              <div className="bg-white border border-gray-200 rounded-2xl min-h-[500px] flex items-center justify-center"><ThinkingLoader /></div>
+              <div className="glass-card min-h-[500px] flex items-center justify-center"><ThinkingLoader /></div>
             ) : coverResult ? (
               <div className="space-y-4">
-                <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                <div className="glass-card p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-gray-900">Cover Letter</h3>
                     <button onClick={generateCoverLetter} className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-teal-600 px-3 py-1.5 rounded-lg transition-all">
@@ -243,21 +247,21 @@ export default function JobAssistantPage() {
                   <div className="bg-gray-50 rounded-xl p-5 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-serif">{coverResult.content}</div>
                 </div>
                 {coverResult.tips?.length > 0 && (
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                  <div className="glass-card p-5">
                     <h3 className="font-semibold text-gray-900 mb-3">Application Tips</h3>
                     <ul className="space-y-2">{coverResult.tips.map((tip, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-500"><span className="text-rose-400 flex-shrink-0">→</span>{tip}</li>
                     ))}</ul>
                   </div>
                 )}
-                <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-wrap gap-3">
+                <div className="glass-card p-4 flex flex-wrap gap-3">
                   <button onClick={handleCopyCover} className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-all">
                     <Copy className="w-4 h-4" />Copy to Clipboard
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-white border border-gray-200 rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+              <div className="glass-card min-h-[400px] flex flex-col items-center justify-center text-center p-8">
                 <div className="w-16 h-16 bg-rose-600/10 rounded-2xl flex items-center justify-center mb-4"><Briefcase className="w-8 h-8 text-rose-600/50" /></div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cover letter will appear here</h3>
                 <p className="text-sm text-gray-500 max-w-xs">Written in a genuine, human tone. No corporate boilerplate. Tailored to the school type and country you&apos;re applying to.</p>
@@ -271,7 +275,7 @@ export default function JobAssistantPage() {
       {tab === 'cv_review' && (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5 sticky top-6">
+            <div className="glass-card p-6 space-y-5 sticky top-6">
               <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">CV Details</h2>
 
               {/* CV Upload / Paste */}
@@ -328,7 +332,7 @@ export default function JobAssistantPage() {
 
               <SelectField label="Your Experience Level" value={cvExperience} onChange={setCvExperience} options={EXPERIENCE_LEVELS} />
 
-              <button onClick={reviewCV} disabled={cvLoading} className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all text-sm">
+              <button onClick={reviewCV} disabled={cvLoading} className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
                 {cvLoading ? <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Reviewing...</> : <><Zap className="w-4 h-4" />Optimise My CV</>}
               </button>
             </div>
@@ -336,11 +340,11 @@ export default function JobAssistantPage() {
 
           <div className="lg:col-span-3">
             {cvLoading ? (
-              <div className="bg-white border border-gray-200 rounded-2xl min-h-[500px] flex items-center justify-center"><ThinkingLoader /></div>
+              <div className="glass-card min-h-[500px] flex items-center justify-center"><ThinkingLoader /></div>
             ) : cvResult ? (
               <div className="space-y-4">
                 {/* Score */}
-                <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                <div className="glass-card p-6">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-gray-900">CV Score</h3>
                     <span className={`text-3xl font-bold ${scoreColor(cvResult.overallScore)}`}>{cvResult.overallScore}<span className="text-base font-normal text-gray-400">/10</span></span>
@@ -352,7 +356,7 @@ export default function JobAssistantPage() {
                 </div>
 
                 {/* Strengths */}
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                <div className="glass-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Star className="w-4 h-4 text-teal-500" />
                     <h3 className="font-semibold text-gray-900">Strengths</h3>
@@ -367,7 +371,7 @@ export default function JobAssistantPage() {
                 </div>
 
                 {/* Improvements */}
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                <div className="glass-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
                     <h3 className="font-semibold text-gray-900">Improvements</h3>
@@ -385,7 +389,7 @@ export default function JobAssistantPage() {
 
                 {/* Keywords */}
                 {cvResult.keywordsToAdd?.length > 0 && (
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                  <div className="glass-card p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <Tag className="w-4 h-4 text-purple-500" />
                       <h3 className="font-semibold text-gray-900">Keywords to Add</h3>
@@ -400,7 +404,7 @@ export default function JobAssistantPage() {
 
                 {/* Rewritten summary */}
                 {cvResult.rewrittenSummary && (
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                  <div className="glass-card p-5">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900">Rewritten Professional Summary</h3>
                       <button
@@ -416,7 +420,7 @@ export default function JobAssistantPage() {
 
                 {/* Tailoring tips */}
                 {cvResult.tailoringTips?.length > 0 && (
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                  <div className="glass-card p-5">
                     <h3 className="font-semibold text-gray-900 mb-3">Country / Role Tailoring Tips</h3>
                     <ul className="space-y-2">
                       {cvResult.tailoringTips.map((tip, i) => (
@@ -428,7 +432,7 @@ export default function JobAssistantPage() {
                   </div>
                 )}
 
-                <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-wrap gap-3">
+                <div className="glass-card p-4 flex flex-wrap gap-3">
                   <button onClick={reviewCV} className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-all">
                     <RefreshCw className="w-4 h-4" />Re-analyse
                   </button>
@@ -441,7 +445,7 @@ export default function JobAssistantPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white border border-gray-200 rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+              <div className="glass-card min-h-[400px] flex flex-col items-center justify-center text-center p-8">
                 <div className="w-16 h-16 bg-rose-600/10 rounded-2xl flex items-center justify-center mb-4">
                   <FileText className="w-8 h-8 text-rose-600/50" />
                 </div>

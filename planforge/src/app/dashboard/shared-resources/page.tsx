@@ -88,7 +88,11 @@ export default function SharedResourcesPage() {
     new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="relative isolate max-w-6xl mx-auto space-y-6">
+      {/* Background decorations */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+      <div aria-hidden style={{ position:'absolute',width:350,height:350,top:-80,right:-80,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8FF,#B3D4FF)',opacity:0.14,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
+      <div aria-hidden style={{ position:'absolute',width:280,height:280,bottom:60,left:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8D0,#A7C4A0)',opacity:0.13,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-sky-600/15 border border-sky-600/30 rounded-xl flex items-center justify-center">
