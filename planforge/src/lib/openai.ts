@@ -1,3 +1,4 @@
+// OpenAI singleton client
 import OpenAI from 'openai'
 
 let _client: OpenAI | null = null
