@@ -2,27 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import mammoth from 'mammoth'
 
-const IMAGE_BASED_RESPONSE = {
+const PASTE_FALLBACK = {
   error: 'We had trouble reading your PDF. Please paste your CV content in the text box below.',
   isImageBased: true,
 }
 
-async function extractWithPdfjs(buffer: Buffer): Promise<string> {
+async function extractPdfText(buffer: Buffer): Promise<string> {
   const pdfjsLib = await import('pdfjs-dist')
   pdfjsLib.GlobalWorkerOptions.workerSrc = ''
-  const loadingTask = pdfjsLib.getDocument({
+  const pdf = await pdfjsLib.getDocument({
     data: new Uint8Array(buffer),
     useWorkerFetch: false,
     isEvalSupported: false,
-  })
-  const pdf = await loadingTask.promise
+    disableFontFace: true,
+  }).promise
+
   const pages: string[] = []
-  for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+  for (let i = 1; i <= Math.min(pdf.numPages, 15); i++) {
     const page = await pdf.getPage(i)
     const content = await page.getTextContent()
-    pages.push(content.items.map((item) => 'str' in item ? item.str : '').join(' '))
+    const pageText = content.items
+      .map((item) => ('str' in item ? item.str : ''))
+      .join(' ')
+    pages.push(pageText)
   }
-  return pages.join('\n').trim()
+
+  return pages.join('\n').replace(/\s{3,}/g, '\n\n').trim()
 }
 
 export async function POST(req: NextRequest) {
@@ -51,41 +56,28 @@ export async function POST(req: NextRequest) {
     let text = ''
 
     if (isPdf) {
-      // Primary: pdf-parse
       try {
-        const pdfParse = require('pdf-parse/lib/pdf-parse')
-        const result = await pdfParse(buffer)
-        text = (result.text ?? '').replace(/\s{3,}/g, '\n\n').trim()
-      } catch {
-        // fall through to pdfjs
+        text = await extractPdfText(buffer)
+      } catch (err) {
+        console.error('[parse-cv-file] pdfjs extraction error:', err)
       }
-
-      // Secondary: pdfjs-dist text extraction (handles more PDF variants)
       if (text.length < 100) {
-        try {
-          text = (await extractWithPdfjs(buffer)).replace(/\s{3,}/g, '\n\n').trim()
-        } catch {
-          // fall through to image-based response
-        }
-      }
-
-      if (text.length < 100) {
-        console.error('[parse-cv-file] PDF appears image-based — no text layer found')
-        return NextResponse.json(IMAGE_BASED_RESPONSE, { status: 422 })
+        console.error('[parse-cv-file] PDF text too short — likely image-based')
+        return NextResponse.json(PASTE_FALLBACK, { status: 422 })
       }
     } else if (isDocx) {
       const result = await mammoth.extractRawText({ buffer })
       text = (result.value ?? '').replace(/\s{3,}/g, '\n\n').trim()
       if (text.length < 50) {
-        return NextResponse.json(IMAGE_BASED_RESPONSE, { status: 422 })
+        return NextResponse.json(PASTE_FALLBACK, { status: 422 })
       }
     } else {
       text = buffer.toString('utf-8').replace(/\s{3,}/g, '\n\n').trim()
     }
 
     return NextResponse.json({ text })
-  } catch {
-    console.error('[parse-cv-file] Unexpected error during parsing')
-    return NextResponse.json(IMAGE_BASED_RESPONSE, { status: 422 })
+  } catch (err) {
+    console.error('[parse-cv-file] Unexpected error:', err)
+    return NextResponse.json(PASTE_FALLBACK, { status: 422 })
   }
 }
