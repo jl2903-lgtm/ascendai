@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { getOpenAIClient } from '@/lib/openai'
 
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,14 +29,18 @@ export async function POST(req: NextRequest) {
   if (!cvText?.trim()) return NextResponse.json({ error: 'CV text is required' }, { status: 400 })
   if (!jobTitle?.trim()) return NextResponse.json({ error: 'Job title is required' }, { status: 400 })
 
-  const prompt = `You are an expert CV reviewer and career coach specialising in English language teaching (ELT) jobs.
+  const words = cvText.trim().split(/\s+/)
+  const truncated = words.length > 3000
+  const processedCv = truncated ? words.slice(0, 3000).join(' ') : cvText
+
+  const prompt = `You are an expert CV reviewer and career coach specialising in English language teaching (ELT) jobs.${truncated ? ' Note: the CV below has been truncated to 3,000 words for processing — your review should reflect only the content provided.' : ''}
 
 Analyse the following CV for a ${jobTitle} position${targetCountry ? ` in ${targetCountry}` : ''}.
 ${jobDescription ? `\nJob Description:\n${jobDescription}\n` : ''}
 Experience Level: ${experienceLevel || 'Not specified'}
 
 CV Text:
-${cvText}
+${processedCv}
 
 Provide a detailed CV review and optimisation in the following JSON format:
 {
@@ -59,7 +63,7 @@ Be specific and actionable. Focus on ELT-specific requirements like teaching cer
 
   try {
     const message = await getOpenAIClient().chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     })
