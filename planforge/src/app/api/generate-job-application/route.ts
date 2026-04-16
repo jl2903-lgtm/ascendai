@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 
 
@@ -40,13 +40,14 @@ export async function POST(req: NextRequest) {
       ? `\n- Teaching context: ${classContext.className} — ${classContext.cefrLevel} ${classContext.studentNationality} students, ${classContext.courseType}`
       : ''
 
-    const response = await getAnthropicClient().messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 2048,
-      system: 'You are an expert career coach specialising in TEFL/ESL job applications. Write genuine, human, compelling application materials. No corporate jargon. Return JSON only.',
-      messages: [{
-        role: 'user',
-        content: `Write a professional, genuine ${docType} for an ESL teaching position:
+      messages: [
+        { role: 'system', content: 'You are an expert career coach specialising in TEFL/ESL job applications. Write genuine, human, compelling application materials. No corporate jargon. Return JSON only.' },
+        {
+          role: 'user',
+          content: `Write a professional, genuine ${docType} for an ESL teaching position:
 - School type: ${schoolType}
 - Country: ${country}
 - Experience: ${experienceLevel}
@@ -59,10 +60,11 @@ Warm, genuine tone. Show real passion for teaching. No clichés. Return JSON onl
   "content": "the complete ${docType} text, ready to use, formatted with paragraph breaks",
   "tips": ["specific application tip 1", "tip 2", "tip 3"]
 }`,
-      }],
+        },
+      ],
     })
 
-    const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rawText = response.choices[0].message.content ?? ''
     let result
     try {
       result = JSON.parse(rawText)

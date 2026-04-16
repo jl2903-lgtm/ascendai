@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 
 
@@ -37,13 +37,14 @@ export async function POST(req: NextRequest) {
       ? `\n\nClass profile context — "${classContext.className}": ${classContext.courseType}, ${classContext.studentNationality} students${classContext.weakAreas?.length ? `, weak areas: ${classContext.weakAreas.join(', ')}` : ''}. Design the demo lesson with these students in mind.`
       : ''
 
-    const response = await getAnthropicClient().messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 4096,
-      system: 'You are an expert TEFL trainer who helps teachers ace job interviews. Create polished, methodologically strong demo lesson plans with clear pedagogical explanations. Return valid JSON only.',
-      messages: [{
-        role: 'user',
-        content: `Create an interview-ready ${demoLength}-minute demo lesson for a ${schoolType} in ${country}:${classNote}
+      messages: [
+        { role: 'system', content: 'You are an expert TEFL trainer who helps teachers ace job interviews. Create polished, methodologically strong demo lesson plans with clear pedagogical explanations. Return valid JSON only.' },
+        {
+          role: 'user',
+          content: `Create an interview-ready ${demoLength}-minute demo lesson for a ${schoolType} in ${country}:${classNote}
 - Topic: ${topic}
 - Level: ${level}
 - Teacher experience: ${experienceLevel}
@@ -69,10 +70,11 @@ Return JSON only:
   "methodologyNotes": "overall notes on methodology for interview discussion",
   "interviewTips": ["interview tip 1", "tip 2", "tip 3"]
 }`,
-      }],
+        },
+      ],
     })
 
-    const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rawText = response.choices[0].message.content ?? ''
     let result
     try {
       result = JSON.parse(rawText)

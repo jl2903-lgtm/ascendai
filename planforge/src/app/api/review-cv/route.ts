@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
@@ -58,14 +58,13 @@ Provide a detailed CV review and optimisation in the following JSON format:
 Be specific and actionable. Focus on ELT-specific requirements like teaching certifications, methodology knowledge, classroom experience, and cultural adaptability.`
 
   try {
-    const anthropic = getAnthropicClient()
-    const message = await anthropic.messages.create({
-      model: 'claude-opus-4-6',
+    const message = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const raw = message.choices[0].message.content ?? ''
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (!jsonMatch) throw new Error('Invalid response format')
     const result = JSON.parse(jsonMatch[0])
