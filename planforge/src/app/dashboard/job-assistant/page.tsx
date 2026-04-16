@@ -101,27 +101,49 @@ export default function JobAssistantPage() {
     if (!file) return
     setCvFileName(file.name)
     setExtracting(true)
-
-    // Read file as text (works for plain text; for PDF/DOCX we extract what we can)
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string
-      // Basic cleanup of non-printable characters
-      const cleaned = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ').replace(/\s{3,}/g, '\n\n').trim()
-      setCvText(cleaned || '')
-      setExtracting(false)
-      if (cleaned.length < 50) {
-        toast.error('Could not extract text from this file. Please paste your CV text manually.')
-      } else {
-        toast.success('CV text extracted. Review and edit if needed.')
-      }
-    }
-    reader.onerror = () => {
-      setExtracting(false)
-      toast.error('Could not read file. Please paste your CV text manually.')
-    }
-    reader.readAsText(file)
     e.target.value = ''
+
+    const name = file.name.toLowerCase()
+    const isPdfOrDocx = name.endsWith('.pdf') || name.endsWith('.docx')
+
+    if (isPdfOrDocx) {
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        const res = await fetch('/api/parse-cv-file', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (!res.ok) {
+          toast.error(data.error || 'Could not read PDF, please try copying and pasting your CV text instead')
+          setCvText('')
+        } else {
+          setCvText(data.text)
+          toast.success('CV text extracted. Review and edit if needed.')
+        }
+      } catch {
+        toast.error('Could not read PDF, please try copying and pasting your CV text instead')
+        setCvText('')
+      } finally {
+        setExtracting(false)
+      }
+    } else {
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        const text = ev.target?.result as string
+        const cleaned = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ').replace(/\s{3,}/g, '\n\n').trim()
+        setCvText(cleaned || '')
+        setExtracting(false)
+        if (cleaned.length < 50) {
+          toast.error('Could not extract text from this file. Please paste your CV text manually.')
+        } else {
+          toast.success('CV text extracted. Review and edit if needed.')
+        }
+      }
+      reader.onerror = () => {
+        setExtracting(false)
+        toast.error('Could not read file. Please paste your CV text manually.')
+      }
+      reader.readAsText(file)
+    }
   }
 
   const clearCV = () => {
