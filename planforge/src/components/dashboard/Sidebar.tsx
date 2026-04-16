@@ -9,6 +9,7 @@ import {
   FileText,
   AlertCircle,
   Presentation,
+  Briefcase,
   Library,
   Settings,
   Globe,
@@ -32,6 +33,10 @@ const CREATE_LINKS = [
   { label: 'Worksheet Builder', href: '/dashboard/worksheet-builder', icon: FileText },
   { label: 'Error Coach',       href: '/dashboard/error-coach',       icon: AlertCircle },
   { label: 'Demo Lesson',       href: '/dashboard/demo-lesson',       icon: Presentation },
+]
+
+const TOOLS_LINKS = [
+  { label: 'Job Assistant', href: '/dashboard/job-assistant', icon: Briefcase },
 ]
 
 const LIBRARY_LINKS = [
@@ -127,6 +132,13 @@ export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) 
           <p className="px-3 mb-1.5" style={SECTION_LABEL_STYLE}>Create</p>
           <div className="space-y-0.5">
             {CREATE_LINKS.map(({ label, href, icon: Icon }) => navItem(href, Icon, label))}
+          </div>
+        </div>
+
+        <div>
+          <p className="px-3 mb-1.5" style={SECTION_LABEL_STYLE}>Tools</p>
+          <div className="space-y-0.5">
+            {TOOLS_LINKS.map(({ label, href, icon: Icon }) => navItem(href, Icon, label))}
           </div>
         </div>
 
