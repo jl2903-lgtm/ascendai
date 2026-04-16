@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 
 
@@ -38,13 +38,14 @@ export async function POST(req: NextRequest) {
       ? `\n\nClass profile — "${classContext.className}": ${classContext.courseType}${classContext.weakAreas?.length ? `, known weak areas: ${classContext.weakAreas.join(', ')}` : ''}. Factor these into your focus recommendation.`
       : ''
 
-    const response = await getAnthropicClient().messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 4096,
-      system: 'You are an expert EFL writing coach. Analyse student writing, identify errors, and provide clear constructive feedback. Return valid JSON only.',
-      messages: [{
-        role: 'user',
-        content: `Analyse this ${level} student writing from a ${nationality} learner:${classNote}
+      messages: [
+        { role: 'system', content: 'You are an expert EFL writing coach. Analyse student writing, identify errors, and provide clear constructive feedback. Return valid JSON only.' },
+        {
+          role: 'user',
+          content: `Analyse this ${level} student writing from a ${nationality} learner:${classNote}
 
 """
 ${text}
@@ -69,10 +70,11 @@ Return JSON only:
   "focusRecommendation": "2-3 sentence personalised recommendation referencing L1 if relevant"
 }
 Type must be one of: grammar, vocabulary, punctuation, wordOrder, articleUsage`,
-      }],
+        },
+      ],
     })
 
-    const rawText2 = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rawText2 = response.choices[0].message.content ?? ''
     let result
     try {
       result = JSON.parse(rawText2)

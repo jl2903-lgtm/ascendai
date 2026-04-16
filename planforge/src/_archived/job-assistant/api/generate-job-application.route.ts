@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 
 
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       ? `\n- Teaching context: ${classContext.className} — ${classContext.cefrLevel} ${classContext.studentNationality} students, ${classContext.courseType}`
       : ''
 
-    const response = await getAnthropicClient().messages.create({
+    const response = await getOpenAIClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
       system: 'You are an expert career coach specialising in TEFL/ESL job applications. Write genuine, human, compelling application materials. No corporate jargon. Return JSON only.',

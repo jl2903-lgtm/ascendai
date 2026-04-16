@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 import type { LessonFormData, LessonContent, ClassContext } from '@/types'
 
@@ -128,14 +128,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const response = await getAnthropicClient().messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const response = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: buildPrompt(body, body.classContext) }],
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: buildPrompt(body, body.classContext) },
+      ],
     })
 
-    const rawText = response.content[0].type === 'text' ? response.content[0].text : ''
+    const rawText = response.choices[0].message.content ?? ''
     let lessonContent: LessonContent
     try {
       lessonContent = JSON.parse(rawText)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
@@ -58,7 +58,7 @@ Provide a detailed CV review and optimisation in the following JSON format:
 Be specific and actionable. Focus on ELT-specific requirements like teaching certifications, methodology knowledge, classroom experience, and cultural adaptability.`
 
   try {
-    const anthropic = getAnthropicClient()
+    const anthropic = getOpenAIClient()
     const message = await anthropic.messages.create({
       model: 'claude-opus-4-6',
       max_tokens: 2000,

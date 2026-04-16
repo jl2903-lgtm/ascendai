@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { getAnthropicClient } from '@/lib/anthropic'
+import { getOpenAIClient } from '@/lib/openai'
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
@@ -20,32 +20,29 @@ export async function POST(req: NextRequest) {
   const type = validMediaTypes.includes(mediaType) ? mediaType : 'image/jpeg'
 
   try {
-    const anthropic = getAnthropicClient()
-    const message = await anthropic.messages.create({
-      model: 'claude-opus-4-6',
+    const message = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o',
       max_tokens: 1024,
       messages: [
         {
           role: 'user',
           content: [
             {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
-                data: imageBase64,
+              type: 'image_url',
+              image_url: {
+                url: `data:${type};base64,${imageBase64}`,
               },
             },
             {
               type: 'text',
-              text: `Please transcribe all handwritten text from this image exactly as written, preserving every error, spelling mistake, and grammatical issue. Do not correct anything. Return only the transcribed text with no commentary, labels, or additional formatting. If you cannot read a word clearly, use [unclear] as a placeholder.`,
+              text: 'Please transcribe all handwritten text from this image exactly as written, preserving every error, spelling mistake, and grammatical issue. Do not correct anything. Return only the transcribed text with no commentary, labels, or additional formatting. If you cannot read a word clearly, use [unclear] as a placeholder.',
             },
           ],
         },
       ],
     })
 
-    const transcription = message.content[0].type === 'text' ? message.content[0].text : ''
+    const transcription = message.choices[0].message.content ?? ''
     return NextResponse.json({ transcription })
   } catch (err) {
     console.error('Transcription error:', err)
