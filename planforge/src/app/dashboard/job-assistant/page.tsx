@@ -102,51 +102,57 @@ export default function JobAssistantPage() {
     if (!file) return
     setCvFileName(file.name)
     setExtracting(true)
+    setShowPasteHint(false)
     e.target.value = ''
 
     const name = file.name.toLowerCase()
-    const isPdfOrDocx = name.endsWith('.pdf') || name.endsWith('.docx')
 
-    if (isPdfOrDocx) {
-      try {
-        const fd = new FormData()
-        fd.append('file', file)
-        const res = await fetch('/api/parse-cv-file', { method: 'POST', body: fd })
-        const data = await res.json()
-        if (!res.ok) {
-          setCvText('')
-          setCvFileName('')
-          setShowPasteHint(true)
-        } else {
-          setCvText(data.text)
-          setShowPasteHint(false)
-          toast.success('CV text extracted. Review and edit if needed.')
+    try {
+      let text = ''
+
+      if (name.endsWith('.pdf')) {
+        const pdfjs = await import('pdfjs-dist')
+        pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+        const arrayBuffer = await file.arrayBuffer()
+        const pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
+        const pages: string[] = []
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          pages.push(content.items.map((item) => ('str' in item ? item.str : '')).join(' '))
         }
-      } catch {
+        text = pages.join('\n').replace(/\s{3,}/g, '\n\n').trim()
+      } else if (name.endsWith('.docx')) {
+        const mammoth = await import('mammoth')
+        const arrayBuffer = await file.arrayBuffer()
+        const result = await mammoth.extractRawText({ arrayBuffer })
+        text = result.value.replace(/\s{3,}/g, '\n\n').trim()
+      } else {
+        text = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (ev) => resolve((ev.target?.result as string) || '')
+          reader.onerror = reject
+          reader.readAsText(file)
+        })
+        text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ').replace(/\s{3,}/g, '\n\n').trim()
+      }
+
+      if (text.length < 100) {
         setCvText('')
         setCvFileName('')
         setShowPasteHint(true)
-      } finally {
-        setExtracting(false)
+      } else {
+        setCvText(text)
+        setShowPasteHint(false)
+        toast.success('CV text extracted. Review and edit if needed.')
       }
-    } else {
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        const text = ev.target?.result as string
-        const cleaned = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ').replace(/\s{3,}/g, '\n\n').trim()
-        setCvText(cleaned || '')
-        setExtracting(false)
-        if (cleaned.length < 50) {
-          toast.error('Could not extract text from this file. Please paste your CV text manually.')
-        } else {
-          toast.success('CV text extracted. Review and edit if needed.')
-        }
-      }
-      reader.onerror = () => {
-        setExtracting(false)
-        toast.error('Could not read file. Please paste your CV text manually.')
-      }
-      reader.readAsText(file)
+    } catch (err) {
+      console.error('[handleCVFile]', err)
+      setCvText('')
+      setCvFileName('')
+      setShowPasteHint(true)
+    } finally {
+      setExtracting(false)
     }
   }
 
@@ -321,7 +327,7 @@ export default function JobAssistantPage() {
                     className="w-full flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/30 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:text-teal-600 transition-all disabled:opacity-50"
                   >
                     <Upload className="w-4 h-4 flex-shrink-0" />
-                    {extracting ? 'Extracting text...' : 'Upload CV (.txt, .pdf, .docx)'}
+                    {extracting ? 'Reading your CV...' : 'Upload CV (.txt, .pdf, .docx)'}
                   </button>
                 )}
                 <input ref={fileInputRef} type="file" accept=".txt,.pdf,.docx,text/plain" onChange={handleCVFile} className="hidden" />
