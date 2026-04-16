@@ -64,6 +64,7 @@ export default function JobAssistantPage() {
   const [extracting, setExtracting] = useState(false)
 
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [showPasteHint, setShowPasteHint] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // --- Cover Letter ---
@@ -113,15 +114,18 @@ export default function JobAssistantPage() {
         const res = await fetch('/api/parse-cv-file', { method: 'POST', body: fd })
         const data = await res.json()
         if (!res.ok) {
-          toast.error(data.error || 'Could not read PDF, please try copying and pasting your CV text instead')
           setCvText('')
+          setCvFileName('')
+          setShowPasteHint(true)
         } else {
           setCvText(data.text)
+          setShowPasteHint(false)
           toast.success('CV text extracted. Review and edit if needed.')
         }
       } catch {
-        toast.error('Could not read PDF, please try copying and pasting your CV text instead')
         setCvText('')
+        setCvFileName('')
+        setShowPasteHint(true)
       } finally {
         setExtracting(false)
       }
@@ -150,6 +154,7 @@ export default function JobAssistantPage() {
     setCvText('')
     setCvFileName('')
     setCvResult(null)
+    setShowPasteHint(false)
   }
 
   const reviewCV = async () => {
@@ -320,10 +325,16 @@ export default function JobAssistantPage() {
                   </button>
                 )}
                 <input ref={fileInputRef} type="file" accept=".txt,.pdf,.docx,text/plain" onChange={handleCVFile} className="hidden" />
+                {showPasteHint && (
+                  <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+                    <span className="flex-shrink-0 mt-0.5">⚠️</span>
+                    <span>We had trouble reading your PDF automatically. Please paste your CV content in the text box below.</span>
+                  </div>
+                )}
                 <textarea
                   value={cvText}
-                  onChange={e => { setCvText(e.target.value); setCvErrors(p => ({ ...p, cvText: '' })) }}
-                  placeholder="Or paste your CV text here..."
+                  onChange={e => { setCvText(e.target.value); setCvErrors(p => ({ ...p, cvText: '' })); if (showPasteHint && e.target.value) setShowPasteHint(false) }}
+                  placeholder={showPasteHint ? 'Paste your CV text here...' : 'Or paste your CV text here...'}
                   rows={6}
                   className={`mt-2 w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 resize-none ${cvErrors.cvText ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
                 />
