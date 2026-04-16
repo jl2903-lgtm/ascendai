@@ -93,6 +93,18 @@ export async function POST(req: NextRequest) {
       await supabase.from('users').update({ worksheets_used_this_month: profile.worksheets_used_this_month + 1 }).eq('id', userId)
     }
 
+    // Track stats for all users (upsert into user_stats)
+    const { data: existingStats } = await supabase.from('user_stats').select('total_worksheets_created, worksheets_this_week, last_weekly_reset').eq('user_id', userId).single()
+    const now = new Date()
+    const lastReset = existingStats?.last_weekly_reset ? new Date(existingStats.last_weekly_reset) : null
+    const weekExpired = !lastReset || (now.getTime() - lastReset.getTime()) > 7 * 24 * 60 * 60 * 1000
+    await supabase.from('user_stats').upsert({
+      user_id: userId,
+      total_worksheets_created: (existingStats?.total_worksheets_created ?? 0) + 1,
+      worksheets_this_week: weekExpired ? 1 : (existingStats?.worksheets_this_week ?? 0) + 1,
+      ...(weekExpired ? { last_weekly_reset: now.toISOString(), lessons_this_week: 0 } : {}),
+    }, { onConflict: 'user_id' })
+
     return NextResponse.json(worksheetContent)
   } catch (error) {
     console.error('[generate-worksheet]', error)

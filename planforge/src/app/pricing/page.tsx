@@ -14,7 +14,6 @@ const FREE_FEATURES = [
   { text: 'Basic lesson generator', included: true },
   { text: 'Error Coach (3 uses/month)', included: true },
   { text: 'Demo Lesson (1 use/month)', included: true },
-  { text: 'Job Assistant (1 use/month)', included: true },
   { text: 'PDF export', included: false },
   { text: 'Save & organise library', included: false },
   { text: 'L1-aware grammar explainer', included: false },
@@ -135,7 +134,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { title: 'Lesson Generator', items: ['Unlimited lessons', 'All levels A1–C2', 'L1-aware notes', 'Cultural sensitivity flags', 'PDF export'] },
-              { title: 'Teaching Tools', items: ['Worksheet Builder (unlimited)', 'Error Correction Coach', 'Demo Lesson Builder', 'Job Application Assistant', 'Save to library'] },
+              { title: 'Teaching Tools', items: ['Worksheet Builder (unlimited)', 'Error Correction Coach', 'Demo Lesson Builder', 'Save to library'] },
               { title: 'Pro Features', items: ['Priority AI generation', 'PDF export on all outputs', 'Saved library with search', 'Default preferences', 'Stripe billing portal'] },
             ].map(group => (
               <div key={group.title} className="bg-white border border-gray-200 rounded-2xl p-6">

@@ -1,36 +1,37 @@
 import type { Metadata } from 'next'
+import { Nunito } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import './globals.css'
 
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-nunito',
+})
+
 export const metadata: Metadata = {
-  title: 'Tyoutor Pro — AI-Powered ESL Lesson Planner',
-  description: 'Set up your class once. Get perfectly tailored ESL lessons every time. AI-powered lesson plans, worksheets, and teaching materials built for TEFL teachers worldwide.',
+  title: 'Tyoutor Pro — AI-Powered ESL Lesson Planning',
+  description: 'Tyoutor Pro — AI-powered lesson planning built exclusively for ESL & TEFL teachers. Generate tailored lesson plans, worksheets, and teaching materials in seconds.',
   keywords: 'ESL lesson planner, EFL teaching materials, TEFL resources, AI lesson generator, English teacher tools, class profiles, Tyoutor Pro',
   openGraph: {
-    title: 'Tyoutor Pro — AI-Powered ESL Lesson Planner',
-    description: 'Set up your class once. Get perfectly tailored ESL lessons every time.',
+    title: 'Tyoutor Pro — AI-Powered ESL Lesson Planning',
+    description: 'Tyoutor Pro — AI-powered lesson planning built exclusively for ESL & TEFL teachers. Generate tailored lesson plans, worksheets, and teaching materials in seconds.',
     type: 'website',
     url: process.env.NEXT_PUBLIC_APP_URL,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tyoutor Pro — AI-Powered ESL Lesson Planner',
-    description: 'Set up your class once. Get perfectly tailored ESL lessons every time.',
+    title: 'Tyoutor Pro — AI-Powered ESL Lesson Planning',
+    description: 'Tyoutor Pro — AI-powered lesson planning built exclusively for ESL & TEFL teachers. Generate tailored lesson plans, worksheets, and teaching materials in seconds.',
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="antialiased">
+    <html lang="en" className={nunito.variable}>
+      <body className={`antialiased ${nunito.className}`}>
         {children}
         <Toaster
           position="top-right"

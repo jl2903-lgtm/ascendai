@@ -9,7 +9,6 @@ import {
   FileText,
   AlertCircle,
   Presentation,
-  Briefcase,
   Library,
   Settings,
   Globe,
@@ -33,7 +32,6 @@ const CREATE_LINKS = [
   { label: 'Worksheet Builder', href: '/dashboard/worksheet-builder', icon: FileText },
   { label: 'Error Coach',       href: '/dashboard/error-coach',       icon: AlertCircle },
   { label: 'Demo Lesson',       href: '/dashboard/demo-lesson',       icon: Presentation },
-  { label: 'Job Assistant',     href: '/dashboard/job-assistant',     icon: Briefcase },
 ]
 
 const LIBRARY_LINKS = [

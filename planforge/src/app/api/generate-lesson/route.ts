@@ -149,6 +149,18 @@ export async function POST(req: NextRequest) {
       await supabase.from('users').update({ lessons_used_this_month: profile.lessons_used_this_month + 1 }).eq('id', userId)
     }
 
+    // Track stats for all users (upsert into user_stats)
+    const { data: existingStats } = await supabase.from('user_stats').select('total_lessons_created, lessons_this_week, last_weekly_reset').eq('user_id', userId).single()
+    const now = new Date()
+    const lastReset = existingStats?.last_weekly_reset ? new Date(existingStats.last_weekly_reset) : null
+    const weekExpired = !lastReset || (now.getTime() - lastReset.getTime()) > 7 * 24 * 60 * 60 * 1000
+    await supabase.from('user_stats').upsert({
+      user_id: userId,
+      total_lessons_created: (existingStats?.total_lessons_created ?? 0) + 1,
+      lessons_this_week: weekExpired ? 1 : (existingStats?.lessons_this_week ?? 0) + 1,
+      ...(weekExpired ? { last_weekly_reset: now.toISOString(), worksheets_this_week: 0 } : {}),
+    }, { onConflict: 'user_id' })
+
     return NextResponse.json(lessonContent)
   } catch (error) {
     console.error('[generate-lesson]', error)

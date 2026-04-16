@@ -239,8 +239,8 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
                 <InfoCard title="Common Errors to Watch">
                   <ul className="space-y-1">
                     {lesson.languageFocus.commonErrors.map((e, i) => (
-                      <li key={i} className="text-sm text-amber-300 flex items-start gap-2">
-                        <span className="text-amber-500 flex-shrink-0">⚠</span>
+                      <li key={i} className="text-sm flex items-start gap-2 bg-red-50 border-l-2 border-red-400 px-2 py-1 rounded-r" style={{ color: '#B91C1C' }}>
+                        <span className="flex-shrink-0" style={{ color: '#EF4444' }}>⚠</span>
                         {e}
                       </li>
                     ))}
@@ -279,8 +279,8 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
           {lesson.culturalNote.hasCulturalConsideration && (
             <div id="section-culturalNote" className="scroll-mt-4">
               <SectionHeader icon={AlertCircle} title="Cultural Sensitivity Note" />
-              <div className="mt-3 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-                <p className="text-sm text-amber-200 leading-relaxed">{lesson.culturalNote.note}</p>
+              <div className="mt-3 rounded-xl p-4 border-l-4" style={{ background: '#FFF8E1', borderColor: '#F59E0B', borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderTopColor: '#FDE68A', borderRightColor: '#FDE68A', borderBottomColor: '#FDE68A' }}>
+                <p className="text-sm leading-relaxed" style={{ color: '#2D2D2D' }}>{lesson.culturalNote.note}</p>
               </div>
             </div>
           )}

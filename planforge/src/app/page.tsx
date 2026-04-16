@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BookOpen, FileText, MessageSquare, Briefcase, GraduationCap, Zap, CheckCircle, Clock, Download, Star, Users } from 'lucide-react'
+import { BookOpen, FileText, MessageSquare, GraduationCap, Zap, CheckCircle, Clock, Download, Star, Users, Presentation } from 'lucide-react'
 import { Navbar } from '@/components/landing/Navbar'
 import { Logo } from '@/components/ui/Logo'
 
@@ -11,34 +11,54 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative isolate pt-24 pb-24 px-6 overflow-hidden">
         {/* Decorative blobs */}
-        <div className="blob-peach w-[600px] h-[400px] -top-20 -right-40" />
-        <div className="blob-lavender w-[500px] h-[400px] top-40 -left-32" />
+        <div aria-hidden style={{ position:'absolute',width:600,height:400,top:-80,right:-120,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.18,pointerEvents:'none',animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
+        <div aria-hidden style={{ position:'absolute',width:500,height:400,top:120,left:-100,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#E8DFF5,#D0BFFF)',opacity:0.15,pointerEvents:'none',animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
+        {/* Floating icons */}
+        <div aria-hidden style={{ position:'absolute',right:'8%',top:'15%',fontSize:36,opacity:0.08,pointerEvents:'none',animation:'iconFloat 6s ease-in-out 0s infinite alternate' }}>📚</div>
+        <div aria-hidden style={{ position:'absolute',right:'15%',top:'55%',fontSize:28,opacity:0.07,pointerEvents:'none',animation:'iconFloat 6s ease-in-out 2s infinite alternate' }}>✏️</div>
+        <div aria-hidden style={{ position:'absolute',right:'4%',top:'70%',fontSize:32,opacity:0.08,pointerEvents:'none',animation:'iconFloat 6s ease-in-out 4s infinite alternate' }}>🌍</div>
 
         <div className="relative max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-full px-4 py-1.5 text-teal-700 text-sm font-bold mb-8">
-            <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-            Built for TEFL teachers worldwide
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold mb-8" style={{ background:'rgba(45,106,79,0.08)', border:'1px solid rgba(45,106,79,0.15)', color:'#2D6A4F' }}>
+            <span className="w-2 h-2 rounded-full bg-teal-500" style={{ animation:'pulse-dot 2s ease-in-out infinite' }} />
+            Built exclusively for ESL &amp; TEFL teachers
           </div>
-          <h1 className="text-[2rem] sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight text-gray-900">
-            Set up your class once.{' '}
-            <span className="text-gradient">
-              Get perfect lessons
-            </span>
-            {' '}every time.
+
+          {/* Headline */}
+          <h1 className="font-extrabold tracking-tight mb-6 leading-tight" style={{ fontSize:'clamp(2rem,6vw,4.5rem)', letterSpacing:'-1.5px' }}>
+            <span style={{ color:'#2D2D2D' }}>Your students are unique.</span>
+            <br />
+            <span className="gradient-text">Their lessons should be too.</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-            Tyoutor Pro remembers your students — their level, nationality, weak areas, and goals. Every lesson, worksheet, and material is automatically tailored to them.
+
+          <p className="max-w-xl mx-auto mb-10 leading-relaxed font-medium" style={{ fontSize:18, color:'#7A7A7A', lineHeight:1.6 }}>
+            Set up your class once. Tyoutor Pro remembers their level, nationality, weak areas, and goals — then tailors every lesson automatically.
           </p>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/signup" className="btn-primary w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-lg">
-              Start Free — No Credit Card
+            <Link href="/auth/signup" className="btn-primary w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base" style={{ fontSize:15, fontWeight:800 }}>
+              Start Free Today →
             </Link>
-            <a href="#how-it-works" className="w-full sm:w-auto inline-flex items-center justify-center border border-gray-300 hover:border-teal-500 hover:bg-teal-50 text-gray-700 hover:text-teal-700 font-bold px-8 py-4 rounded-full text-lg transition-all">
+            <a href="#how-it-works" className="w-full sm:w-auto inline-flex items-center justify-center font-bold px-8 py-4 rounded-full text-base transition-all" style={{ background:'rgba(255,255,255,0.75)', backdropFilter:'blur(12px)', border:'1px solid #E8E4DE', color:'#2D2D2D', fontSize:15 }}>
               See How It Works
             </a>
           </div>
-          <p className="text-sm text-gray-500 mt-6 font-medium">5 free lessons per month · No credit card required</p>
+
+          {/* Stats strip */}
+          <div className="flex items-center justify-center gap-10 mt-12 flex-wrap">
+            {[
+              { value: '2,400+', label: 'Teachers' },
+              { value: '50+', label: 'Countries' },
+              { value: '18hrs', label: 'Avg. saved/month' },
+            ].map(s => (
+              <div key={s.label} className="text-center">
+                <div style={{ fontSize: 22, fontWeight: 900, color: '#2D2D2D' }}>{s.value}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#999', marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Hero visual */}
@@ -83,7 +103,7 @@ export default function LandingPage() {
             {[
               { icon: Clock, title: 'Spending your Sunday nights building lessons from scratch', desc: 'Hours on lesson planning that could be spent resting, preparing, or actually living your life.' },
               { icon: FileText, title: "Downloading random worksheets that don't match your students", desc: 'Generic materials that frustrate your students and make your lessons feel disconnected.' },
-              { icon: Briefcase, title: 'Scrambling to prep a demo lesson for a job interview', desc: 'Trying to create an impressive, methodologically sound lesson in 24 hours with no support.' },
+              { icon: Presentation, title: 'Scrambling to prep a demo lesson for a job interview', desc: 'Trying to create an impressive, methodologically sound lesson in 24 hours with no support.' },
             ].map((item, i) => (
               <div key={i} className="bg-white border border-gray-200 rounded-2xl p-6 card-lift">
                 <div className="w-10 h-10 bg-red-50 border border-red-200 rounded-xl flex items-center justify-center mb-4">
@@ -138,8 +158,7 @@ export default function LandingPage() {
               { icon: FileText, title: 'Worksheet Builder', desc: 'Gap fills, matching, multiple choice, reading comprehension — custom worksheets at any level, with answer keys.', tag: null, color: 'blue' },
               { icon: MessageSquare, title: 'Error Correction Coach', desc: 'Upload a photo of handwritten work or paste text. Get errors highlighted, categorised, and explained.', tag: null, color: 'purple' },
               { icon: Star, title: 'Demo Lesson Builder', desc: 'Interview-ready demo lessons with a "Why this works" sidebar. Impress any hiring panel.', tag: null, color: 'amber' },
-              { icon: Briefcase, title: 'Job Application Assistant', desc: 'Cover letters and full CV review — scored, improved, and rewritten in a genuine, human tone.', tag: null, color: 'rose' },
-              { icon: GraduationCap, title: 'Shared Resources', desc: 'Browse and share community lesson materials from teachers around the world.', tag: null, color: 'sky' },
+{ icon: GraduationCap, title: 'Shared Resources', desc: 'Browse and share community lesson materials from teachers around the world.', tag: null, color: 'sky' },
             ].map((feature, i) => (
               <div key={i} className="bg-white border border-gray-200 rounded-2xl p-6 card-lift relative">
                 {feature.tag && (
@@ -244,7 +263,7 @@ export default function LandingPage() {
                 <div className="text-gray-500 text-sm mt-1 font-medium">Cancel anytime</div>
               </div>
               <ul className="space-y-3 mb-8">
-                {['Unlimited lessons', 'Unlimited worksheets', 'All 7 tools — unlimited', 'PDF export on everything', 'Save & organise your library', 'Class Profiles — AI auto-fill', 'CV review and optimisation', 'Priority generation'].map(f => (
+                {['Unlimited lessons', 'Unlimited worksheets', 'All 6 tools — unlimited', 'PDF export on everything', 'Save & organise your library', 'Class Profiles — AI auto-fill', 'Priority generation'].map(f => (
                   <li key={f} className="flex items-center gap-3 text-sm text-gray-800 font-medium">
                     <CheckCircle className="w-4 h-4 text-teal-600 flex-shrink-0" />
                     {f}
