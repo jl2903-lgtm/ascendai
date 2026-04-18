@@ -35,12 +35,12 @@ Return JSON only:
     {
       "type": "exercise type name",
       "instructions": "student-facing instructions",
-      "items": ["item 1", "item 2", "item 3"],
-      "answerKey": ["answer 1", "answer 2", "answer 3"]
+      "items": ["plain text only — no numbers or letters", "plain text only — no numbers or letters"],
+      "answerKey": ["plain text only — no numbers or letters", "plain text only — no numbers or letters"]
     }
   ]
 }
-Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant.${classContext ? buildClassContextNote(classContext) : ''}`
+Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant. IMPORTANT: items and answerKey entries must be plain text strings with NO leading numbers, letters, or punctuation — the renderer numbers them automatically.${classContext ? buildClassContextNote(classContext) : ''}`
 }
 
 export async function POST(req: NextRequest) {
