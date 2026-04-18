@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Lesson, Worksheet } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { BookOpen, FileText, Search, Trash2, Download, Eye, SlidersHorizontal, BookMarked, Upload, X, Globe } from 'lucide-react'
-import { generateLessonPDF } from '@/lib/pdf'
+import { generateLessonPDF, generateWorksheetPDF } from '@/lib/pdf'
 import toast from 'react-hot-toast'
 
 type FilterType = 'all' | 'lesson' | 'worksheet'
@@ -30,6 +30,7 @@ export default function SavedPage() {
   const [filter, setFilter] = useState<FilterType>('all')
   const [levelFilter, setLevelFilter] = useState('all')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [viewedWorksheet, setViewedWorksheet] = useState<Worksheet | null>(null)
   const [upload, setUpload] = useState<UploadModal>({
     open: false, file: null, title: '', subject: '', level: 'B1', isPublic: false, uploading: false,
   })
@@ -67,6 +68,15 @@ export default function SavedPage() {
   const handleDownloadLesson = async (lesson: Lesson) => {
     try {
       await generateLessonPDF(lesson.lesson_content, { level: lesson.student_level, topic: lesson.topic, date: formatDate(lesson.created_at) })
+    } catch {
+      toast.error('PDF generation failed.')
+    }
+  }
+
+  const handleDownloadWorksheet = async (ws: Worksheet) => {
+    try {
+      await generateWorksheetPDF(ws.content, formatDate(ws.created_at))
+      toast.success('PDF downloaded!')
     } catch {
       toast.error('PDF generation failed.')
     }
@@ -259,7 +269,7 @@ export default function SavedPage() {
                 <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-1 line-clamp-2">{ws.title}</h3>
                 <p className="text-xs text-gray-400 mt-3">{formatDate(ws.created_at)}</p>
                 <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-teal-500 hover:text-teal-600 text-gray-500 px-3 py-1.5 rounded-lg transition-all">
+                  <button onClick={() => setViewedWorksheet(ws)} className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-teal-500 hover:text-teal-600 text-gray-500 px-3 py-1.5 rounded-lg transition-all">
                     <Eye className="w-3 h-3" /> View
                   </button>
                   <button onClick={() => deleteWorksheet(ws.id)} disabled={deleting === ws.id} className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-red-400 hover:text-red-500 text-gray-400 px-3 py-1.5 rounded-lg transition-all ml-auto">
@@ -268,6 +278,98 @@ export default function SavedPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Worksheet Viewer Modal */}
+      {viewedWorksheet && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setViewedWorksheet(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">{viewedWorksheet.title}</h2>
+                <p className="text-sm text-gray-500">{viewedWorksheet.content.level} · {viewedWorksheet.content.topic}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleDownloadWorksheet(viewedWorksheet)} className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
+                  <Download className="w-4 h-4" /> Download PDF
+                </button>
+                <button onClick={() => setViewedWorksheet(null)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1 p-8">
+              <div className="border-b-2 border-gray-900 pb-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">{viewedWorksheet.content.title}</h2>
+                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                  <span>Level: {viewedWorksheet.content.level}</span>
+                  <span>·</span>
+                  <span>Topic: {viewedWorksheet.content.topic}</span>
+                </div>
+              </div>
+              <div className="flex gap-16 mb-6 text-sm text-gray-700">
+                <div>Name: <span className="inline-block w-40 border-b border-gray-400 ml-2">&nbsp;</span></div>
+                <div>Date: <span className="inline-block w-32 border-b border-gray-400 ml-2">&nbsp;</span></div>
+              </div>
+              <div className="space-y-8">
+                {viewedWorksheet.content.exercises.map((ex, i) => (
+                  <div key={i}>
+                    <div className="bg-gray-100 rounded-lg px-4 py-2 mb-3">
+                      <span className="font-bold text-gray-900">Exercise {i + 1}: {ex.type}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3 italic">{ex.instructions}</p>
+                    {ex.matchingPairs && ex.matchingPairs.length > 0 && ex.shuffledRight ? (
+                      <>
+                        <div className="grid grid-cols-2 gap-x-6">
+                          <div className="space-y-2">
+                            {ex.matchingPairs.map((pair, j) => (
+                              <div key={j} className="text-sm flex items-start gap-2">
+                                <span className="font-medium w-5 flex-shrink-0 text-right">{j + 1}.</span>
+                                <span>{pair.word}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="space-y-2 border-l border-gray-200 pl-4">
+                            {ex.shuffledRight.map((item, j) => (
+                              <div key={j} className="text-sm flex items-start gap-2">
+                                <span className="font-medium w-5 flex-shrink-0 text-right">{item.letter}.</span>
+                                <span className="text-gray-700">{item.definition}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        {ex.compactAnswerKey && (
+                          <div className="mt-4 pt-3 border-t border-dashed border-gray-300">
+                            <div className="text-xs font-semibold text-gray-500 mb-1">ANSWER KEY</div>
+                            <div className="text-xs text-gray-600">{ex.compactAnswerKey}</div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-3">
+                          {(ex.items ?? []).map((item, j) => (
+                            <div key={j} className="text-sm text-gray-800">
+                              <span className="font-medium">{j + 1}.</span> {item}
+                            </div>
+                          ))}
+                        </div>
+                        {ex.answerKey && ex.answerKey.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-dashed border-gray-300">
+                            <div className="text-xs font-semibold text-gray-500 mb-1">ANSWER KEY</div>
+                            <div className="text-xs text-gray-600">
+                              {ex.answerKey.map((a, j) => `${j + 1}. ${a}`).join('  |  ')}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
