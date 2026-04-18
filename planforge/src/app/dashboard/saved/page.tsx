@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Lesson, Worksheet } from '@/types'
+import { Lesson, Worksheet, PracticeSession } from '@/types'
 import { formatDate } from '@/lib/utils'
-import { BookOpen, FileText, Search, Trash2, Download, Eye, SlidersHorizontal, BookMarked, Upload, X, Globe } from 'lucide-react'
+import { BookOpen, FileText, Search, Trash2, Download, Eye, SlidersHorizontal, BookMarked, Upload, X, Globe, Zap, Link2, QrCode } from 'lucide-react'
 import { generateLessonPDF, generateWorksheetPDF } from '@/lib/pdf'
+import { QRCodeSVG } from 'qrcode.react'
 import toast from 'react-hot-toast'
 
-type FilterType = 'all' | 'lesson' | 'worksheet'
+type FilterType = 'all' | 'lesson' | 'worksheet' | 'practice'
 
 interface UploadModal {
   open: boolean
@@ -25,12 +26,14 @@ export default function SavedPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [worksheets, setWorksheets] = useState<Worksheet[]>([])
+  const [practiceSessions, setPracticeSessions] = useState<PracticeSession[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
   const [levelFilter, setLevelFilter] = useState('all')
   const [deleting, setDeleting] = useState<string | null>(null)
   const [viewedWorksheet, setViewedWorksheet] = useState<Worksheet | null>(null)
+  const [qrSession, setQrSession] = useState<PracticeSession | null>(null)
   const [upload, setUpload] = useState<UploadModal>({
     open: false, file: null, title: '', subject: '', level: 'B1', isPublic: false, uploading: false,
   })
@@ -38,12 +41,14 @@ export default function SavedPage() {
   const load = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    const [{ data: l }, { data: w }] = await Promise.all([
+    const [{ data: l }, { data: w }, { data: p }] = await Promise.all([
       supabase.from('lessons').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
       supabase.from('worksheets').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
+      supabase.from('practice_sessions').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
     ])
     setLessons(l || [])
     setWorksheets(w || [])
+    setPracticeSessions((p || []) as PracticeSession[])
     setLoading(false)
   }
 
@@ -63,6 +68,19 @@ export default function SavedPage() {
     setWorksheets(p => p.filter(w => w.id !== id))
     toast.success('Worksheet deleted')
     setDeleting(null)
+  }
+
+  const deletePracticeSession = async (id: string) => {
+    setDeleting(id)
+    await supabase.from('practice_sessions').delete().eq('id', id)
+    setPracticeSessions(p => p.filter(s => s.id !== id))
+    toast.success('Practice session deleted')
+    setDeleting(null)
+  }
+
+  const copyPracticeLink = (code: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/practice/${code}`)
+    toast.success('Link copied!')
   }
 
   const handleDownloadLesson = async (lesson: Lesson) => {
@@ -139,9 +157,11 @@ export default function SavedPage() {
     return matchSearch && matchLevel
   })
   const filteredWorksheets = worksheets.filter(w => w.title.toLowerCase().includes(search.toLowerCase()))
+  const filteredPractice = practiceSessions.filter(p => p.lesson_title.toLowerCase().includes(search.toLowerCase()) || p.lesson_topic.toLowerCase().includes(search.toLowerCase()))
   const showLessons = filter === 'all' || filter === 'lesson'
   const showWorksheets = filter === 'all' || filter === 'worksheet'
-  const total = (showLessons ? filteredLessons.length : 0) + (showWorksheets ? filteredWorksheets.length : 0)
+  const showPractice = filter === 'all' || filter === 'practice'
+  const total = (showLessons ? filteredLessons.length : 0) + (showWorksheets ? filteredWorksheets.length : 0) + (showPractice ? filteredPractice.length : 0)
 
   if (loading) {
     return (
@@ -165,7 +185,7 @@ export default function SavedPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Saved Library</h1>
-            <p className="text-sm text-gray-500">{lessons.length} lessons · {worksheets.length} worksheets</p>
+            <p className="text-sm text-gray-500">{lessons.length} lessons · {worksheets.length} worksheets · {practiceSessions.length} practice sessions</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -192,13 +212,13 @@ export default function SavedPage() {
           />
         </div>
         <div className="flex gap-2">
-          {(['all', 'lesson', 'worksheet'] as FilterType[]).map(f => (
+          {(['all', 'lesson', 'worksheet', 'practice'] as FilterType[]).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all capitalize ${filter === f ? 'bg-teal-600 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'}`}
             >
-              {f === 'all' ? 'All' : f === 'lesson' ? 'Lessons' : 'Worksheets'}
+              {f === 'all' ? 'All' : f === 'lesson' ? 'Lessons' : f === 'worksheet' ? 'Worksheets' : 'Practice ⚡'}
             </button>
           ))}
         </div>
@@ -278,6 +298,72 @@ export default function SavedPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {showPractice && filteredPractice.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Practice Sessions <span className="text-gray-400 font-normal normal-case">({filteredPractice.length})</span></h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPractice.map(ps => {
+              const practiceUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://tyoutorpro.io'}/practice/${ps.share_code}`
+              return (
+                <div key={ps.id} className="bg-white border border-gray-200 hover:border-emerald-600/50 rounded-2xl p-5 transition-all group">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0"><Zap className="w-4 h-4 text-emerald-600" /></div>
+                    <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">{ps.lesson_level}</span>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-1 line-clamp-2">{ps.lesson_title}</h3>
+                  <p className="text-xs text-gray-500 truncate mb-1">{ps.lesson_topic}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-gray-400">{ps.view_count} views</span>
+                    <span className="text-gray-300">·</span>
+                    <span className="text-xs text-gray-400">{formatDate(ps.created_at)}</span>
+                  </div>
+                  <div className="mt-2 bg-gray-50 rounded-lg px-2 py-1.5 text-xs font-mono text-gray-500 truncate">
+                    /practice/{ps.share_code}
+                  </div>
+                  <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => copyPracticeLink(ps.share_code)} className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-teal-500 hover:text-teal-600 text-gray-500 px-3 py-1.5 rounded-lg transition-all">
+                      <Link2 className="w-3 h-3" /> Copy Link
+                    </button>
+                    <button onClick={() => setQrSession(ps)} className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-teal-500 hover:text-teal-600 text-gray-500 px-3 py-1.5 rounded-lg transition-all">
+                      <QrCode className="w-3 h-3" /> QR
+                    </button>
+                    <button onClick={() => deletePracticeSession(ps.id)} disabled={deleting === ps.id} className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-red-400 hover:text-red-500 text-gray-400 px-3 py-1.5 rounded-lg transition-all ml-auto">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                  {/* suppress unused var warning */}
+                  <span className="hidden">{practiceUrl}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {qrSession && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setQrSession(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">QR Code</h2>
+              <button onClick={() => setQrSession(null)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="text-sm text-gray-600 truncate">{qrSession.lesson_title}</div>
+            <div className="flex justify-center p-4 bg-white rounded-xl border border-gray-200">
+              <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : 'https://tyoutorpro.io'}/practice/${qrSession.share_code}`} size={180} fgColor="#2D6A4F" />
+            </div>
+            <button
+              onClick={() => { copyPracticeLink(qrSession.share_code); setQrSession(null) }}
+              className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+            >
+              <Link2 className="w-4 h-4" /> Copy Link
+            </button>
           </div>
         </div>
       )}

@@ -1,3 +1,20 @@
+export interface PracticeSession {
+  id: string
+  share_code: string
+  user_id: string
+  lesson_title: string
+  lesson_topic: string
+  lesson_level: string
+  student_nationality: string
+  vocabulary: Array<{ word: string; definition: string; example: string }>
+  grammar_focus: string
+  practice_sentences: Array<{ sentence: string; blank_word: string; hint: string }>
+  lesson_content: string
+  view_count: number
+  created_at: string
+  expires_at: string
+}
+
 export type SubscriptionStatus = 'free' | 'pro' | 'cancelled'
 
 export interface UserProfile {

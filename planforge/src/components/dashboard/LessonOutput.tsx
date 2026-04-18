@@ -9,9 +9,10 @@ import {
   Clock, Target, Package, Flame, Compass, Zap, Globe,
   AlertCircle, BookOpen, Mic, LogOut, Home, Download,
   Copy, Save, RefreshCw, TrendingUp, TrendingDown,
-  Timer, Scissors, MessageSquare, PenLine
+  Timer, Scissors, MessageSquare, PenLine, Share2, X, Check
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface Props {
   lesson: LessonContent
@@ -40,6 +41,10 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
   const [saved, setSaved] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>(null)
+  const [sharing, setSharing] = useState(false)
+  const [shareCode, setShareCode] = useState<string | null>(null)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
@@ -84,6 +89,39 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
     const text = buildPlainText(lesson)
     navigator.clipboard.writeText(text)
     toast.success('Copied to clipboard!')
+  }
+
+  const handleShare = async () => {
+    setSharing(true)
+    try {
+      const res = await fetch('/api/practice/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonTitle: lesson.title,
+          lessonTopic: formData.topic,
+          lessonLevel: formData.level,
+          studentNationality: formData.nationality,
+          lessonContent: buildPlainText(lesson),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { toast.error(data.error || 'Failed to create practice session'); return }
+      setShareCode(data.shareCode)
+      setShowShareModal(true)
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setSharing(false)
+    }
+  }
+
+  const shareUrl = shareCode ? `${typeof window !== 'undefined' ? window.location.origin : 'https://tyoutorpro.io'}/practice/${shareCode}` : ''
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -363,6 +401,18 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
           {saved ? 'Saved!' : saving ? 'Saving...' : 'Save Lesson'}
         </button>
         <button
+          onClick={handleShare}
+          disabled={sharing}
+          className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white"
+        >
+          {sharing ? (
+            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+          ) : (
+            <Share2 className="w-4 h-4" />
+          )}
+          {sharing ? 'Creating...' : 'Share with Students ⚡'}
+        </button>
+        <button
           onClick={handleDownload}
           disabled={downloading}
           className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-white transition-all"
@@ -378,6 +428,46 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
           Copy to Clipboard
         </button>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && shareCode && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowShareModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Share with Students ⚡</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Share this link or project the QR code for your class</p>
+              </div>
+              <button onClick={() => setShowShareModal(false)} className="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex justify-center p-4 bg-white rounded-xl border border-gray-200">
+              <QRCodeSVG value={shareUrl} size={180} fgColor="#2D6A4F" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Shareable Link</div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 font-mono truncate">
+                  {shareUrl}
+                </div>
+                <button
+                  onClick={handleCopyLink}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${copied ? 'bg-green-500 text-white' : 'bg-teal-600 hover:bg-teal-500 text-white'}`}
+                >
+                  {copied ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy</>}
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700">
+              Students can open this on their phone — no login required. The link is active for 30 days.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
