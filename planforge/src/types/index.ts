@@ -131,6 +131,9 @@ export interface WorksheetContent {
     instructions: string
     items: string[]
     answerKey?: string[]
+    matchingPairs?: Array<{ word: string; definition: string }>
+    shuffledRight?: Array<{ letter: string; definition: string; origIdx: number }>
+    compactAnswerKey?: string
   }>
 }
 

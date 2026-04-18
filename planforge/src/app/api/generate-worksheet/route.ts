@@ -19,6 +19,10 @@ function buildClassContextNote(ctx: ClassContext): string {
 }
 
 function buildPrompt(data: WorksheetFormData, classContext?: ClassContext | null): string {
+  const hasMatching = data.exerciseTypes.some(t => t.toLowerCase().includes('match'))
+  const matchingNote = hasMatching
+    ? `\n\nSPECIAL RULE for Matching exercises: use matchingPairs instead of items/answerKey:\n{"type":"Matching","instructions":"...","items":[],"answerKey":[],"matchingPairs":[{"word":"term","definition":"its meaning"}]}\nMatchingPairs must have exactly ${data.questionCount} objects with "word" and "definition" string fields.`
+    : ''
   return `Create an ESL/EFL worksheet:
 - Exercise Types: ${data.exerciseTypes.join(', ')}
 - Topic: ${data.topic}
@@ -40,7 +44,7 @@ Return JSON only:
     }
   ]
 }
-Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant. IMPORTANT: items and answerKey entries must be plain text strings with NO leading numbers, letters, or punctuation — the renderer numbers them automatically.${classContext ? buildClassContextNote(classContext) : ''}`
+Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant. IMPORTANT: items and answerKey entries must be plain text strings with NO leading numbers, letters, or punctuation — the renderer numbers them automatically.${matchingNote}${classContext ? buildClassContextNote(classContext) : ''}`
 }
 
 export async function POST(req: NextRequest) {

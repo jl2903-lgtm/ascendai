@@ -214,21 +214,57 @@ export async function generateWorksheetPDF(worksheet: WorksheetContent, date: st
 
     addText(ex.instructions, 10, [30, 41, 59])
     y += 2
-    ex.items.forEach((item, j) => {
-      const cleanItem = item.replace(/^\d+[\.\)]\s*/, '')
-      addText(`${j + 1}. ${cleanItem}`, 10, [51, 65, 85], false, 4)
-      y += 3
-    })
 
-    if (ex.answerKey && ex.answerKey.length > 0) {
-      y += 4
-      doc.setDrawColor(203, 213, 225)
-      doc.setLineDashPattern([2, 2], 0)
-      doc.line(margin, y, margin + contentWidth, y)
-      doc.setLineDashPattern([], 0)
-      y += 4
-      addText('Answer Key:', 9, [13, 148, 136], true)
-      ex.answerKey.forEach((ans, j) => addText(`${j + 1}. ${ans.replace(/^\d+[\.\)]\s*/, '')}`, 9, [51, 65, 85], false, 4))
+    if (ex.matchingPairs && ex.matchingPairs.length > 0 && ex.shuffledRight) {
+      const midX = margin + contentWidth / 2
+      const colWidth = contentWidth / 2 - 8
+      const startY = y
+
+      ex.matchingPairs.forEach((pair, j) => {
+        const leftText = `${j + 1}.  ${pair.word}`
+        const rightEntry = ex.shuffledRight![j]
+        const rightText = `${rightEntry.letter}.  ${rightEntry.definition}`
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(51, 65, 85)
+        const leftLines = doc.splitTextToSize(leftText, colWidth)
+        const rightLines = doc.splitTextToSize(rightText, colWidth)
+        const rowLines = Math.max(leftLines.length, rightLines.length)
+        checkPageBreak(rowLines * 5 + 3)
+        doc.text(leftLines, margin + 4, y)
+        doc.text(rightLines, midX + 4, y)
+        y += rowLines * (10 * 0.4) + 3
+      })
+
+      doc.setDrawColor(210, 220, 230)
+      doc.line(midX, startY - 2, midX, y - 1)
+
+      if (ex.compactAnswerKey) {
+        y += 4
+        doc.setDrawColor(203, 213, 225)
+        doc.setLineDashPattern([2, 2], 0)
+        doc.line(margin, y, margin + contentWidth, y)
+        doc.setLineDashPattern([], 0)
+        y += 4
+        addText(`Answer Key: ${ex.compactAnswerKey}`, 9, [13, 148, 136], false)
+      }
+    } else {
+      ex.items.forEach((item, j) => {
+        const cleanItem = item.replace(/^\d+[\.\)]\s*/, '')
+        addText(`${j + 1}. ${cleanItem}`, 10, [51, 65, 85], false, 4)
+        y += 3
+      })
+
+      if (ex.answerKey && ex.answerKey.length > 0) {
+        y += 4
+        doc.setDrawColor(203, 213, 225)
+        doc.setLineDashPattern([2, 2], 0)
+        doc.line(margin, y, margin + contentWidth, y)
+        doc.setLineDashPattern([], 0)
+        y += 4
+        addText('Answer Key:', 9, [13, 148, 136], true)
+        ex.answerKey.forEach((ans, j) => addText(`${j + 1}. ${ans.replace(/^\d+[\.\)]\s*/, '')}`, 9, [51, 65, 85], false, 4))
+      }
     }
     y += 8
   })

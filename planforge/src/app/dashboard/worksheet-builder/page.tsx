@@ -55,6 +55,29 @@ export default function WorksheetBuilderPage() {
     }))
   }
 
+  const prepareWorksheet = (ws: WorksheetContent): WorksheetContent => ({
+    ...ws,
+    exercises: ws.exercises.map(ex => {
+      if (!ex.matchingPairs || ex.matchingPairs.length === 0) return ex
+      const len = ex.matchingPairs.length
+      const positions = Array.from({ length: len }, (_, i) => i)
+      for (let i = len - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[positions[i], positions[j]] = [positions[j], positions[i]]
+      }
+      const shuffledRight = positions.map((origIdx, pos) => ({
+        letter: String.fromCharCode(65 + pos),
+        definition: ex.matchingPairs![origIdx].definition,
+        origIdx,
+      }))
+      const compactAnswerKey = ex.matchingPairs.map((_, i) => {
+        const entry = shuffledRight.find(r => r.origIdx === i)!
+        return `${i + 1}–${entry.letter}`
+      }).join('   ')
+      return { ...ex, shuffledRight, compactAnswerKey }
+    }),
+  })
+
   const generate = async () => {
     if (!form.topic.trim()) { setErrors({ topic: 'Please enter a topic' }); return }
     if (form.exerciseTypes.length === 0) { setErrors({ exerciseTypes: 'Select at least one exercise type' }); return }
@@ -69,7 +92,7 @@ export default function WorksheetBuilderPage() {
       const data = await res.json()
       if (res.status === 402) { setShowUpgrade(true); return }
       if (!res.ok) { toast.error(data.error || 'Generation failed. Please try again.'); return }
-      setWorksheet(data)
+      setWorksheet(prepareWorksheet(data))
     } catch {
       toast.error('Something went wrong. Please try again.')
     } finally {
@@ -251,20 +274,51 @@ export default function WorksheetBuilderPage() {
                         <span className="font-bold">Exercise {i + 1}: {ex.type}</span>
                       </div>
                       <p className="text-sm text-gray-600 mb-3 italic">{ex.instructions}</p>
-                      <div className="space-y-3">
-                        {ex.items.map((item, j) => (
-                          <div key={j} className="text-sm">
-                            <span className="font-medium">{j + 1}.</span> {item}
+                      {ex.matchingPairs && ex.matchingPairs.length > 0 && ex.shuffledRight ? (
+                        <>
+                          <div className="grid grid-cols-2 gap-x-6">
+                            <div className="space-y-2">
+                              {ex.matchingPairs.map((pair, j) => (
+                                <div key={j} className="text-sm flex items-start gap-2">
+                                  <span className="font-medium w-5 flex-shrink-0 text-right">{j + 1}.</span>
+                                  <span>{pair.word}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="space-y-2 border-l border-gray-200 pl-4">
+                              {ex.shuffledRight.map((item, j) => (
+                                <div key={j} className="text-sm flex items-start gap-2">
+                                  <span className="font-medium w-5 flex-shrink-0 text-right">{item.letter}.</span>
+                                  <span className="text-gray-700">{item.definition}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                      {ex.answerKey && ex.answerKey.length > 0 && form.includeAnswerKey && (
-                        <div className="mt-4 pt-3 border-t border-dashed border-gray-300">
-                          <div className="text-xs font-semibold text-gray-500 mb-1">ANSWER KEY</div>
-                          <div className="text-xs text-gray-600">
-                            {ex.answerKey.map((a, j) => `${j + 1}. ${a}`).join('  |  ')}
+                          {form.includeAnswerKey && ex.compactAnswerKey && (
+                            <div className="mt-4 pt-3 border-t border-dashed border-gray-300">
+                              <div className="text-xs font-semibold text-gray-500 mb-1">ANSWER KEY</div>
+                              <div className="text-xs text-gray-600">{ex.compactAnswerKey}</div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="space-y-3">
+                            {(ex.items ?? []).map((item, j) => (
+                              <div key={j} className="text-sm">
+                                <span className="font-medium">{j + 1}.</span> {item}
+                              </div>
+                            ))}
                           </div>
-                        </div>
+                          {ex.answerKey && ex.answerKey.length > 0 && form.includeAnswerKey && (
+                            <div className="mt-4 pt-3 border-t border-dashed border-gray-300">
+                              <div className="text-xs font-semibold text-gray-500 mb-1">ANSWER KEY</div>
+                              <div className="text-xs text-gray-600">
+                                {ex.answerKey.map((a, j) => `${j + 1}. ${a}`).join('  |  ')}
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}
