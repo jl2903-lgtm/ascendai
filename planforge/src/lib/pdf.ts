@@ -215,7 +215,8 @@ export async function generateWorksheetPDF(worksheet: WorksheetContent, date: st
     addText(ex.instructions, 10, [30, 41, 59])
     y += 2
     ex.items.forEach((item, j) => {
-      addText(`${j + 1}. ${item}`, 10, [51, 65, 85], false, 4)
+      const cleanItem = item.replace(/^\d+[\.\)]\s*/, '')
+      addText(`${j + 1}. ${cleanItem}`, 10, [51, 65, 85], false, 4)
       y += 3
     })
 
@@ -227,7 +228,7 @@ export async function generateWorksheetPDF(worksheet: WorksheetContent, date: st
       doc.setLineDashPattern([], 0)
       y += 4
       addText('Answer Key:', 9, [13, 148, 136], true)
-      ex.answerKey.forEach((ans, j) => addText(`${j + 1}. ${ans}`, 9, [51, 65, 85], false, 4))
+      ex.answerKey.forEach((ans, j) => addText(`${j + 1}. ${ans.replace(/^\d+[\.\)]\s*/, '')}`, 9, [51, 65, 85], false, 4))
     }
     y += 8
   })

@@ -5,12 +5,12 @@ import { PricingUpgradeButton } from '@/components/pricing/PricingUpgradeButton'
 
 export const metadata: Metadata = {
   title: 'Pricing — PlanForge',
-  description: 'Start free with 5 lessons per month. Upgrade to Pro for unlimited AI-powered lesson plans, worksheets, and all 6 teaching tools.',
+  description: 'Start free with 5 lessons. Upgrade to Pro for unlimited AI-powered lesson plans, worksheets, and all 6 teaching tools.',
 }
 
 const FREE_FEATURES = [
-  { text: '5 lessons per month', included: true },
-  { text: '5 worksheets per month', included: true },
+  { text: '5 lessons free', included: true },
+  { text: '5 worksheets free', included: true },
   { text: 'Basic lesson generator', included: true },
   { text: 'Error Coach (3 uses/month)', included: true },
   { text: 'Demo Lesson (1 use/month)', included: true },
@@ -159,7 +159,7 @@ export default function PricingPage() {
             {[
               { q: 'Can I cancel my Pro subscription at any time?', a: 'Yes, absolutely. Cancel anytime from your settings page. You keep Pro access until the end of your billing period.' },
               { q: 'What happens to my saved lessons if I cancel?', a: "Your saved lessons remain in your account. You just won't be able to save new ones or export PDFs on the free plan." },
-              { q: 'Is the free plan genuinely free?', a: 'Yes. No credit card required. 5 lessons and 5 worksheets every month, forever.' },
+              { q: 'Is the free plan genuinely free?', a: 'Yes. No credit card required. You get 5 lessons and 5 worksheets free, no expiry.' },
               { q: 'How is the AI lesson content different from templates?', a: 'Every lesson is generated fresh by Claude AI based on your specific inputs — student level, nationality, topic, age group, and class size. No two lessons are the same.' },
               { q: 'Does the L1-aware feature work for my students?', a: "We support 25 first languages. The AI provides specific linguistic challenges and teaching tips based on your students' mother tongue." },
             ].map(faq => (

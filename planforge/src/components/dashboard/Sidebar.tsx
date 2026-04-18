@@ -172,7 +172,7 @@ export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) 
             <div>
               <p className="text-white font-extrabold text-sm">Go Pro ✨</p>
               <p className="mt-0.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                {lessonsUsed}/{FREE_LESSON_LIMIT} lessons used
+                {lessonsUsed}/{FREE_LESSON_LIMIT} free lessons used
               </p>
             </div>
             <div

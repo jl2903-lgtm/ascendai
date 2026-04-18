@@ -73,8 +73,6 @@ export async function POST(req: NextRequest) {
           subscription_status: 'cancelled' as const,
           subscription_tier: 'cancelled',
           subscription_id: null,
-          lessons_used_this_month: 0,
-          worksheets_used_this_month: 0,
           error_coach_used_this_month: 0,
           demo_lesson_used_this_month: 0,
           job_assistant_used_this_month: 0,
@@ -131,8 +129,6 @@ export async function POST(req: NextRequest) {
 
         if (internalStatus === 'cancelled') {
           Object.assign(updatePayload, {
-            lessons_used_this_month: 0,
-            worksheets_used_this_month: 0,
             error_coach_used_this_month: 0,
             demo_lesson_used_this_month: 0,
             job_assistant_used_this_month: 0,

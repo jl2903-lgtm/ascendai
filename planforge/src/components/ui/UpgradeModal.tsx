@@ -61,8 +61,8 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
             You&apos;ve used all{' '}
             <span className="font-semibold text-gray-900">
               {limit} free {toolName}
-            </span>{' '}
-            this month. Upgrade to Pro for unlimited access to every tool.
+            </span>
+            . Upgrade to Pro for unlimited access to every tool.
           </p>
         </div>
 

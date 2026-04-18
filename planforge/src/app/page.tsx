@@ -236,7 +236,7 @@ export default function LandingPage() {
                 <div className="text-gray-500 text-sm mt-1 font-medium">Forever free</div>
               </div>
               <ul className="space-y-3 mb-8">
-                {['5 lessons per month', '5 worksheets per month', 'Basic lesson generator', 'Error Coach (3/month)', 'Demo Lesson (1/month)', 'Class Profiles (unlimited)'].map(f => (
+                {['5 lessons free', '5 worksheets free', 'Basic lesson generator', 'Error Coach (3 uses)', 'Demo Lesson (1 use)', 'Class Profiles (unlimited)'].map(f => (
                   <li key={f} className="flex items-center gap-3 text-sm text-gray-700 font-medium">
                     <CheckCircle className="w-4 h-4 text-teal-600 flex-shrink-0" />
                     {f}
