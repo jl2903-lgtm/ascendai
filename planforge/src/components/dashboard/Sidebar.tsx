@@ -15,6 +15,7 @@ import {
   Globe,
   Users,
   Sparkles,
+  Wand2,
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 
@@ -29,6 +30,7 @@ const CLASS_LINKS = [
 ]
 
 const CREATE_LINKS = [
+  { label: 'Magic Paste',       href: '/dashboard/magic-paste',       icon: Wand2 },
   { label: 'Lesson Generator',  href: '/dashboard/lesson-generator',  icon: BookOpen },
   { label: 'Worksheet Builder', href: '/dashboard/worksheet-builder', icon: FileText },
   { label: 'Error Coach',       href: '/dashboard/error-coach',       icon: AlertCircle },

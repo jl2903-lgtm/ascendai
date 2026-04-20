@@ -17,6 +17,7 @@ interface UserStats {
 }
 
 const toolCards = [
+  { href: '/dashboard/magic-paste', emoji: '✨', label: 'Magic Paste', desc: 'Turn any content into a lesson', accent: '#BE185D', accentLight: '#EC4899', tags: [{ label: 'Articles', c: 'pink' }, { label: 'Videos', c: 'pink' }, { label: 'Any Topic', c: 'muted' }] },
   { href: '/dashboard/lesson-generator', emoji: '✏️', label: 'Lesson Generator', desc: 'Full lesson plan in 60 seconds', accent: '#2D6A4F', accentLight: '#52B788', tags: [{ label: 'PPP', c: 'green' }, { label: 'TTT', c: 'green' }, { label: 'ESA', c: 'orange' }] },
   { href: '/dashboard/worksheet-builder', emoji: '📝', label: 'Worksheet Builder', desc: 'Custom exercises with answer keys', accent: '#E07A5F', accentLight: '#F4A78A', tags: [{ label: 'A1–C2', c: 'orange' }, { label: 'Print-ready', c: 'indigo' }] },
   { href: '/dashboard/error-coach', emoji: '📸', label: 'Error Coach', desc: 'Analyse student writing mistakes', accent: '#9B59B6', accentLight: '#C39BD3', tags: [{ label: 'Photo Upload', c: 'purple' }, { label: 'CEFR', c: 'orange' }] },
@@ -29,6 +30,7 @@ const TC: Record<string, { bg: string; text: string }> = {
   orange: { bg: '#FFF3E0', text: '#E65100' },
   indigo: { bg: '#E8EAF6', text: '#283593' },
   purple: { bg: '#F3E5F5', text: '#6A1B9A' },
+  pink:   { bg: '#FCE7F3', text: '#BE185D' },
   muted:  { bg: '#F5F4F0', text: '#6B6B6B' },
 }
 
