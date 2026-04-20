@@ -82,7 +82,7 @@ export default function AdminPage() {
               { label: 'Total Lessons Generated', value: stats.totalLessons.toLocaleString(), icon: BookOpen, color: 'blue', sub: 'All time' },
               { label: 'Total Worksheets', value: stats.totalWorksheets.toLocaleString(), icon: FileText, color: 'purple', sub: 'All time' },
               { label: 'Pro Subscribers', value: stats.proUsers.toLocaleString(), icon: TrendingUp, color: 'amber', sub: `${((stats.proUsers / Math.max(stats.totalUsers, 1)) * 100).toFixed(1)}% conversion rate` },
-              { label: 'Monthly Recurring Revenue', value: `$${stats.mrr.toLocaleString()}`, icon: DollarSign, color: 'green', sub: `${stats.proUsers} × $19` },
+              { label: 'Monthly Recurring Revenue', value: `$${stats.mrr.toLocaleString()}`, icon: DollarSign, color: 'green', sub: `${stats.proUsers} × $12` },
               { label: 'Free Users', value: stats.freeUsers.toLocaleString(), icon: Users, color: 'slate', sub: 'Potential upgrades' },
             ].map(stat => {
               const colorMap: Record<string, string> = {

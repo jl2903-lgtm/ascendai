@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const PRO_PRICE_PER_USER = 19
+const PRO_PRICE_PER_USER = 12
 
 export async function GET(req: NextRequest) {
   try {

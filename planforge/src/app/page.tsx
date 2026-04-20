@@ -259,7 +259,7 @@ export default function LandingPage() {
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-extrabold text-gray-900 mb-1">Pro</h3>
-                <div className="text-4xl font-extrabold text-teal-600">$19<span className="text-xl text-gray-500 font-semibold">/month</span></div>
+                <div className="text-4xl font-extrabold text-teal-600">$12<span className="text-xl text-gray-500 font-semibold">/month</span></div>
                 <div className="text-gray-500 text-sm mt-1 font-medium">Cancel anytime</div>
               </div>
               <ul className="space-y-3 mb-8">
@@ -271,7 +271,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link href="/auth/signup" className="block w-full text-center bg-teal-600 hover:bg-teal-500 text-white font-bold px-6 py-3.5 rounded-xl transition-all shadow-lg shadow-teal-600/20 hover:scale-105">
-                Start 7-Day Free Trial
+                Upgrade to Pro
               </Link>
             </div>
           </div>

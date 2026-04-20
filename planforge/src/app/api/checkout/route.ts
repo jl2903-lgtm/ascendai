@@ -14,15 +14,6 @@ export async function POST(req: NextRequest) {
     const userId = session.user.id
     const userEmail = session.user.email
 
-    // Optional body: { trial: true } to add 7-day trial period
-    let withTrial = false
-    try {
-      const body = await req.json()
-      withTrial = !!body?.trial
-    } catch {
-      // empty body is fine
-    }
-
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('stripe_customer_id, full_name, subscription_status')
@@ -69,7 +60,6 @@ export async function POST(req: NextRequest) {
       metadata: { userId },
       subscription_data: {
         metadata: { userId },
-        ...(withTrial ? { trial_period_days: 7 } : {}),
       },
       allow_promotion_codes: true,
     })

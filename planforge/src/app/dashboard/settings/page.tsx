@@ -203,7 +203,7 @@ export default function SettingsPage() {
             </button>
           ) : (
             <a href="/pricing" className="bg-teal-600 hover:bg-teal-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              Upgrade to Pro — $19/mo
+              Upgrade to Pro — $12/mo
             </a>
           )}
         </div>

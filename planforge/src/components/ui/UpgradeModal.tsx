@@ -78,7 +78,7 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
 
         {/* Pricing callout */}
         <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-bold text-gray-900">$19</span>
+          <span className="text-3xl font-bold text-gray-900">$12</span>
           <span className="text-sm text-gray-500">/ month</span>
         </div>
 
@@ -91,7 +91,7 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
           onClick={handleUpgrade}
         >
           <Zap className="h-4 w-4" />
-          Upgrade to Pro — $19/month
+          Upgrade to Pro — $12/month
         </Button>
 
         {error && <p className="text-xs text-red-400">{error}</p>}
