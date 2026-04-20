@@ -36,18 +36,22 @@ function deriveTopic(sourceLabel: string, sourcePreview: string): string {
 }
 
 export default function MagicPastePage() {
-  const [pastedContent, setPastedContent]   = useState('')
-  const [cefrLevel, setCefrLevel]           = useState('B1')
-  const [duration, setDuration]             = useState(60)
-  const [ageGroup, setAgeGroup]             = useState('Adults')
-  const [selectedClass, setSelectedClass]   = useState<ClassProfile | null>(null)
-  const [loading, setLoading]               = useState(false)
-  const [loadingMsg, setLoadingMsg]         = useState(getLoadingMessages('B1')[0])
-  const [adjusting]                         = useState(false)
-  const [result, setResult]                 = useState<{ lesson: LessonContent; sourceLabel: string; sourcePreview: string; contentNote?: string } | null>(null)
-  const [error, setError]                   = useState<string | null>(null)
-  const [sourceExpanded, setSourceExpanded] = useState(false)
-  const intervalRef                         = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [pastedContent, setPastedContent]       = useState('')
+  const [cefrLevel, setCefrLevel]               = useState('B1')
+  const [duration, setDuration]                 = useState(60)
+  const [ageGroup, setAgeGroup]                 = useState('Adults')
+  const [selectedClass, setSelectedClass]       = useState<ClassProfile | null>(null)
+  const [loading, setLoading]                   = useState(false)
+  const [loadingMsg, setLoadingMsg]             = useState(getLoadingMessages('B1')[0])
+  const [adjusting]                             = useState(false)
+  const [result, setResult]                     = useState<{ lesson: LessonContent; sourceLabel: string; sourcePreview: string; contentNote?: string } | null>(null)
+  const [error, setError]                       = useState<string | null>(null)
+  const [sourceExpanded, setSourceExpanded]     = useState(false)
+  const [manualTranscript, setManualTranscript] = useState('')
+  const [transcriptOpen, setTranscriptOpen]     = useState(false)
+  const intervalRef                             = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const isYouTubeUrl = /^https?:\/\//i.test(pastedContent.trim()) && /youtube\.com|youtu\.be/i.test(pastedContent.trim())
 
   useEffect(() => {
     if (loading) {
@@ -93,6 +97,7 @@ export default function MagicPastePage() {
           duration,
           ageGroup,
           classId: selectedClass?.id ?? null,
+          manualTranscript: manualTranscript.trim() || undefined,
         }),
       })
       const data = await res.json()
@@ -114,6 +119,8 @@ export default function MagicPastePage() {
     setError(null)
     setPastedContent('')
     setSourceExpanded(false)
+    setManualTranscript('')
+    setTranscriptOpen(false)
   }
 
   const glass: React.CSSProperties = {
@@ -288,6 +295,51 @@ export default function MagicPastePage() {
               />
             </div>
 
+            {/* Optional manual transcript (collapsible) */}
+            <div className="mb-5">
+              <button
+                type="button"
+                onClick={() => setTranscriptOpen(o => !o)}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: transcriptOpen ? 10 : 0 }}
+              >
+                <ChevronRight style={{ width: 13, height: 13, transform: transcriptOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+                Have a transcript? Paste it here for an even better lesson (optional)
+              </button>
+
+              {transcriptOpen && (
+                <div>
+                  <textarea
+                    value={manualTranscript}
+                    onChange={e => setManualTranscript(e.target.value)}
+                    placeholder="Paste the video transcript here..."
+                    rows={5}
+                    style={{
+                      width: '100%',
+                      resize: 'vertical',
+                      padding: '12px 16px',
+                      fontSize: 13,
+                      lineHeight: 1.65,
+                      color: '#2D2D2D',
+                      background: '#FAFAFA',
+                      border: '1.5px solid #E5E7EB',
+                      borderRadius: 14,
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                      transition: 'border-color 0.15s',
+                    }}
+                    onFocus={e => { e.currentTarget.style.borderColor = '#22C55E' }}
+                    onBlur={e => { e.currentTarget.style.borderColor = '#E5E7EB' }}
+                  />
+                  {isYouTubeUrl && manualTranscript.trim() && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6, fontSize: 12, fontWeight: 700, color: '#166534' }}>
+                      <CheckCircle style={{ width: 13, height: 13 }} />
+                      Using your transcript
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Options row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <div>
@@ -358,17 +410,27 @@ export default function MagicPastePage() {
             </div>
 
             <p style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: '#9CA3AF', lineHeight: 1.5 }}>
-              Tip: For YouTube videos, just paste the URL. We&apos;ll grab the transcript automatically.
+              {isYouTubeUrl
+                ? "YouTube sometimes blocks automated transcript extraction. If it does, we'll build a complete lesson from the video title — or use the transcript option above."
+                : "Tip: For YouTube videos, just paste the URL. We'll grab the transcript automatically."
+              }
             </p>
           </div>
         )}
 
-        {/* ── Content note badge (fallback methods) ── */}
+        {/* ── Content note badge (tips & fallback notices) ── */}
         {result?.contentNote && !loading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', marginBottom: 16, background: 'rgba(254,243,199,0.9)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 12, animation: 'fadeInUp 0.4s ease both' }}>
-            <span style={{ fontSize: 14 }}>⚠️</span>
-            <p style={{ fontSize: 12, color: '#92400E', fontWeight: 600, lineHeight: 1.4 }}>{result.contentNote}</p>
-          </div>
+          result.contentNote.startsWith('💡')
+            ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', marginBottom: 16, background: 'rgba(219,234,254,0.9)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 12, animation: 'fadeInUp 0.4s ease both' }}>
+                <p style={{ fontSize: 12, color: '#1E40AF', fontWeight: 600, lineHeight: 1.4 }}>{result.contentNote}</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', marginBottom: 16, background: 'rgba(254,243,199,0.9)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 12, animation: 'fadeInUp 0.4s ease both' }}>
+                <span style={{ fontSize: 14 }}>⚠️</span>
+                <p style={{ fontSize: 12, color: '#92400E', fontWeight: 600, lineHeight: 1.4 }}>{result.contentNote}</p>
+              </div>
+            )
         )}
 
         {/* ── Full lesson output ── */}
