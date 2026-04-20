@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { after } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import { resend } from '@/lib/resend'
 
@@ -41,8 +40,7 @@ export async function POST(req: NextRequest) {
       ? String(reason).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       : null
 
-    // Send email after the response is returned — non-blocking
-    after(async () => { await resend.emails.send({
+    try { await resend.emails.send({
       from: 'Tyoutor Pro <hello@tyoutorpro.app>',
       to: 'info@tyoutor.io',
       subject: `[Report] ${resource?.title ?? resource_id}`,
@@ -81,7 +79,7 @@ export async function POST(req: NextRequest) {
           </p>
         </div>
       `,
-    }).catch(e => console.error('[report-email]', e)) })
+    }) } catch (emailErr) { console.error('[report-email]', emailErr) }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
