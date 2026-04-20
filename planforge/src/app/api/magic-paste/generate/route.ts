@@ -7,6 +7,25 @@ import type { LessonContent } from '@/types'
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&ndash;/g, '–')
+    .replace(/&mdash;/g, '—')
+    .replace(/&lsquo;/g, '\u2018')
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&ldquo;/g, '\u201C')
+    .replace(/&rdquo;/g, '\u201D')
+    .replace(/&hellip;/g, '…')
+}
+
 interface ExtractionResult {
   content: string
   sourceLabel: string
@@ -153,7 +172,7 @@ function getMetaTag(html: string, ...names: string[]): string {
     ]
     for (const p of patterns) {
       const m = html.match(p)
-      if (m?.[1]?.trim()) return m[1].trim()
+      if (m?.[1]?.trim()) return decodeHtmlEntities(m[1].trim())
     }
   }
   return ''
@@ -162,7 +181,7 @@ function getMetaTag(html: string, ...names: string[]): string {
 function extractMeta(html: string, url: string): { metaContent: string; title: string } {
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
   const title =
-    titleMatch?.[1]?.trim() ||
+    decodeHtmlEntities(titleMatch?.[1]?.trim() ?? '') ||
     getMetaTag(html, 'og:title', 'twitter:title') ||
     ''
   const description = getMetaTag(html, 'og:description', 'description', 'twitter:description')
@@ -192,7 +211,7 @@ async function extractYouTube(url: string, videoId: string): Promise<ExtractionR
   try {
     const { YoutubeTranscript } = await import('youtube-transcript')
     const items = await YoutubeTranscript.fetchTranscript(videoId)
-    const content = items.map((i: { text: string }) => i.text).join(' ')
+    const content = decodeHtmlEntities(items.map((i: { text: string }) => i.text).join(' '))
     if (content.trim().length > 100) {
       console.log(`[magic-paste] Transcript success — ${content.length} chars`)
       return { content, sourceLabel: `YouTube video (${url})` }
@@ -210,8 +229,8 @@ async function extractYouTube(url: string, videoId: string): Promise<ExtractionR
     )
     if (!oEmbedRes.ok) throw new Error(`HTTP ${oEmbedRes.status}`)
     const data = await oEmbedRes.json() as { title?: string; author_name?: string }
-    const title = data.title ?? ''
-    const author = data.author_name ?? ''
+    const title = decodeHtmlEntities(data.title ?? '')
+    const author = decodeHtmlEntities(data.author_name ?? '')
     console.log(`[magic-paste] Using oEmbed data: "${title}" by ${author}`)
 
     const content = `VIDEO TITLE: ${title}
@@ -244,19 +263,31 @@ Note: No video information was accessible. Generate a practical ESL lesson that 
 // ─── Article extraction (3-method fallback) ──────────────────────────────────
 
 async function extractArticle(url: string): Promise<ExtractionResult> {
-  console.log('[magic-paste] Detected: Article URL, trying readability...')
+  console.log(`[magic-paste] Fetching article: ${url}`)
 
   // Single fetch — reused for both Method 1 and Method 2
   let html: string | null = null
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': USER_AGENT },
-      signal: AbortSignal.timeout(10000),
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+      },
+      signal: AbortSignal.timeout(15000),
     })
+    console.log(`[magic-paste] HTTP ${response.status} from ${url}`)
     if (response.ok) {
       html = await response.text()
+      console.log(`[magic-paste] Fetched ${html.length} chars of HTML`)
     } else {
-      console.log(`[magic-paste] Fetch returned HTTP ${response.status}`)
+      console.log(`[magic-paste] Fetch returned HTTP ${response.status} — will try URL-based fallback`)
     }
   } catch (err) {
     console.log('[magic-paste] Fetch failed:', (err as Error).message)
@@ -269,14 +300,16 @@ async function extractArticle(url: string): Promise<ExtractionResult> {
       const { Readability } = await import('@mozilla/readability')
       const dom = new JSDOM(html, { url })
       const article = new Readability(dom.window.document).parse()
-      const content = article?.textContent?.trim() ?? ''
+      const rawContent = article?.textContent?.trim() ?? ''
+      const content = decodeHtmlEntities(rawContent)
+      console.log(`[magic-paste] Readability extracted ${content.length} chars`)
       if (content.length > 200) {
-        console.log(`[magic-paste] Readability success — ${content.length} chars`)
-        return { content, sourceLabel: `Article: ${article?.title ?? url}` }
+        console.log(`[magic-paste] Readability success — using article: "${article?.title}"`)
+        return { content, sourceLabel: `Article: ${decodeHtmlEntities(article?.title ?? url)}` }
       }
-      console.log('[magic-paste] Readability content too short, trying meta tags...')
+      console.log(`[magic-paste] Readability content too short (${content.length} chars) — falling back to meta tags`)
     } catch (err) {
-      console.log('[magic-paste] Readability error, trying meta tags:', (err as Error).message)
+      console.log('[magic-paste] Readability error — falling back to meta tags:', (err as Error).message)
     }
 
     // Method 2: Meta tags (from already-fetched HTML — no second request)
