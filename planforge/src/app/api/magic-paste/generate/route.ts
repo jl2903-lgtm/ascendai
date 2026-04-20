@@ -7,6 +7,25 @@ import type { LessonContent } from '@/types'
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&ndash;/g, '–')
+    .replace(/&mdash;/g, '—')
+    .replace(/&lsquo;/g, '\u2018')
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&ldquo;/g, '\u201C')
+    .replace(/&rdquo;/g, '\u201D')
+    .replace(/&hellip;/g, '…')
+}
+
 interface ExtractionResult {
   content: string
   sourceLabel: string
@@ -153,7 +172,7 @@ function getMetaTag(html: string, ...names: string[]): string {
     ]
     for (const p of patterns) {
       const m = html.match(p)
-      if (m?.[1]?.trim()) return m[1].trim()
+      if (m?.[1]?.trim()) return decodeHtmlEntities(m[1].trim())
     }
   }
   return ''
@@ -162,7 +181,7 @@ function getMetaTag(html: string, ...names: string[]): string {
 function extractMeta(html: string, url: string): { metaContent: string; title: string } {
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
   const title =
-    titleMatch?.[1]?.trim() ||
+    decodeHtmlEntities(titleMatch?.[1]?.trim() ?? '') ||
     getMetaTag(html, 'og:title', 'twitter:title') ||
     ''
   const description = getMetaTag(html, 'og:description', 'description', 'twitter:description')
@@ -192,7 +211,7 @@ async function extractYouTube(url: string, videoId: string): Promise<ExtractionR
   try {
     const { YoutubeTranscript } = await import('youtube-transcript')
     const items = await YoutubeTranscript.fetchTranscript(videoId)
-    const content = items.map((i: { text: string }) => i.text).join(' ')
+    const content = decodeHtmlEntities(items.map((i: { text: string }) => i.text).join(' '))
     if (content.trim().length > 100) {
       console.log(`[magic-paste] Transcript success — ${content.length} chars`)
       return { content, sourceLabel: `YouTube video (${url})` }
@@ -210,20 +229,33 @@ async function extractYouTube(url: string, videoId: string): Promise<ExtractionR
     )
     if (!oEmbedRes.ok) throw new Error(`HTTP ${oEmbedRes.status}`)
     const data = await oEmbedRes.json() as { title?: string; author_name?: string }
-    const title = data.title ?? ''
-    const author = data.author_name ?? ''
+    const title = decodeHtmlEntities(data.title ?? '')
+    const author = decodeHtmlEntities(data.author_name ?? '')
     console.log(`[magic-paste] Using oEmbed data: "${title}" by ${author}`)
 
     const content = `VIDEO TITLE: ${title}
 CHANNEL: ${author}
 URL: ${url}
 
-Note: Full transcript unavailable. Generate a complete ESL lesson based on the video title and its likely topic. Pre-teach vocabulary students will encounter. Include the URL for in-class or homework viewing. Create comprehension questions inferred from the title, and include discussion questions about the broader topic.`
+You are building a complete ESL lesson around a YouTube video that the teacher will play in class.
+
+Create a rich, complete lesson that assumes the teacher will play this video in class. The lesson should include:
+1. A compelling warmer activity that connects to the video's apparent topic
+2. Comprehensive pre-teach vocabulary (12-15 words) based on what students are likely to encounter in this video
+3. Pre-watching discussion questions to activate prior knowledge
+4. Clear instructions for the teacher on how to play the video (suggest pausing points, prediction moments)
+5. While-watching tasks (things students look for or note down during viewing)
+6. Post-watching comprehension questions the teacher can ask after showing the video
+7. Follow-up speaking/discussion activities
+8. Grammar focus that's likely relevant to the video's topic
+9. Homework that extends the video's themes
+
+The goal is that when the teacher plays the video and uses this lesson, their students get a complete learning experience — even though we built the lesson from just the title.`
 
     return {
       content,
       sourceLabel: `YouTube: ${title}`,
-      contentNote: 'Lesson built from video title — transcript not available',
+      contentNote: '💡 Tip: Play this video during the Main Activity stage of the lesson.',
     }
   } catch (err) {
     console.log('[magic-paste] oEmbed failed:', (err as Error).message, '— using URL-based generation...')
@@ -232,31 +264,45 @@ Note: Full transcript unavailable. Generate a complete ESL lesson based on the v
   // Method 3: URL-based last resort
   const content = `VIDEO URL: ${url}
 
-Note: No video information was accessible. Generate a practical ESL lesson that teachers can use alongside any YouTube video. Include general video-watching skills (prediction, note-taking, comprehension), and discussion prompts that work for any topic.`
+You are building a complete ESL lesson around a YouTube video that the teacher will play in class.
+
+Create a rich, complete lesson that assumes the teacher will play this video in class. Include general video-watching skills (prediction, note-taking, comprehension strategies), comprehensive vocabulary pre-teaching, while-watching tasks, post-watching discussion, and homework that works for any video topic.`
 
   return {
     content,
     sourceLabel: `YouTube video (${url})`,
-    contentNote: 'Lesson built from URL — video details not accessible',
+    contentNote: '💡 Tip: Play this video during the Main Activity stage of the lesson.',
   }
 }
 
 // ─── Article extraction (3-method fallback) ──────────────────────────────────
 
 async function extractArticle(url: string): Promise<ExtractionResult> {
-  console.log('[magic-paste] Detected: Article URL, trying readability...')
+  console.log(`[magic-paste] Fetching article: ${url}`)
 
   // Single fetch — reused for both Method 1 and Method 2
   let html: string | null = null
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': USER_AGENT },
-      signal: AbortSignal.timeout(10000),
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+      },
+      signal: AbortSignal.timeout(15000),
     })
+    console.log(`[magic-paste] HTTP ${response.status} from ${url}`)
     if (response.ok) {
       html = await response.text()
+      console.log(`[magic-paste] Fetched ${html.length} chars of HTML`)
     } else {
-      console.log(`[magic-paste] Fetch returned HTTP ${response.status}`)
+      console.log(`[magic-paste] Fetch returned HTTP ${response.status} — will try URL-based fallback`)
     }
   } catch (err) {
     console.log('[magic-paste] Fetch failed:', (err as Error).message)
@@ -269,14 +315,16 @@ async function extractArticle(url: string): Promise<ExtractionResult> {
       const { Readability } = await import('@mozilla/readability')
       const dom = new JSDOM(html, { url })
       const article = new Readability(dom.window.document).parse()
-      const content = article?.textContent?.trim() ?? ''
+      const rawContent = article?.textContent?.trim() ?? ''
+      const content = decodeHtmlEntities(rawContent)
+      console.log(`[magic-paste] Readability extracted ${content.length} chars`)
       if (content.length > 200) {
-        console.log(`[magic-paste] Readability success — ${content.length} chars`)
-        return { content, sourceLabel: `Article: ${article?.title ?? url}` }
+        console.log(`[magic-paste] Readability success — using article: "${article?.title}"`)
+        return { content, sourceLabel: `Article: ${decodeHtmlEntities(article?.title ?? url)}` }
       }
-      console.log('[magic-paste] Readability content too short, trying meta tags...')
+      console.log(`[magic-paste] Readability content too short (${content.length} chars) — falling back to meta tags`)
     } catch (err) {
-      console.log('[magic-paste] Readability error, trying meta tags:', (err as Error).message)
+      console.log('[magic-paste] Readability error — falling back to meta tags:', (err as Error).message)
     }
 
     // Method 2: Meta tags (from already-fetched HTML — no second request)
@@ -333,7 +381,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { pastedContent, cefrLevel = 'B1', duration = 60, ageGroup = 'Adults', classId } = body
+    const { pastedContent, cefrLevel = 'B1', duration = 60, ageGroup = 'Adults', classId, manualTranscript } = body
 
     if (!pastedContent?.trim()) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
@@ -363,7 +411,24 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         )
       }
-      extraction = await extractYouTube(pastedContent.trim(), videoId)
+      // If teacher pasted a manual transcript, use it directly
+      if (manualTranscript?.trim()) {
+        console.log('[magic-paste] Using manual transcript for YouTube URL')
+        let sourceLabel = `YouTube video (${pastedContent.trim()})`
+        try {
+          const oEmbedRes = await fetch(
+            `https://www.youtube.com/oembed?url=${encodeURIComponent(pastedContent.trim())}&format=json`,
+            { signal: AbortSignal.timeout(5000) }
+          )
+          if (oEmbedRes.ok) {
+            const data = await oEmbedRes.json() as { title?: string }
+            if (data.title) sourceLabel = `YouTube: ${decodeHtmlEntities(data.title)}`
+          }
+        } catch { /* keep default source label */ }
+        extraction = { content: manualTranscript.trim(), sourceLabel }
+      } else {
+        extraction = await extractYouTube(pastedContent.trim(), videoId)
+      }
     } else if (contentType === 'url') {
       extraction = await extractArticle(pastedContent.trim())
     } else {
