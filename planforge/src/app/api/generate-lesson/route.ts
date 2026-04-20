@@ -29,6 +29,12 @@ function buildPrompt(data: LessonFormData, classContext?: ClassContext | null): 
 - Class Size: ${data.classSize}
 - Special Focus: ${data.specialFocus.length > 0 ? data.specialFocus.join(', ') : 'None'}
 
+CRITICAL REQUIREMENTS FOR THE "exercises" SECTION — these are real worksheet sections a teacher will print and use in class, not placeholders:
+- Gap fill: generate 8–10 complete sentences, each with one blank marked as _____ . Number them 1–10. The answer key must list every answer.
+- Multiple choice: generate 5–6 questions, each with exactly three options labelled a), b), c). Number them 1–6. The answer key must list the correct letter for every question.
+- Matching: generate 8–10 pairs — Column A numbered 1–10, Column B labelled a–j, mixed order so the answers are not sequential. The answer key must list every pair.
+- Every sentence, question, and pair must be fully written out — no "etc.", no "example 1", no placeholders. Content must reinforce the target language from languageFocus and be appropriate for ${data.level} level.
+
 Return a JSON object with this exact structure:
 {
   "title": "engaging lesson title",
@@ -73,14 +79,20 @@ Return a JSON object with this exact structure:
     {
       "type": "Gap fill",
       "instructions": "student-facing instructions",
-      "content": "exercise content with blanks",
-      "answerKey": "1. word, 2. word, 3. word"
+      "content": "1. Sentence with _____ blank.\n2. Another sentence with _____.\n3. Third sentence _____ here.\n4. Fourth _____ sentence.\n5. Fifth sentence with _____.\n6. Sixth _____ sentence.\n7. Seventh sentence _____ here.\n8. Eighth sentence with _____.",
+      "answerKey": "1. word, 2. word, 3. word, 4. word, 5. word, 6. word, 7. word, 8. word"
     },
     {
       "type": "Multiple choice",
       "instructions": "student-facing instructions",
-      "content": "questions and options",
-      "answerKey": "1. b, 2. a, 3. c"
+      "content": "1. Question text here?\n   a) option one\n   b) option two\n   c) option three\n\n2. Second question?\n   a) option one\n   b) option two\n   c) option three\n\n3. Third question?\n   a) option one\n   b) option two\n   c) option three\n\n4. Fourth question?\n   a) option one\n   b) option two\n   c) option three\n\n5. Fifth question?\n   a) option one\n   b) option two\n   c) option three",
+      "answerKey": "1. b, 2. a, 3. c, 4. a, 5. b"
+    },
+    {
+      "type": "Matching",
+      "instructions": "student-facing instructions",
+      "content": "Column A: 1. word/phrase, 2. word/phrase, 3. word/phrase, 4. word/phrase, 5. word/phrase, 6. word/phrase, 7. word/phrase, 8. word/phrase\nColumn B: a. definition/match, b. definition/match, c. definition/match, d. definition/match, e. definition/match, f. definition/match, g. definition/match, h. definition/match",
+      "answerKey": "1-c, 2-a, 3-f, 4-b, 5-h, 6-d, 7-g, 8-e"
     }
   ],
   "speakingTask": {
@@ -130,7 +142,7 @@ export async function POST(req: NextRequest) {
 
     const response = await getOpenAIClient().chat.completions.create({
       model: 'gpt-4o',
-      max_tokens: 4096,
+      max_tokens: 6000,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: buildPrompt(body, body.classContext) },
