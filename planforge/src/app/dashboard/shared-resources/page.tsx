@@ -5,11 +5,12 @@ import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 import { formatDistanceToNow } from 'date-fns'
 import {
   Globe, Search, Download, BookOpen, Filter, FileText, Image,
-  Plus, ArrowUpDown, Users, Tag,
+  Plus, ArrowUpDown, Users, Tag, Flag,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { UploadResourceModal } from '@/components/dashboard/UploadResourceModal'
 import { UploaderProfileModal } from '@/components/dashboard/UploaderProfileModal'
+import { ReportResourceModal } from '@/components/dashboard/ReportResourceModal'
 
 interface SharedResource {
   id: string
@@ -83,10 +84,12 @@ function ResourceCard({
   resource,
   onDownload,
   onUploaderClick,
+  onReport,
 }: {
   resource: SharedResource
   onDownload: (r: SharedResource) => void
   onUploaderClick?: (r: SharedResource) => void
+  onReport?: (r: SharedResource) => void
 }) {
   const ft = FILE_ICON_CONFIG[resource.file_type ?? 'pdf'] ?? FILE_ICON_CONFIG.pdf
   const uploaderName = resource.uploader_name ?? 'Anonymous'
@@ -196,6 +199,17 @@ function ResourceCard({
         <Download className="w-3.5 h-3.5" />
         Download
       </button>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => onReport?.(resource)}
+          className="flex items-center gap-1 text-[11px] text-gray-300 hover:text-red-400 transition-colors"
+        >
+          <Flag className="w-3 h-3" />
+          Report
+        </button>
+      </div>
     </div>
   )
 }
@@ -267,6 +281,7 @@ export default function SharedResourcesPage() {
   const [sortBy, setSortBy]                 = useState<'newest' | 'oldest' | 'popular'>('newest')
   const [uploadOpen, setUploadOpen]         = useState(false)
   const [profileUser, setProfileUser]       = useState<{ userId: string; name: string; avatarUrl: string | null } | null>(null)
+  const [reportResource, setReportResource] = useState<SharedResource | null>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -497,6 +512,7 @@ export default function SharedResourcesPage() {
               resource={resource}
               onDownload={handleDownload}
               onUploaderClick={r => setProfileUser({ userId: r.user_id, name: r.uploader_name ?? 'Anonymous', avatarUrl: r.uploader_avatar_url })}
+              onReport={r => setReportResource(r)}
             />
           ))}
         </div>
@@ -520,6 +536,15 @@ export default function SharedResourcesPage() {
           uploaderName={profileUser.name}
           uploaderAvatarUrl={profileUser.avatarUrl}
           onClose={() => setProfileUser(null)}
+        />
+      )}
+
+      {/* ── Report modal ── */}
+      {reportResource && (
+        <ReportResourceModal
+          resourceId={reportResource.id}
+          resourceTitle={reportResource.title}
+          onClose={() => setReportResource(null)}
         />
       )}
     </div>
