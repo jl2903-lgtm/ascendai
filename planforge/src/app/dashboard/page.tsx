@@ -22,6 +22,7 @@ const toolCards = [
   { href: '/dashboard/worksheet-builder', emoji: '📝', label: 'Worksheet Builder', desc: 'Custom exercises with answer keys', accent: '#E07A5F', accentLight: '#F4A78A', tags: [{ label: 'A1–C2', c: 'orange' }, { label: 'Print-ready', c: 'indigo' }] },
   { href: '/dashboard/error-coach', emoji: '📸', label: 'Error Coach', desc: 'Analyse student writing mistakes', accent: '#9B59B6', accentLight: '#C39BD3', tags: [{ label: 'Photo Upload', c: 'purple' }, { label: 'CEFR', c: 'orange' }] },
   { href: '/dashboard/demo-lesson', emoji: '🎯', label: 'Demo Lesson', desc: 'Interview-ready lesson plan', accent: '#E07A5F', accentLight: '#F4A78A', tags: [{ label: 'Interview', c: 'orange' }, { label: 'CELTA', c: 'green' }] },
+  { href: '/dashboard/job-assistant', emoji: '💼', label: 'Job Assistant', desc: 'Craft winning TEFL applications', accent: '#0F766E', accentLight: '#14B8A6', tags: [{ label: 'Cover Letter', c: 'teal' }, { label: 'CV', c: 'indigo' }] },
   { href: '/dashboard/saved', emoji: '📚', label: 'Saved Library', desc: 'Your lessons and worksheets', accent: '#5B8FB9', accentLight: '#85B5D4', tags: [{ label: 'Search', c: 'indigo' }] },
 ]
 
@@ -31,6 +32,7 @@ const TC: Record<string, { bg: string; text: string }> = {
   indigo: { bg: '#E8EAF6', text: '#283593' },
   purple: { bg: '#F3E5F5', text: '#6A1B9A' },
   pink:   { bg: '#FCE7F3', text: '#BE185D' },
+  teal:   { bg: '#CCFBF1', text: '#0F766E' },
   muted:  { bg: '#F5F4F0', text: '#6B6B6B' },
 }
 
