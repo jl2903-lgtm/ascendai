@@ -10,10 +10,10 @@ interface SharedResource {
   title: string
   description: string | null
   subject: string | null
-  level: string | null
+  cefr_level: string | null
   file_url: string
   file_name: string
-  uploaded_by_name: string | null
+  uploader_name: string | null
   created_at: string
 }
 
@@ -37,12 +37,12 @@ export default function SharedResourcesPage() {
     try {
       let query = supabase
         .from('shared_resources')
-        .select('id, title, description, subject, level, file_url, file_name, uploaded_by_name, created_at')
+        .select('id, title, description, subject, cefr_level, file_url, file_name, uploader_name, created_at')
         .eq('is_public', true)
         .order('created_at', { ascending: false })
 
       if (subjectFilter !== 'All') query = query.eq('subject', subjectFilter)
-      if (levelFilter !== 'All') query = query.eq('level', levelFilter)
+      if (levelFilter !== 'All') query = query.eq('cefr_level', levelFilter)
 
       const { data, error } = await query
       if (error) throw error
@@ -80,7 +80,7 @@ export default function SharedResourcesPage() {
       r.title.toLowerCase().includes(q) ||
       (r.description ?? '').toLowerCase().includes(q) ||
       (r.subject ?? '').toLowerCase().includes(q) ||
-      (r.uploaded_by_name ?? '').toLowerCase().includes(q)
+      (r.uploader_name ?? '').toLowerCase().includes(q)
     )
   })
 
@@ -204,9 +204,9 @@ export default function SharedResourcesPage() {
                     {resource.subject}
                   </span>
                 )}
-                {resource.level && (
+                {resource.cefr_level && (
                   <span className="text-xs px-2.5 py-0.5 bg-sky-50 border border-sky-200 text-sky-700 rounded-full font-medium">
-                    {resource.level}
+                    {resource.cefr_level}
                   </span>
                 )}
               </div>
@@ -215,7 +215,7 @@ export default function SharedResourcesPage() {
               <div className="flex items-center justify-between text-xs text-gray-400 mt-auto pt-1">
                 <span className="flex items-center gap-1">
                   <User className="w-3 h-3" />
-                  {resource.uploaded_by_name ?? 'Anonymous'}
+                  {resource.uploader_name ?? 'Anonymous'}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
