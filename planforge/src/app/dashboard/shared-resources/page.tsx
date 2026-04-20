@@ -9,9 +9,11 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { UploadResourceModal } from '@/components/dashboard/UploadResourceModal'
+import { UploaderProfileModal } from '@/components/dashboard/UploaderProfileModal'
 
 interface SharedResource {
   id: string
+  user_id: string
   title: string
   description: string | null
   subject: string | null
@@ -80,9 +82,11 @@ function getAvatarBg(name: string): string {
 function ResourceCard({
   resource,
   onDownload,
+  onUploaderClick,
 }: {
   resource: SharedResource
   onDownload: (r: SharedResource) => void
+  onUploaderClick?: (r: SharedResource) => void
 }) {
   const ft = FILE_ICON_CONFIG[resource.file_type ?? 'pdf'] ?? FILE_ICON_CONFIG.pdf
   const uploaderName = resource.uploader_name ?? 'Anonymous'
@@ -109,22 +113,28 @@ function ResourceCard({
 
       {/* ── METADATA: avatar + name + time ── */}
       <div className="flex items-center gap-2">
-        {resource.uploader_avatar_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={resource.uploader_avatar_url}
-            alt={uploaderName}
-            className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-          />
-        ) : (
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-white"
-            style={{ background: avatarBg }}
-          >
-            {getInitials(uploaderName)}
-          </div>
-        )}
-        <span className="text-xs font-semibold text-gray-600 truncate">{uploaderName}</span>
+        <button
+          type="button"
+          onClick={() => onUploaderClick?.(resource)}
+          className="flex items-center gap-2 min-w-0 hover:opacity-70 transition-opacity"
+        >
+          {resource.uploader_avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={resource.uploader_avatar_url}
+              alt={uploaderName}
+              className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-white"
+              style={{ background: avatarBg }}
+            >
+              {getInitials(uploaderName)}
+            </div>
+          )}
+          <span className="text-xs font-semibold text-gray-600 truncate">{uploaderName}</span>
+        </button>
         <span className="text-gray-300 text-xs flex-shrink-0">·</span>
         <span className="text-xs text-gray-400 flex-shrink-0">{timeAgo(resource.created_at)}</span>
       </div>
@@ -256,6 +266,7 @@ export default function SharedResourcesPage() {
   const [typeFilter, setTypeFilter]         = useState('All')
   const [sortBy, setSortBy]                 = useState<'newest' | 'oldest' | 'popular'>('newest')
   const [uploadOpen, setUploadOpen]         = useState(false)
+  const [profileUser, setProfileUser]       = useState<{ userId: string; name: string; avatarUrl: string | null } | null>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -267,7 +278,7 @@ export default function SharedResourcesPage() {
     try {
       let query = supabase
         .from('shared_resources')
-        .select('id, title, description, subject, cefr_level, age_group, resource_type, file_url, file_name, file_type, file_size_bytes, uploader_name, uploader_avatar_url, tags, download_count, created_at')
+        .select('id, user_id, title, description, subject, cefr_level, age_group, resource_type, file_url, file_name, file_type, file_size_bytes, uploader_name, uploader_avatar_url, tags, download_count, created_at')
         .eq('is_public', true)
 
       if (subjectFilter  !== 'All') query = query.eq('subject',       subjectFilter)
@@ -485,6 +496,7 @@ export default function SharedResourcesPage() {
               key={resource.id}
               resource={resource}
               onDownload={handleDownload}
+              onUploaderClick={r => setProfileUser({ userId: r.user_id, name: r.uploader_name ?? 'Anonymous', avatarUrl: r.uploader_avatar_url })}
             />
           ))}
         </div>
@@ -498,6 +510,16 @@ export default function SharedResourcesPage() {
             setUploadOpen(false)
             fetchResources()
           }}
+        />
+      )}
+
+      {/* ── Uploader profile panel ── */}
+      {profileUser && (
+        <UploaderProfileModal
+          userId={profileUser.userId}
+          uploaderName={profileUser.name}
+          uploaderAvatarUrl={profileUser.avatarUrl}
+          onClose={() => setProfileUser(null)}
         />
       )}
     </div>
