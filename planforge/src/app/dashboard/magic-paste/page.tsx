@@ -20,13 +20,17 @@ function getLoadingMessages(level: string) {
 
 function deriveSourceBadge(sourceLabel: string): string {
   if (sourceLabel === 'Pasted text') return '✨ Generated from pasted text'
+  if (sourceLabel.startsWith('YouTube: ')) return `✨ Generated from YouTube: ${sourceLabel.replace('YouTube: ', '')}`
   if (sourceLabel.startsWith('YouTube video')) return '✨ Generated from YouTube'
   if (sourceLabel.startsWith('Article: ')) return `✨ Generated from article: ${sourceLabel.replace('Article: ', '')}`
+  if (sourceLabel.startsWith('Article from ')) return `✨ Generated from ${sourceLabel}`
   return `✨ Generated from: ${sourceLabel}`
 }
 
 function deriveTopic(sourceLabel: string, sourcePreview: string): string {
   if (sourceLabel.startsWith('Article: ')) return sourceLabel.replace('Article: ', '')
+  if (sourceLabel.startsWith('Article from ')) return sourceLabel.replace('Article from ', '')
+  if (sourceLabel.startsWith('YouTube: ')) return sourceLabel.replace('YouTube: ', '')
   if (sourceLabel.startsWith('YouTube video')) return 'YouTube video lesson'
   return sourcePreview.slice(0, 60).trim() || 'Pasted content'
 }
@@ -40,7 +44,7 @@ export default function MagicPastePage() {
   const [loading, setLoading]               = useState(false)
   const [loadingMsg, setLoadingMsg]         = useState(getLoadingMessages('B1')[0])
   const [adjusting]                         = useState(false)
-  const [result, setResult]                 = useState<{ lesson: LessonContent; sourceLabel: string; sourcePreview: string } | null>(null)
+  const [result, setResult]                 = useState<{ lesson: LessonContent; sourceLabel: string; sourcePreview: string; contentNote?: string } | null>(null)
   const [error, setError]                   = useState<string | null>(null)
   const [sourceExpanded, setSourceExpanded] = useState(false)
   const intervalRef                         = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -356,6 +360,14 @@ export default function MagicPastePage() {
             <p style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: '#9CA3AF', lineHeight: 1.5 }}>
               Tip: For YouTube videos, just paste the URL. We&apos;ll grab the transcript automatically.
             </p>
+          </div>
+        )}
+
+        {/* ── Content note badge (fallback methods) ── */}
+        {result?.contentNote && !loading && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', marginBottom: 16, background: 'rgba(254,243,199,0.9)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 12, animation: 'fadeInUp 0.4s ease both' }}>
+            <span style={{ fontSize: 14 }}>⚠️</span>
+            <p style={{ fontSize: 12, color: '#92400E', fontWeight: 600, lineHeight: 1.4 }}>{result.contentNote}</p>
           </div>
         )}
 
