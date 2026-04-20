@@ -18,10 +18,10 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'PlanForge <hello@planforge.app>',
+        from: 'Tyoutor Pro <hello@planforge.app>',
         to: email,
-        subject: 'Welcome to PlanForge — your lesson planning just got easier',
-        html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0F172A;color:#F8FAFC;padding:40px;border-radius:12px"><h1 style="color:#0D9488">PlanForge</h1><h2>Hey ${firstName}, welcome aboard! 👋</h2><p style="color:#94A3B8">You've just joined thousands of ESL/EFL teachers who plan smarter. Your free account gives you 5 lessons and 5 worksheets per month.</p><a href="${appUrl}/dashboard" style="display:inline-block;background:#0D9488;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:20px">Start Planning →</a></div>`,
+        subject: 'Welcome to Tyoutor Pro — your lesson planning just got easier',
+        html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0F172A;color:#F8FAFC;padding:40px;border-radius:12px"><h1 style="color:#0D9488">Tyoutor Pro</h1><h2>Hey ${firstName}, welcome aboard! 👋</h2><p style="color:#94A3B8">You've just joined thousands of ESL/EFL teachers who plan smarter. Your free account gives you 5 lessons and 5 worksheets per month.</p><a href="${appUrl}/dashboard" style="display:inline-block;background:#0D9488;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:20px">Start Planning →</a></div>`,
       }),
     })
 

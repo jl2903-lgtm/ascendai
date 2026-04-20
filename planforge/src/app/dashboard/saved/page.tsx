@@ -520,7 +520,7 @@ export default function SavedPage() {
               <div>
                 <div className="text-sm font-medium text-gray-900 flex items-center gap-1.5">
                   <Globe className="w-3.5 h-3.5 text-teal-500" />
-                  Share with all PlanForge users
+                  Share with all Tyoutor Pro users
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">This lesson will appear in the Shared Resources community library.</p>
               </div>
