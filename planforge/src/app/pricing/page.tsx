@@ -103,7 +103,7 @@ export default function PricingPage() {
             <div className="mb-8">
               <div className="text-sm font-semibold text-teal-400 uppercase tracking-wider mb-3">Pro</div>
               <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-5xl font-extrabold text-teal-400">$19</span>
+                <span className="text-5xl font-extrabold text-teal-400">$12</span>
                 <span className="text-gray-500 text-lg">/month</span>
               </div>
               <p className="text-gray-500 text-sm">Cancel anytime · No hidden fees</p>
@@ -119,12 +119,10 @@ export default function PricingPage() {
             </ul>
 
             <PricingUpgradeButton
-              trial
               className="block w-full text-center bg-teal-600 hover:bg-teal-500 disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
             >
-              Start 7-Day Free Trial
+              Upgrade to Pro
             </PricingUpgradeButton>
-            <p className="text-xs text-center text-gray-400 mt-3">No charge until trial ends</p>
           </div>
         </div>
 

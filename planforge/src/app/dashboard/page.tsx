@@ -158,7 +158,7 @@ export default function DashboardPage() {
               <div style={{ fontSize: 12, color: '#7A7A7A', marginTop: 2 }}>Upgrade to Pro for unlimited lessons, worksheets, and PDF export.</div>
             </div>
             <Link href="/pricing" style={{ background: 'linear-gradient(135deg,#2D6A4F,#40916C)', color: 'white', fontWeight: 700, fontSize: 13, padding: '8px 18px', borderRadius: 999, boxShadow: '0 4px 12px rgba(45,106,79,0.2)' }}>
-              Upgrade — $19/mo
+              Upgrade — $12/mo
             </Link>
           </div>
         )}
