@@ -1,3 +1,32 @@
+export interface SharedResource {
+  id: string
+  user_id: string
+  uploader_name: string
+  uploader_avatar_url: string | null
+  title: string
+  description: string | null
+  file_url: string
+  file_name: string
+  file_type: string
+  file_size_bytes: number | null
+  cefr_level: string
+  age_group: string
+  subject: string
+  resource_type: string
+  tags: string[] | null
+  download_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ReportedResource {
+  id: string
+  resource_id: string
+  reporter_id: string
+  reason: string
+  created_at: string
+}
+
 export interface PracticeSession {
   id: string
   share_code: string
