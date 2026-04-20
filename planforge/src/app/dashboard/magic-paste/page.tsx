@@ -42,10 +42,15 @@ export default function MagicPastePage() {
   }, [loading])
 
   const generate = async () => {
-    if (!pastedContent.trim()) return
+    console.log('[MagicPaste] generate() called, pastedContent length:', pastedContent.length)
+    if (!pastedContent.trim()) {
+      console.log('[MagicPaste] early return — pastedContent is empty')
+      return
+    }
     setError(null)
     setResult(null)
     setLoading(true)
+    console.log('[MagicPaste] setLoading(true) — fetching API...')
     try {
       const res = await fetch('/api/magic-paste/generate', {
         method: 'POST',
@@ -95,7 +100,7 @@ export default function MagicPastePage() {
   }
 
   return (
-    <div className="relative max-w-3xl mx-auto pb-16" style={{ zIndex: 1 }}>
+    <div className="relative max-w-3xl mx-auto pb-16" style={{ zIndex: 30 }}>
 
       {/* Decorative blobs */}
       <div aria-hidden className="pointer-events-none fixed inset-0 bg-dot-pattern" style={{ zIndex: 0 }} />
@@ -231,7 +236,8 @@ export default function MagicPastePage() {
 
             {/* CTA button */}
             <button
-              onClick={generate}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); generate() }}
               disabled={!pastedContent.trim()}
               style={{
                 width: '100%',
