@@ -30,9 +30,9 @@ const CLASS_LINKS = [
 ]
 
 const CREATE_LINKS = [
-  { label: 'Magic Paste',       href: '/dashboard/magic-paste',       icon: Wand2 },
   { label: 'Lesson Generator',  href: '/dashboard/lesson-generator',  icon: BookOpen },
   { label: 'Worksheet Builder', href: '/dashboard/worksheet-builder', icon: FileText },
+  { label: 'Magic Paste',       href: '/dashboard/magic-paste',       icon: Wand2 },
   { label: 'Error Coach',       href: '/dashboard/error-coach',       icon: AlertCircle },
   { label: 'Demo Lesson',       href: '/dashboard/demo-lesson',       icon: Presentation },
 ]

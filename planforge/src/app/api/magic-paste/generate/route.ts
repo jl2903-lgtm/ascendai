@@ -4,6 +4,17 @@ import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 import type { LessonContent } from '@/types'
 
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+
+interface ExtractionResult {
+  content: string
+  sourceLabel: string
+  contentNote?: string
+}
+
+// ─── Pure helpers (unchanged) ────────────────────────────────────────────────
+
 function detectContentType(content: string): 'youtube' | 'url' | 'text' {
   const trimmed = content.trim()
   if (!/^https?:\/\//i.test(trimmed)) return 'text'
@@ -131,6 +142,185 @@ SOURCE CONTENT:
 ${extractedContent}`
 }
 
+// ─── Meta tag extraction ─────────────────────────────────────────────────────
+
+function getMetaTag(html: string, ...names: string[]): string {
+  for (const name of names) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const patterns = [
+      new RegExp(`<meta[^>]+(?:name|property)=["']${escaped}["'][^>]+content=["']([^"'<]+)["']`, 'i'),
+      new RegExp(`<meta[^>]+content=["']([^"'<]+)["'][^>]+(?:name|property)=["']${escaped}["']`, 'i'),
+    ]
+    for (const p of patterns) {
+      const m = html.match(p)
+      if (m?.[1]?.trim()) return m[1].trim()
+    }
+  }
+  return ''
+}
+
+function extractMeta(html: string, url: string): { metaContent: string; title: string } {
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+  const title =
+    titleMatch?.[1]?.trim() ||
+    getMetaTag(html, 'og:title', 'twitter:title') ||
+    ''
+  const description = getMetaTag(html, 'og:description', 'description', 'twitter:description')
+  const keywords = getMetaTag(html, 'keywords')
+
+  let domain = url
+  try { domain = new URL(url).hostname.replace(/^www\./, '') } catch { /* keep */ }
+
+  const parts = [
+    title       && `TITLE: ${title}`,
+    description && `DESCRIPTION: ${description}`,
+    keywords    && `KEYWORDS: ${keywords}`,
+    `SOURCE: ${domain}`,
+    `URL: ${url}`,
+    '',
+    "Note: Full article text wasn't accessible. Generate a complete ESL lesson based on this metadata. Include the URL for students to access the article in class or as homework. Create vocabulary, comprehension, and discussion activities around the apparent topic.",
+  ].filter(Boolean)
+
+  return { metaContent: parts.join('\n'), title: title || domain }
+}
+
+// ─── YouTube extraction (3-method fallback) ──────────────────────────────────
+
+async function extractYouTube(url: string, videoId: string): Promise<ExtractionResult> {
+  // Method 1: youtube-transcript package
+  console.log('[magic-paste] Detected: YouTube URL, trying transcript...')
+  try {
+    const { YoutubeTranscript } = await import('youtube-transcript')
+    const items = await YoutubeTranscript.fetchTranscript(videoId)
+    const content = items.map((i: { text: string }) => i.text).join(' ')
+    if (content.trim().length > 100) {
+      console.log(`[magic-paste] Transcript success — ${content.length} chars`)
+      return { content, sourceLabel: `YouTube video (${url})` }
+    }
+    throw new Error('transcript too short')
+  } catch (err) {
+    console.log('[magic-paste] Transcript failed:', (err as Error).message, '— falling back to oEmbed...')
+  }
+
+  // Method 2: YouTube oEmbed API (works for any public video)
+  try {
+    const oEmbedRes = await fetch(
+      `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`,
+      { signal: AbortSignal.timeout(8000) }
+    )
+    if (!oEmbedRes.ok) throw new Error(`HTTP ${oEmbedRes.status}`)
+    const data = await oEmbedRes.json() as { title?: string; author_name?: string }
+    const title = data.title ?? ''
+    const author = data.author_name ?? ''
+    console.log(`[magic-paste] Using oEmbed data: "${title}" by ${author}`)
+
+    const content = `VIDEO TITLE: ${title}
+CHANNEL: ${author}
+URL: ${url}
+
+Note: Full transcript unavailable. Generate a complete ESL lesson based on the video title and its likely topic. Pre-teach vocabulary students will encounter. Include the URL for in-class or homework viewing. Create comprehension questions inferred from the title, and include discussion questions about the broader topic.`
+
+    return {
+      content,
+      sourceLabel: `YouTube: ${title}`,
+      contentNote: 'Lesson built from video title — transcript not available',
+    }
+  } catch (err) {
+    console.log('[magic-paste] oEmbed failed:', (err as Error).message, '— using URL-based generation...')
+  }
+
+  // Method 3: URL-based last resort
+  const content = `VIDEO URL: ${url}
+
+Note: No video information was accessible. Generate a practical ESL lesson that teachers can use alongside any YouTube video. Include general video-watching skills (prediction, note-taking, comprehension), and discussion prompts that work for any topic.`
+
+  return {
+    content,
+    sourceLabel: `YouTube video (${url})`,
+    contentNote: 'Lesson built from URL — video details not accessible',
+  }
+}
+
+// ─── Article extraction (3-method fallback) ──────────────────────────────────
+
+async function extractArticle(url: string): Promise<ExtractionResult> {
+  console.log('[magic-paste] Detected: Article URL, trying readability...')
+
+  // Single fetch — reused for both Method 1 and Method 2
+  let html: string | null = null
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': USER_AGENT },
+      signal: AbortSignal.timeout(10000),
+    })
+    if (response.ok) {
+      html = await response.text()
+    } else {
+      console.log(`[magic-paste] Fetch returned HTTP ${response.status}`)
+    }
+  } catch (err) {
+    console.log('[magic-paste] Fetch failed:', (err as Error).message)
+  }
+
+  if (html) {
+    // Method 1: Readability
+    try {
+      const { JSDOM } = await import('jsdom')
+      const { Readability } = await import('@mozilla/readability')
+      const dom = new JSDOM(html, { url })
+      const article = new Readability(dom.window.document).parse()
+      const content = article?.textContent?.trim() ?? ''
+      if (content.length > 200) {
+        console.log(`[magic-paste] Readability success — ${content.length} chars`)
+        return { content, sourceLabel: `Article: ${article?.title ?? url}` }
+      }
+      console.log('[magic-paste] Readability content too short, trying meta tags...')
+    } catch (err) {
+      console.log('[magic-paste] Readability error, trying meta tags:', (err as Error).message)
+    }
+
+    // Method 2: Meta tags (from already-fetched HTML — no second request)
+    const { metaContent, title } = extractMeta(html, url)
+    if (metaContent.length > 50) {
+      console.log(`[magic-paste] Meta tags success: "${title}"`)
+      return {
+        content: metaContent,
+        sourceLabel: `Article: ${title}`,
+        contentNote: "Lesson built from page title — full article wasn't accessible",
+      }
+    }
+    console.log('[magic-paste] Meta tags yielded no useful content')
+  }
+
+  // Method 3: URL-based last resort
+  console.log('[magic-paste] All article methods failed, using URL-based generation...')
+  let domain = url
+  let pathWords = ''
+  try {
+    const parsed = new URL(url)
+    domain = parsed.hostname.replace(/^www\./, '')
+    pathWords = parsed.pathname
+      .split('/')
+      .filter(Boolean)
+      .join(' ')
+      .replace(/[-_]/g, ' ')
+  } catch { /* keep defaults */ }
+
+  const content = `ARTICLE SOURCE: ${domain}
+URL: ${url}
+Apparent topic from URL: ${pathWords || domain}
+
+Note: The article couldn't be accessed. Generate a complete ESL lesson on the likely topic suggested by this URL and domain. Include vocabulary, reading skills activities, and discussion questions. Teachers can adapt activities when they have access to the actual article.`
+
+  return {
+    content,
+    sourceLabel: `Article from ${domain}`,
+    contentNote: "Lesson built from URL — article wasn't accessible",
+  }
+}
+
+// ─── Route handler ───────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = createRouteClient()
@@ -161,10 +351,9 @@ export async function POST(req: NextRequest) {
       if (classProfile?.student_nationality) nationality = classProfile.student_nationality
     }
 
-    // Detect and extract content
+    // Extract content using fallback chains
     const contentType = detectContentType(pastedContent.trim())
-    let extractedContent = ''
-    let sourceLabel = ''
+    let extraction: ExtractionResult
 
     if (contentType === 'youtube') {
       const videoId = extractYouTubeId(pastedContent.trim())
@@ -174,44 +363,16 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         )
       }
-      try {
-        const { YoutubeTranscript } = await import('youtube-transcript')
-        const items = await YoutubeTranscript.fetchTranscript(videoId)
-        extractedContent = items.map((i: { text: string }) => i.text).join(' ')
-        sourceLabel = `YouTube video (${pastedContent.trim()})`
-      } catch {
-        return NextResponse.json(
-          { error: "We couldn't access this video's transcript. Try pasting the transcript or video description directly." },
-          { status: 422 }
-        )
-      }
+      extraction = await extractYouTube(pastedContent.trim(), videoId)
     } else if (contentType === 'url') {
-      try {
-        const response = await fetch(pastedContent.trim(), {
-          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TyoutorPro/1.0; +https://tyoutorpro.com)' },
-          signal: AbortSignal.timeout(10000),
-        })
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        const html = await response.text()
-        const { JSDOM } = await import('jsdom')
-        const { Readability } = await import('@mozilla/readability')
-        const dom = new JSDOM(html, { url: pastedContent.trim() })
-        const article = new Readability(dom.window.document).parse()
-        extractedContent = article?.textContent?.trim() ?? ''
-        if (!extractedContent) throw new Error('No readable content found')
-        sourceLabel = `Article: ${article?.title ?? pastedContent.trim()}`
-      } catch {
-        return NextResponse.json(
-          { error: "We couldn't read this URL. Try copying and pasting the article text directly." },
-          { status: 422 }
-        )
-      }
+      extraction = await extractArticle(pastedContent.trim())
     } else {
-      extractedContent = pastedContent.trim()
-      sourceLabel = 'Pasted text'
+      console.log('[magic-paste] Detected: plain text paste')
+      extraction = { content: pastedContent.trim(), sourceLabel: 'Pasted text' }
     }
 
-    extractedContent = truncateContent(extractedContent)
+    const { content, sourceLabel, contentNote } = extraction
+    const truncated = truncateContent(content)
 
     const aiResponse = await getOpenAIClient().chat.completions.create({
       model: 'gpt-4o',
@@ -222,7 +383,7 @@ export async function POST(req: NextRequest) {
           content:
             'You are an expert TEFL/ESL teacher and curriculum designer. You create complete, classroom-ready lesson plans. Return valid JSON only — no markdown fences, no extra text.',
         },
-        { role: 'user', content: buildPrompt(extractedContent, sourceLabel, cefrLevel, duration, ageGroup, nationality) },
+        { role: 'user', content: buildPrompt(truncated, sourceLabel, cefrLevel, duration, ageGroup, nationality) },
       ],
     })
 
@@ -232,7 +393,7 @@ export async function POST(req: NextRequest) {
       lessonContent = JSON.parse(rawText)
     } catch {
       const jsonMatch = rawText.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 })
+      if (!jsonMatch) return NextResponse.json({ error: 'Failed to parse AI response. Please try again.' }, { status: 500 })
       lessonContent = JSON.parse(jsonMatch[0])
     }
 
@@ -259,9 +420,13 @@ export async function POST(req: NextRequest) {
       lesson: lessonContent,
       sourceLabel,
       sourcePreview: pastedContent.trim().slice(0, 100),
+      contentNote,
     })
   } catch (error) {
     console.error('[magic-paste/generate]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'We couldn\'t create a lesson right now. Please try again, or paste the text directly into the box above.' },
+      { status: 500 }
+    )
   }
 }
