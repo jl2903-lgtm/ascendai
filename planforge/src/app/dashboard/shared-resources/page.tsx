@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
-import { Globe, Search, Download, Calendar, User, BookOpen, Filter, FileText } from 'lucide-react'
+import { Globe, Search, Download, Calendar, User, BookOpen, Filter, FileText, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { UploadResourceModal } from '@/components/dashboard/UploadResourceModal'
 
 interface SharedResource {
   id: string
@@ -26,6 +27,7 @@ export default function SharedResourcesPage() {
   const [search, setSearch] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('All')
   const [levelFilter, setLevelFilter] = useState('All')
+  const [uploadOpen, setUploadOpen] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,14 +96,25 @@ export default function SharedResourcesPage() {
       <div aria-hidden style={{ position:'absolute',width:350,height:350,top:-80,right:-80,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8FF,#B3D4FF)',opacity:0.14,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
       <div aria-hidden style={{ position:'absolute',width:280,height:280,bottom:60,left:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8D0,#A7C4A0)',opacity:0.13,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-sky-600/15 border border-sky-600/30 rounded-xl flex items-center justify-center">
-          <Globe className="w-5 h-5 text-sky-500" />
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-sky-600/15 border border-sky-600/30 rounded-xl flex items-center justify-center">
+            <Globe className="w-5 h-5 text-sky-500" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Shared Resources</h1>
+            <p className="text-sm text-gray-500">Community-uploaded lesson materials from Tyoutor Pro teachers</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Shared Resources</h1>
-          <p className="text-sm text-gray-500">Community-uploaded lesson materials from Tyoutor Pro teachers</p>
-        </div>
+        <button
+          type="button"
+          onClick={() => setUploadOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #0284C7, #38BDF8)', boxShadow: '0 4px 14px rgba(2,132,199,0.30)' }}
+        >
+          <Plus className="w-4 h-4" />
+          Upload Resource
+        </button>
       </div>
 
       {/* Search + Filters */}
@@ -170,12 +183,25 @@ export default function SharedResourcesPage() {
           <div className="w-16 h-16 bg-sky-600/10 rounded-2xl flex items-center justify-center mb-4">
             <Globe className="w-8 h-8 text-sky-500/50" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No resources yet</h3>
-          <p className="text-sm text-gray-500 max-w-xs">
-            Be the first to share a lesson! Upload a PDF from your{' '}
-            <a href="/dashboard/saved" className="text-teal-600 hover:underline">Saved Library</a>{' '}
-            and toggle "Share with all Tyoutor Pro users".
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {search || subjectFilter !== 'All' || levelFilter !== 'All'
+              ? 'No resources found'
+              : 'No resources yet'}
+          </h3>
+          <p className="text-sm text-gray-500 max-w-xs mb-5">
+            {search || subjectFilter !== 'All' || levelFilter !== 'All'
+              ? 'Try different filters or be the first to upload!'
+              : 'Be the first to share a teaching material with the community.'}
           </p>
+          <button
+            type="button"
+            onClick={() => setUploadOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
+            style={{ background: 'linear-gradient(135deg, #0284C7, #38BDF8)', boxShadow: '0 4px 14px rgba(2,132,199,0.25)' }}
+          >
+            <Plus className="w-4 h-4" />
+            Upload Resource
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -234,6 +260,17 @@ export default function SharedResourcesPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Upload modal */}
+      {uploadOpen && (
+        <UploadResourceModal
+          onClose={() => setUploadOpen(false)}
+          onSuccess={() => {
+            setUploadOpen(false)
+            fetchResources()
+          }}
+        />
       )}
     </div>
   )
