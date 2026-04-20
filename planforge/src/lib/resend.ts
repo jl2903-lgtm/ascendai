@@ -1,8 +1,16 @@
 import { Resend } from 'resend'
 
-export const resend = new Resend(process.env.RESEND_API_KEY)
+let _resend: Resend | null = null
+
+export function getResend(): Resend | null {
+  if (!process.env.RESEND_API_KEY) return null
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY)
+  return _resend
+}
 
 export async function sendWelcomeEmail(email: string, name: string) {
+  const resend = getResend()
+  if (!resend) { console.warn('[resend] RESEND_API_KEY not set, skipping welcome email'); return }
   try {
     await resend.emails.send({
       from: 'Tyoutor Pro <hello@tyoutorpro.app>',
@@ -40,6 +48,8 @@ export async function sendWelcomeEmail(email: string, name: string) {
 }
 
 export async function sendUpgradeConfirmationEmail(email: string, name: string) {
+  const resend = getResend()
+  if (!resend) { console.warn('[resend] RESEND_API_KEY not set, skipping upgrade email'); return }
   try {
     await resend.emails.send({
       from: 'Tyoutor Pro <hello@tyoutorpro.app>',
@@ -76,6 +86,8 @@ export async function sendUpgradeConfirmationEmail(email: string, name: string) 
 }
 
 export async function sendUsageResetEmail(email: string, name: string) {
+  const resend = getResend()
+  if (!resend) { console.warn('[resend] RESEND_API_KEY not set, skipping reset email'); return }
   try {
     await resend.emails.send({
       from: 'Tyoutor Pro <hello@tyoutorpro.app>',
