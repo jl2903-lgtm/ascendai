@@ -100,7 +100,7 @@ export default function SharedResourcesPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900">Shared Resources</h1>
-          <p className="text-sm text-gray-500">Community-uploaded lesson materials from PlanForge teachers</p>
+          <p className="text-sm text-gray-500">Community-uploaded lesson materials from Tyoutor Pro teachers</p>
         </div>
       </div>
 
@@ -174,7 +174,7 @@ export default function SharedResourcesPage() {
           <p className="text-sm text-gray-500 max-w-xs">
             Be the first to share a lesson! Upload a PDF from your{' '}
             <a href="/dashboard/saved" className="text-teal-600 hover:underline">Saved Library</a>{' '}
-            and toggle "Share with all PlanForge users".
+            and toggle "Share with all Tyoutor Pro users".
           </p>
         </div>
       ) : (

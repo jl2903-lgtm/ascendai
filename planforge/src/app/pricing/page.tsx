@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { PricingUpgradeButton } from '@/components/pricing/PricingUpgradeButton'
 
 export const metadata: Metadata = {
-  title: 'Pricing — PlanForge',
+  title: 'Pricing — Tyoutor Pro',
   description: 'Start free with 5 lessons. Upgrade to Pro for unlimited AI-powered lesson plans, worksheets, and all 6 teaching tools.',
 }
 
@@ -42,7 +42,7 @@ export default function PricingPage() {
             <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-teal-400">PlanForge</span>
+            <span className="text-lg font-bold text-teal-400">Tyoutor Pro</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-gray-500 hover:text-white transition-colors px-4 py-2">Log in</Link>
