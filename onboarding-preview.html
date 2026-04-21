@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onboarding Flow — Tyoutor Pro</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F0F0EC;
+    padding: 40px 24px 80px;
+    color: #2D2D2D;
+  }
+
+  h1 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .flow {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 16px;
+  }
+
+  .step-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .step-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .arrow {
+    font-size: 22px;
+    color: #ccc;
+    margin-top: 90px;
+    flex-shrink: 0;
+  }
+
+  /* ---------- SCREEN FRAME ---------- */
+  .screen {
+    width: 340px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.8);
+  }
+
+  /* ---------- MODAL BACKDROP ---------- */
+  .modal-frame {
+    background: rgba(0,0,0,0.55);
+    border-radius: 20px;
+    padding: 24px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 480px;
+    position: relative;
+  }
+
+  /* ---------- MODAL CARD ---------- */
+  .modal {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #E5E7EB;
+    padding: 24px 20px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: #F3F4F6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: #6B7280;
+  }
+
+  /* ---------- ICON CIRCLE ---------- */
+  .icon-circle {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+  }
+  .icon-teal { background: rgba(45,106,79,0.12); border: 1px solid rgba(45,106,79,0.25); }
+  .icon-orange { background: rgba(255,152,0,0.12); border: 1px solid rgba(255,152,0,0.25); }
+
+  /* ---------- TYPOGRAPHY ---------- */
+  .modal h2 { font-size: 18px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+  .modal p.sub { font-size: 12px; color: #6B7280; text-align: center; line-height: 1.55; margin-bottom: 16px; }
+  .modal .question { font-size: 16px; font-weight: 800; text-align: center; margin-bottom: 4px; }
+  .modal .question-sub { font-size: 11.5px; color: #9CA3AF; text-align: center; margin-bottom: 16px; }
+
+  /* ---------- BENEFIT LIST ---------- */
+  .benefit-list {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+  .benefit-list li {
+    list-style: none;
+    display: flex; gap: 8px; align-items: flex-start;
+    font-size: 12px; color: #374151; margin-bottom: 8px;
+  }
+  .benefit-list li:last-child { margin-bottom: 0; }
+  .benefit-list li .dot { color: #2D6A4F; flex-shrink: 0; margin-top: 1px; }
+
+  /* ---------- BUTTONS ---------- */
+  .btn-primary {
+    display: block; width: 100%;
+    background: #2D6A4F;
+    color: white;
+    border: none; border-radius: 10px;
+    padding: 12px;
+    font-size: 13px; font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(45,106,79,0.25);
+  }
+  .btn-skip {
+    display: block; width: 100%;
+    background: none; border: none;
+    color: #9CA3AF; font-size: 11px;
+    cursor: pointer; text-align: center;
+  }
+
+  /* ---------- OPTION CARDS ---------- */
+  .option-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+
+  .option-card {
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex; align-items: center; gap: 10px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .option-card.selected {
+    border-color: #2D6A4F;
+    background: #F0FDF4;
+    box-shadow: 0 0 0 3px rgba(45,106,79,0.12);
+  }
+  .option-card-grid {
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 14px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: white;
+    cursor: pointer;
+  }
+  .option-card-grid.selected {
+    border-color: #2D6A4F;
+    background: #F0FDF4;
+    box-shadow: 0 0 0 3px rgba(45,106,79,0.12);
+  }
+
+  .option-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: #F3F4F6;
+    color: #6B7280;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .option-icon.active { background: #2D6A4F; color: white; }
+
+  .option-label { font-size: 12.5px; font-weight: 700; color: #111827; }
+  .option-desc { font-size: 11px; color: #9CA3AF; }
+
+  /* ---------- PROGRESS DOTS ---------- */
+  .progress-dots {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-bottom: 20px;
+  }
+  .dot-bar {
+    height: 5px; border-radius: 99px;
+    background: #E5E7EB;
+  }
+  .dot-bar.active { background: #2D6A4F; width: 28px; }
+  .dot-bar.done { background: rgba(45,106,79,0.4); width: 14px; }
+  .dot-bar.upcoming { width: 14px; }
+  .dot-step { font-size: 10px; color: #9CA3AF; margin-left: 4px; }
+
+  /* ---------- FOOTER NAV ---------- */
+  .wizard-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 4px;
+  }
+  .back-link { font-size: 11px; color: #9CA3AF; }
+  .skip-link { font-size: 11px; color: #9CA3AF; }
+
+  /* ---------- BANNER ---------- */
+  .onboarding-banner {
+    background: linear-gradient(90deg, #F0FDF4, #ECFDF5);
+    border: 1px solid #A7F3D0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .banner-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(45,106,79,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .banner-title { font-size: 12.5px; font-weight: 700; color: #065F46; }
+  .banner-sub { font-size: 11px; color: rgba(6,95,70,0.7); margin-top: 2px; }
+
+  /* ---------- LESSON GENERATOR SCREEN ---------- */
+  .generator-screen {
+    background: #FAFAF8;
+    border-radius: 20px;
+    padding: 16px;
+    min-height: 480px;
+  }
+  .gen-header { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .gen-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: rgba(45,106,79,0.1);
+    border: 1px solid rgba(45,106,79,0.2);
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+  }
+  .gen-title { font-size: 15px; font-weight: 800; color: #1F2937; }
+  .gen-subtitle { font-size: 11px; color: #9CA3AF; }
+
+  .form-label { font-size: 11px; font-weight: 600; color: #6B7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-select {
+    width: 100%; background: #F9FAFB; border: 1px solid #E5E7EB;
+    border-radius: 8px; padding: 8px 10px;
+    font-size: 12px; color: #111827; margin-bottom: 10px;
+  }
+  .form-input {
+    width: 100%; background: #F9FAFB; border: 1px solid #E5E7EB;
+    border-radius: 8px; padding: 8px 10px;
+    font-size: 12px; color: #9CA3AF; margin-bottom: 10px;
+  }
+
+  .gen-btn {
+    width: 100%; background: #2D6A4F; color: white;
+    border: none; border-radius: 10px; padding: 11px;
+    font-size: 12.5px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    box-shadow: 0 4px 12px rgba(45,106,79,0.3);
+    cursor: pointer;
+  }
+  .gen-btn.pulse {
+    animation: pulse 1.5s infinite;
+    box-shadow: 0 0 0 3px rgba(45,106,79,0.25), 0 4px 12px rgba(45,106,79,0.3);
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(45,106,79,0.4), 0 4px 12px rgba(45,106,79,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(45,106,79,0), 0 4px 12px rgba(45,106,79,0.3); }
+  }
+
+  .prefilled-tag {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: rgba(45,106,79,0.08); border: 1px solid rgba(45,106,79,0.2);
+    border-radius: 5px; padding: 1px 6px; font-size: 10px; color: #2D6A4F;
+    font-weight: 600; margin-left: 4px;
+  }
+
+  /* ---------- CELEBRATION SCREEN ---------- */
+  .celebration-frame {
+    background: linear-gradient(160deg, rgba(45,106,79,0.08), rgba(236,72,153,0.04), white);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .celebration-top {
+    background: linear-gradient(135deg, #F0FDF4, #ECFDF5, white);
+    padding: 28px 20px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* confetti dots visual */
+  .confetti-dot {
+    position: absolute;
+    border-radius: 2px;
+    opacity: 0.7;
+  }
+
+  .party-icon {
+    width: 60px; height: 60px;
+    background: #2D6A4F;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 12px;
+    box-shadow: 0 8px 24px rgba(45,106,79,0.35);
+  }
+  .celebration-title { font-size: 19px; font-weight: 900; color: #111827; margin-bottom: 6px; }
+  .celebration-sub { font-size: 11.5px; color: #6B7280; line-height: 1.55; }
+
+  .next-steps { padding: 16px; }
+  .next-label {
+    font-size: 10px; font-weight: 700; color: #9CA3AF;
+    text-transform: uppercase; letter-spacing: 1px;
+    text-align: center; margin-bottom: 10px;
+  }
+  .next-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .next-card {
+    border: 1.5px solid #E5E7EB; border-radius: 10px;
+    padding: 12px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    text-align: center;
+    background: white;
+  }
+  .next-card-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .next-card-title { font-size: 10.5px; font-weight: 700; color: #111827; }
+  .next-card-sub { font-size: 9.5px; color: #9CA3AF; }
+  .next-keep {
+    text-align: center; margin-top: 10px;
+    font-size: 11px; color: #9CA3AF;
+  }
+
+  /* badge */
+  .phase-badge {
+    background: #2D6A4F;
+    color: white;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Tyoutor Pro — Onboarding Flow</h1>
+
+<div class="flow">
+
+  <!-- ─── STEP 1: WELCOME MODAL ─── -->
+  <div class="step-wrapper">
+    <span class="phase-badge">Phase 2</span>
+    <div class="step-label">Welcome Modal</div>
+    <div class="screen">
+      <div class="modal-frame">
+        <div class="modal">
+          <div class="modal-close">✕</div>
+          <div class="icon-circle icon-teal">✨</div>
+          <h2>Welcome to Tyoutor Pro, Sarah! 👋</h2>
+          <p class="sub">Let's get you to your first lesson in under 60 seconds.</p>
+          <ul class="benefit-list">
+            <li>
+              <span class="dot">⚡</span>
+              <span>Answer <strong>3 quick questions</strong> so we can tailor lessons to your students</span>
+            </li>
+            <li>
+              <span class="dot">🕐</span>
+              <span>Then generate your first lesson plan — takes about 45 seconds</span>
+            </li>
+          </ul>
+          <button class="btn-primary">Get Started →</button>
+          <button class="btn-skip">Skip for now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <!-- ─── STEP 2: WIZARD Q1 ─── -->
+  <div class="step-wrapper">
+    <span class="phase-badge">Phase 3 · Q1</span>
+    <div class="step-label">Teaching Context</div>
+    <div class="screen">
+      <div class="modal-frame">
+        <div class="modal">
+          <div class="modal-close">✕</div>
+          <div class="progress-dots">
+            <div class="dot-bar active"></div>
+            <div class="dot-bar upcoming"></div>
+            <div class="dot-bar upcoming"></div>
+            <span class="dot-step">1 of 3</span>
+          </div>
+          <div class="question">Where do you teach?</div>
+          <div class="question-sub">This helps us suggest the right class size.</div>
+          <div class="option-list">
+            <div class="option-card selected">
+              <div class="option-icon active">👤</div>
+              <div>
+                <div class="option-label">Private tutor</div>
+                <div class="option-desc">1-on-1 or very small groups</div>
+              </div>
+            </div>
+            <div class="option-card">
+              <div class="option-icon">👥</div>
+              <div>
+                <div class="option-label">Classroom teacher</div>
+                <div class="option-desc">Standard class sizes (7–20+)</div>
+              </div>
+            </div>
+            <div class="option-card">
+              <div class="option-icon">🔀</div>
+              <div>
+                <div class="option-label">A bit of both</div>
+                <div class="option-desc">Mix of private and classroom</div>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-footer">
+            <span class="back-link" style="opacity:0">← Back</span>
+            <button class="skip-link">Skip for now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <!-- ─── STEP 3: WIZARD Q2 ─── -->
+  <div class="step-wrapper">
+    <span class="phase-badge">Phase 3 · Q2</span>
+    <div class="step-label">Age Group</div>
+    <div class="screen">
+      <div class="modal-frame">
+        <div class="modal">
+          <div class="modal-close">✕</div>
+          <div class="progress-dots">
+            <div class="dot-bar done"></div>
+            <div class="dot-bar active"></div>
+            <div class="dot-bar upcoming"></div>
+            <span class="dot-step">2 of 3</span>
+          </div>
+          <div class="question">Who do you teach most?</div>
+          <div class="question-sub">We'll default your lessons to this age group.</div>
+          <div class="option-grid">
+            <div class="option-card-grid">
+              <div style="font-size:28px">🧒</div>
+              <div class="option-label">Young Learners</div>
+              <div class="option-desc">Ages 5–12</div>
+            </div>
+            <div class="option-card-grid">
+              <div style="font-size:28px">🧑</div>
+              <div class="option-label">Teenagers</div>
+              <div class="option-desc">Ages 13–17</div>
+            </div>
+            <div class="option-card-grid selected">
+              <div style="font-size:28px">👩</div>
+              <div class="option-label">Adults</div>
+              <div class="option-desc">18+ general English</div>
+            </div>
+            <div class="option-card-grid">
+              <div style="font-size:28px">💼</div>
+              <div class="option-label">Business Pros</div>
+              <div class="option-desc">Professional English</div>
+            </div>
+          </div>
+          <div class="wizard-footer">
+            <button class="back-link">← Back</button>
+            <button class="skip-link">Skip for now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <!-- ─── STEP 4: WIZARD Q3 ─── -->
+  <div class="step-wrapper">
+    <span class="phase-badge">Phase 3 · Q3</span>
+    <div class="step-label">Level Focus</div>
+    <div class="screen">
+      <div class="modal-frame">
+        <div class="modal">
+          <div class="modal-close">✕</div>
+          <div class="progress-dots">
+            <div class="dot-bar done"></div>
+            <div class="dot-bar done"></div>
+            <div class="dot-bar active"></div>
+            <span class="dot-step">3 of 3</span>
+          </div>
+          <div class="question">What level do you teach most?</div>
+          <div class="question-sub">Last question — then you're generating lessons.</div>
+          <div class="option-list">
+            <div class="option-card">
+              <div class="option-icon" style="font-size:11px;font-weight:800;color:#6B7280;">A1–A2</div>
+              <div>
+                <div class="option-label">Beginner</div>
+                <div class="option-desc">Basic expressions and everyday phrases</div>
+              </div>
+            </div>
+            <div class="option-card selected">
+              <div class="option-icon active" style="font-size:11px;font-weight:800;">B1–B2</div>
+              <div>
+                <div class="option-label">Intermediate</div>
+                <div class="option-desc">Can hold a conversation on familiar topics</div>
+              </div>
+            </div>
+            <div class="option-card">
+              <div class="option-icon" style="font-size:11px;font-weight:800;color:#6B7280;">C1–C2</div>
+              <div>
+                <div class="option-label">Advanced</div>
+                <div class="option-desc">Near-fluent, academic or professional use</div>
+              </div>
+            </div>
+            <div class="option-card">
+              <div class="option-icon" style="font-size:10px;font-weight:800;color:#6B7280;">Varied</div>
+              <div>
+                <div class="option-label">Mix of levels</div>
+                <div class="option-desc">I'll set per-lesson</div>
+              </div>
+            </div>
+          </div>
+          <div class="wizard-footer">
+            <button class="back-link">← Back</button>
+            <button class="skip-link">Skip for now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <!-- ─── STEP 5: LESSON GENERATOR ─── -->
+  <div class="step-wrapper">
+    <span class="phase-badge">Phase 4</span>
+    <div class="step-label">Lesson Generator</div>
+    <div class="screen">
+      <div class="generator-screen">
+        <div class="gen-header">
+          <div class="gen-icon">📖</div>
+          <div>
+            <div class="gen-title">Lesson Generator</div>
+            <div class="gen-subtitle">Complete lesson plans in 60 seconds</div>
+          </div>
+        </div>
+
+        <!-- Banner -->
+        <div class="onboarding-banner">
+          <div class="banner-icon">✨</div>
+          <div>
+            <div class="banner-title">You're all set! Just add a topic and hit Generate Lesson ↓</div>
+            <div class="banner-sub">We pre-filled the form with your preferences. Tweak anything you like.</div>
+          </div>
+          <span style="font-size:16px;color:#6B7280;cursor:pointer;margin-left:auto;flex-shrink:0">✕</span>
+        </div>
+
+        <!-- Pre-filled form -->
+        <div class="form-label">Student Level <span class="prefilled-tag">✓ Pre-filled</span></div>
+        <div class="form-select">B1 Intermediate</div>
+
+        <div class="form-label">Topic or Skill Focus *</div>
+        <div class="form-input">e.g. Present Perfect, Job interviews…</div>
+
+        <div class="form-label">Student Age Group <span class="prefilled-tag">✓ Pre-filled</span></div>
+        <div class="form-select">Adults</div>
+
+        <div class="form-label">Class Size <span class="prefilled-tag">✓ Pre-filled</span></div>
+        <div class="form-select">1-on-1</div>
+
+        <button class="gen-btn pulse">⚡ Generate Lesson</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">→</div>
+
+  <!-- ─── STEP 6: CELEBRATION ─── -->
+  <div class="step-wrapper">
+    <span class="phase-badge">Phase 5</span>
+    <div class="step-label">Wow Moment + Confetti 🎊</div>
+    <div class="screen">
+      <div class="modal-frame" style="padding:16px">
+        <div class="celebration-frame" style="width:100%">
+          <div class="celebration-top">
+            <!-- simulated confetti dots -->
+            <div class="confetti-dot" style="width:7px;height:7px;background:#2D6A4F;top:18px;left:40px;transform:rotate(25deg)"></div>
+            <div class="confetti-dot" style="width:5px;height:9px;background:#EC4899;top:10px;left:80px;transform:rotate(-15deg)"></div>
+            <div class="confetti-dot" style="width:8px;height:5px;background:#FFD700;top:25px;left:130px;transform:rotate(40deg)"></div>
+            <div class="confetti-dot" style="width:6px;height:6px;background:#2D6A4F;top:8px;right:60px;transform:rotate(-30deg)"></div>
+            <div class="confetti-dot" style="width:5px;height:8px;background:#EC4899;top:22px;right:30px;transform:rotate(20deg)"></div>
+            <div class="confetti-dot" style="width:9px;height:4px;background:#FFD700;top:40px;left:20px;transform:rotate(-10deg)"></div>
+            <div class="confetti-dot" style="width:5px;height:5px;background:#FFFFFF;border:1px solid #ccc;top:30px;right:80px;transform:rotate(45deg)"></div>
+            <div class="confetti-dot" style="width:6px;height:9px;background:#2D6A4F;top:50px;left:60px;transform:rotate(60deg);opacity:0.4"></div>
+            <div class="confetti-dot" style="width:7px;height:5px;background:#EC4899;top:55px;right:45px;transform:rotate(-45deg);opacity:0.4"></div>
+
+            <div class="party-icon">🎉</div>
+            <div class="celebration-title">Your first lesson! 🎉</div>
+            <div class="celebration-sub">That's a full, communicative lesson plan ready to teach. Most teachers save 20+ minutes per lesson with Tyoutor Pro.</div>
+          </div>
+          <div class="next-steps">
+            <div class="next-label">What's next?</div>
+            <div class="next-grid">
+              <div class="next-card">
+                <div class="next-card-icon" style="background:#FCE7F3">✨</div>
+                <div class="next-card-title">Magic Paste</div>
+                <div class="next-card-sub">Turn any article into a lesson</div>
+              </div>
+              <div class="next-card">
+                <div class="next-card-icon" style="background:#CCFBF1">🔗</div>
+                <div class="next-card-title">Share it</div>
+                <div class="next-card-sub">Save & share this lesson</div>
+              </div>
+              <div class="next-card">
+                <div class="next-card-icon" style="background:#FEF3C7">📚</div>
+                <div class="next-card-title">Browse Library</div>
+                <div class="next-card-sub">Free community resources</div>
+              </div>
+            </div>
+            <div class="next-keep">Keep working on this lesson →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer legend -->
+<div style="margin-top:40px;text-align:center;font-size:11px;color:#9CA3AF;line-height:2">
+  <strong style="color:#555">Flow:</strong>
+  New user signs up → lands on Dashboard → <strong style="color:#2D6A4F">Welcome Modal</strong> fires →
+  3-step wizard (Teaching Context → Age Group → Level) →
+  redirected to <strong style="color:#2D6A4F">Lesson Generator</strong> with smart defaults pre-filled →
+  <strong style="color:#2D6A4F">Generate first lesson</strong> (pulsing button) →
+  <strong style="color:#2D6A4F">Celebration overlay</strong> + confetti burst 🎊<br>
+  <span style="color:#9CA3AF">Every step is skippable · ESC key closes modals · prefers-reduced-motion skips confetti · all existing users backfilled to skip onboarding</span>
+</div>
+
+</body>
+</html>
