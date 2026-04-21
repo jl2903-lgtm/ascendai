@@ -1,14 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { LessonContent, LessonFormData, ClassProfile, ClassContext } from '@/types'
 import { STUDENT_LEVELS, LESSON_LENGTHS, AGE_GROUPS, NATIONALITIES, CLASS_SIZES, SPECIAL_FOCUS_OPTIONS } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
 import { LessonOutput } from '@/components/dashboard/LessonOutput'
 import { ClassSelector } from '@/components/dashboard/ClassSelector'
+import { OnboardingBanner } from '@/components/onboarding/OnboardingBanner'
+import { FirstLessonCelebration } from '@/components/onboarding/FirstLessonCelebration'
+import { createClient } from '@/lib/supabase/client'
 import { BookOpen, Zap, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+function contextToClassSize(ctx: string | null | undefined): string | null {
+  if (ctx === 'private_tutor') return '1-on-1'
+  if (ctx === 'classroom') return 'Standard class (7-20)'
+  if (ctx === 'both') return 'Small group (2-6)'
+  return null
+}
+
+function OnboardingSearchParamsReader({ onFromOnboarding }: { onFromOnboarding: () => void }) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    if (searchParams.get('from') === 'onboarding') onFromOnboarding()
+  }, [searchParams, onFromOnboarding])
+  return null
+}
 
 const defaultForm: LessonFormData = {
   level: 'B1',
@@ -28,6 +47,31 @@ export default function LessonGeneratorPage() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [adjusting, setAdjusting] = useState(false)
+  const [fromOnboarding, setFromOnboarding] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
+
+  // Hydrate smart defaults from the user profile once on mount
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      supabase
+        .from('users')
+        .select('default_level, default_age_group, default_nationality, teaching_context')
+        .eq('id', session.user.id)
+        .single()
+        .then(({ data }) => {
+          if (!data) return
+          setForm(f => ({
+            ...f,
+            level: data.default_level ?? f.level,
+            ageGroup: data.default_age_group ?? f.ageGroup,
+            nationality: data.default_nationality ?? f.nationality,
+            classSize: contextToClassSize(data.teaching_context) ?? f.classSize,
+          }))
+        })
+    })
+  }, [])
 
   const handleClassSelected = (profile: ClassProfile | null) => {
     if (profile) {
@@ -76,6 +120,10 @@ export default function LessonGeneratorPage() {
       if (!res.ok) { toast.error(data.error || 'Failed to generate lesson. Please try again.'); return }
       setLesson(data)
       window.scrollTo({ top: 0, behavior: 'smooth' })
+      if (fromOnboarding && !overrides) {
+        setShowCelebration(true)
+        setFromOnboarding(false)
+      }
     } catch {
       toast.error('Something went wrong. Please try again.')
     } finally {
@@ -126,6 +174,14 @@ export default function LessonGeneratorPage() {
         </div>
         <ClassSelector onClassSelected={handleClassSelected} />
       </div>
+
+      <Suspense fallback={null}>
+        <OnboardingSearchParamsReader onFromOnboarding={() => setFromOnboarding(true)} />
+      </Suspense>
+
+      {fromOnboarding && !lesson && (
+        <OnboardingBanner onDismiss={() => setFromOnboarding(false)} />
+      )}
 
       {classContext && (
         <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-700 font-medium">
@@ -248,7 +304,7 @@ export default function LessonGeneratorPage() {
             <button
               onClick={() => generate()}
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed ${fromOnboarding && !loading ? 'animate-pulse ring-2 ring-teal-400/60 ring-offset-2' : ''}`}
             >
               {loading ? (
                 <>
@@ -302,6 +358,7 @@ export default function LessonGeneratorPage() {
       </div>
 
       <UpgradeModal isOpen={showUpgrade} onClose={() => setShowUpgrade(false)} toolName="Lesson Generator" limit={5} />
+      <FirstLessonCelebration isOpen={showCelebration} onClose={() => setShowCelebration(false)} />
     </div>
   )
 }

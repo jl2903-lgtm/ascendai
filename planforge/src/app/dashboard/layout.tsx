@@ -43,10 +43,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       if (profile) {
-        if (!profile.onboarding_completed) {
-          router.push('/onboarding')
-          return
-        }
         setUserProfile(profile)
       }
       setLoading(false)
