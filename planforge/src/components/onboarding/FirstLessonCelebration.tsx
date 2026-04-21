@@ -1,11 +1,42 @@
 'use client'
 import { useEffect } from 'react'
 import Link from 'next/link'
+import confetti from 'canvas-confetti'
 import { PartyPopper, Sparkles, Share2, Library, X } from 'lucide-react'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
+}
+
+const BRAND_COLORS = ['#2D6A4F', '#EC4899', '#FFFFFF', '#FFD700']
+
+function fireConfetti() {
+  confetti({
+    particleCount: 80,
+    angle: 60,
+    spread: 70,
+    origin: { x: 0, y: 0.8 },
+    colors: BRAND_COLORS,
+    zIndex: 60,
+  })
+  confetti({
+    particleCount: 80,
+    angle: 120,
+    spread: 70,
+    origin: { x: 1, y: 0.8 },
+    colors: BRAND_COLORS,
+    zIndex: 60,
+  })
+  setTimeout(() => {
+    confetti({
+      particleCount: 50,
+      spread: 100,
+      origin: { x: 0.5, y: 0.6 },
+      colors: BRAND_COLORS,
+      zIndex: 60,
+    })
+  }, 250)
 }
 
 export function FirstLessonCelebration({ isOpen, onClose }: Props) {
@@ -17,6 +48,12 @@ export function FirstLessonCelebration({ isOpen, onClose }: Props) {
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [isOpen, onClose])
+
+  useEffect(() => {
+    if (!isOpen) return
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!prefersReducedMotion) fireConfetti()
+  }, [isOpen])
 
   if (!isOpen) return null
 
