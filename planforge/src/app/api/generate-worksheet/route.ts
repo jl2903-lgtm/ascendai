@@ -22,19 +22,43 @@ function buildPrompt(data: WorksheetFormData, classContext?: ClassContext | null
   const hasMatching = data.exerciseTypes.some(t => t.toLowerCase().includes('match'))
   const hasReading = data.exerciseTypes.some(t =>
     t.toLowerCase().includes('reading') || t.toLowerCase().includes('comprehension'))
-  const matchingNote = hasMatching
-    ? `\n\nSPECIAL RULE for Matching exercises: use matchingPairs instead of items/answerKey:\n{"type":"Matching","instructions":"...","items":[],"answerKey":[],"matchingPairs":[{"word":"term","definition":"its meaning"}]}\nMatchingPairs must have exactly ${data.questionCount} objects with "word" and "definition" string fields.`
+
+  const criticalRules: string[] = []
+
+  if (hasReading) {
+    criticalRules.push(`CRITICAL — Reading comprehension: you MUST include a "passage" field with 150–200 words of real reading text written at ${data.level} level on the topic. This is not a placeholder — write the actual passage. The passage field must appear before "items". Example structure:
+{
+  "type": "Reading comprehension",
+  "instructions": "Read the passage, then answer the questions.",
+  "passage": "[150–200 words of actual reading text on the topic at ${data.level} level goes here]",
+  "items": ["Question 1?", "Question 2?"],
+  "answerKey": ["Answer 1", "Answer 2"]
+}`)
+  }
+
+  if (hasMatching) {
+    criticalRules.push(`CRITICAL — Matching exercises: use "matchingPairs" instead of "items"/"answerKey". Example:
+{
+  "type": "Matching",
+  "instructions": "Match each word to its definition.",
+  "items": [],
+  "answerKey": [],
+  "matchingPairs": [{"word": "term", "definition": "its meaning"}]
+}
+matchingPairs must have exactly ${data.questionCount} objects with "word" and "definition" fields.`)
+  }
+
+  const rulesBlock = criticalRules.length > 0
+    ? `\n${criticalRules.map((r, i) => `RULE ${i + 1}: ${r}`).join('\n\n')}\n`
     : ''
-  const readingNote = hasReading
-    ? `\n\nSPECIAL RULE for Reading Comprehension exercises: include a "passage" field containing a 150–200 word reading text on the topic, then generate comprehension questions as "items" based on that text:\n{"type":"Reading Comprehension","instructions":"Read the passage and answer the questions.","passage":"The full reading text goes here...","items":["Question 1?","Question 2?"],"answerKey":["Answer 1","Answer 2"]}\nThe passage must be written at the correct CEFR level.`
-    : ''
+
   return `Create an ESL/EFL worksheet:
 - Exercise Types: ${data.exerciseTypes.join(', ')}
 - Topic: ${data.topic}
 - CEFR Level: ${data.level}
 - Items per exercise: ${data.questionCount}
 - Include Answer Key: ${data.includeAnswerKey}
-
+${rulesBlock}
 Return JSON only:
 {
   "title": "worksheet title",
@@ -49,7 +73,7 @@ Return JSON only:
     }
   ]
 }
-Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant. IMPORTANT: items and answerKey entries must be plain text strings with NO leading numbers, letters, or punctuation — the renderer numbers them automatically.${matchingNote}${readingNote}${classContext ? buildClassContextNote(classContext) : ''}`
+Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant. items and answerKey entries must be plain text strings with NO leading numbers, letters, or punctuation — the renderer numbers them automatically.${classContext ? buildClassContextNote(classContext) : ''}`
 }
 
 export async function POST(req: NextRequest) {
