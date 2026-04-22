@@ -56,15 +56,15 @@ export function ReportResourceModal({ resourceId, resourceTitle, onClose }: Prop
               <div className="w-8 h-8 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center">
                 <Flag className="w-4 h-4 text-red-500" />
               </div>
-              <h2 className="text-base font-bold text-gray-900">Report resource</h2>
+              <h2 className="text-base font-bold text-[#2D2D2D]">Report resource</h2>
             </div>
             {!submitting && (
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-xl bg-[#F0EEE9] hover:bg-[#E8E4DE] flex items-center justify-center transition-colors"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-[#6B6860]" />
               </button>
             )}
           </div>
@@ -77,12 +77,12 @@ export function ReportResourceModal({ resourceId, resourceTitle, onClose }: Prop
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-sm font-semibold text-gray-900 mb-1">Report submitted</p>
-              <p className="text-xs text-gray-400 mb-5">Our team will review this resource shortly.</p>
+              <p className="text-sm font-semibold text-[#2D2D2D] mb-1">Report submitted</p>
+              <p className="text-xs text-[#8C8880] mb-5">Our team will review this resource shortly.</p>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                className="px-5 py-2.5 rounded-xl text-sm font-bold bg-[#F0EEE9] text-[#4A473E] hover:bg-[#E8E4DE] transition-colors"
               >
                 Close
               </button>
@@ -90,12 +90,12 @@ export function ReportResourceModal({ resourceId, resourceTitle, onClose }: Prop
           ) : (
             <>
               {/* Resource title preview */}
-              <p className="text-xs text-gray-500 mb-4 bg-gray-50 rounded-xl px-3 py-2 line-clamp-2">
+              <p className="text-xs text-[#6B6860] mb-4 bg-[#F7F6F2] rounded-xl px-3 py-2 line-clamp-2">
                 &ldquo;{resourceTitle}&rdquo;
               </p>
 
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                Reason <span className="font-normal text-gray-400">(optional)</span>
+              <label className="block text-xs font-semibold text-[#4A473E] mb-1.5">
+                Reason <span className="font-normal text-[#8C8880]">(optional)</span>
               </label>
               <textarea
                 value={reason}
@@ -103,16 +103,16 @@ export function ReportResourceModal({ resourceId, resourceTitle, onClose }: Prop
                 placeholder="Describe the issue — e.g. inappropriate content, copyright violation, incorrect information..."
                 rows={4}
                 maxLength={500}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 resize-none"
+                className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-3 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 resize-none"
               />
-              <p className="text-[11px] text-gray-400 text-right mt-1">{reason.length}/500</p>
+              <p className="text-[11px] text-[#8C8880] text-right mt-1">{reason.length}/500</p>
 
               <div className="flex gap-2 mt-4">
                 <button
                   type="button"
                   onClick={onClose}
                   disabled={submitting}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-[#F0EEE9] text-[#4A473E] hover:bg-[#E8E4DE] transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
