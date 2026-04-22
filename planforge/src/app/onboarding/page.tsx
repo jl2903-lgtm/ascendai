@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import confetti from 'canvas-confetti'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronRight, BookOpen, Users, BarChart2, Target, Layers, CheckCircle } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
@@ -100,7 +101,16 @@ export default function OnboardingPage() {
         .update({ onboarding_completed: true })
         .eq('id', session.user.id)
 
-      router.push('/dashboard')
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#0D9488', '#14B8A6', '#F59E0B', '#EF4444', '#8B5CF6'],
+      })
+
+      setTimeout(() => {
+        router.push('/dashboard/lesson-generator?from=onboarding')
+      }, 1200)
     } catch {
       // Still redirect on error — don't block the user
       router.push('/dashboard')

@@ -20,8 +20,13 @@ function buildClassContextNote(ctx: ClassContext): string {
 
 function buildPrompt(data: WorksheetFormData, classContext?: ClassContext | null): string {
   const hasMatching = data.exerciseTypes.some(t => t.toLowerCase().includes('match'))
+  const hasReading = data.exerciseTypes.some(t =>
+    t.toLowerCase().includes('reading') || t.toLowerCase().includes('comprehension'))
   const matchingNote = hasMatching
     ? `\n\nSPECIAL RULE for Matching exercises: use matchingPairs instead of items/answerKey:\n{"type":"Matching","instructions":"...","items":[],"answerKey":[],"matchingPairs":[{"word":"term","definition":"its meaning"}]}\nMatchingPairs must have exactly ${data.questionCount} objects with "word" and "definition" string fields.`
+    : ''
+  const readingNote = hasReading
+    ? `\n\nSPECIAL RULE for Reading Comprehension exercises: include a "passage" field containing a 150–200 word reading text on the topic, then generate comprehension questions as "items" based on that text:\n{"type":"Reading Comprehension","instructions":"Read the passage and answer the questions.","passage":"The full reading text goes here...","items":["Question 1?","Question 2?"],"answerKey":["Answer 1","Answer 2"]}\nThe passage must be written at the correct CEFR level.`
     : ''
   return `Create an ESL/EFL worksheet:
 - Exercise Types: ${data.exerciseTypes.join(', ')}
@@ -44,7 +49,7 @@ Return JSON only:
     }
   ]
 }
-Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant. IMPORTANT: items and answerKey entries must be plain text strings with NO leading numbers, letters, or punctuation — the renderer numbers them automatically.${matchingNote}${classContext ? buildClassContextNote(classContext) : ''}`
+Create one section per exercise type requested. Each must have exactly ${data.questionCount} items. Make content engaging and topically relevant. IMPORTANT: items and answerKey entries must be plain text strings with NO leading numbers, letters, or punctuation — the renderer numbers them automatically.${matchingNote}${readingNote}${classContext ? buildClassContextNote(classContext) : ''}`
 }
 
 export async function POST(req: NextRequest) {
@@ -60,14 +65,22 @@ export async function POST(req: NextRequest) {
 
     const { data: profile } = await supabase
       .from('users')
-      .select('subscription_status, worksheets_used_this_month')
+      .select('subscription_status')
       .eq('id', userId)
       .single()
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
     const isFree = profile.subscription_status === 'free' || profile.subscription_status === 'cancelled'
-    if (isFree && profile.worksheets_used_this_month >= 5) {
+
+    // Query user_stats early — used for both limit check and post-generation upsert
+    const { data: existingStats } = await supabase
+      .from('user_stats')
+      .select('total_worksheets_created, worksheets_this_week, last_weekly_reset')
+      .eq('user_id', userId)
+      .single()
+
+    if (isFree && (existingStats?.total_worksheets_created ?? 0) >= 5) {
       return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
     }
 
@@ -95,12 +108,7 @@ export async function POST(req: NextRequest) {
       worksheetContent = JSON.parse(jsonMatch[0])
     }
 
-    if (isFree) {
-      await supabase.from('users').update({ worksheets_used_this_month: profile.worksheets_used_this_month + 1 }).eq('id', userId)
-    }
-
     // Track stats for all users (upsert into user_stats)
-    const { data: existingStats } = await supabase.from('user_stats').select('total_worksheets_created, worksheets_this_week, last_weekly_reset').eq('user_id', userId).single()
     const now = new Date()
     const lastReset = existingStats?.last_weekly_reset ? new Date(existingStats.last_weekly_reset) : null
     const weekExpired = !lastReset || (now.getTime() - lastReset.getTime()) > 7 * 24 * 60 * 60 * 1000

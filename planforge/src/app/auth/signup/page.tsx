@@ -88,7 +88,7 @@ export default function SignupPage() {
             <Logo size="lg" />
           </div>
           <h1 className="text-2xl font-bold text-[#2D2D2D]">Create your account</h1>
-          <p className="text-[#6B6860] mt-2 font-medium">5 free lessons every month. No credit card needed.</p>
+          <p className="text-[#6B6860] mt-2 font-medium">5 free lessons to get started. No credit card needed.</p>
         </div>
 
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">

@@ -303,6 +303,11 @@ export default function WorksheetBuilderPage() {
                         </>
                       ) : (
                         <>
+                          {ex.passage && (
+                            <div className="bg-[#F7F6F2] border border-[#E8E4DE] rounded-lg p-4 mb-4 text-sm text-[#4A473E] leading-relaxed">
+                              {ex.passage}
+                            </div>
+                          )}
                           <div className="space-y-3">
                             {(ex.items ?? []).map((item, j) => (
                               <div key={j} className="text-sm">

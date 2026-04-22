@@ -124,14 +124,22 @@ export async function POST(req: NextRequest) {
 
     const { data: profile } = await supabase
       .from('users')
-      .select('subscription_status, lessons_used_this_month')
+      .select('subscription_status')
       .eq('id', userId)
       .single()
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
     const isFree = profile.subscription_status === 'free' || profile.subscription_status === 'cancelled'
-    if (isFree && profile.lessons_used_this_month >= 5) {
+
+    // Query user_stats early — used for both limit check and post-generation upsert
+    const { data: existingStats } = await supabase
+      .from('user_stats')
+      .select('total_lessons_created, lessons_this_week, last_weekly_reset')
+      .eq('user_id', userId)
+      .single()
+
+    if (isFree && (existingStats?.total_lessons_created ?? 0) >= 5) {
       return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
     }
 
@@ -159,12 +167,7 @@ export async function POST(req: NextRequest) {
       lessonContent = JSON.parse(jsonMatch[0])
     }
 
-    if (isFree) {
-      await supabase.from('users').update({ lessons_used_this_month: profile.lessons_used_this_month + 1 }).eq('id', userId)
-    }
-
     // Track stats for all users (upsert into user_stats)
-    const { data: existingStats } = await supabase.from('user_stats').select('total_lessons_created, lessons_this_week, last_weekly_reset').eq('user_id', userId).single()
     const now = new Date()
     const lastReset = existingStats?.last_weekly_reset ? new Date(existingStats.last_weekly_reset) : null
     const weekExpired = !lastReset || (now.getTime() - lastReset.getTime()) > 7 * 24 * 60 * 60 * 1000

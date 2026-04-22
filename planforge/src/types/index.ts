@@ -177,6 +177,7 @@ export interface WorksheetContent {
   exercises: Array<{
     type: string
     instructions: string
+    passage?: string
     items: string[]
     answerKey?: string[]
     matchingPairs?: Array<{ word: string; definition: string }>
