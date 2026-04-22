@@ -112,7 +112,7 @@ export default function DashboardPage() {
     ...recentWorksheets.map(w => ({ id: w.id, emoji: '📝', title: w.title, sub: 'Worksheet', type: 'Worksheet', tc: 'orange', date: w.created_at })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
 
-  const glass: React.CSSProperties = { background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.6)', borderRadius: 16 }
+  const glass: React.CSSProperties = { background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(232,228,222,0.9)', borderRadius: 16 }
 
   return (
     <div className="relative max-w-6xl mx-auto pb-10" style={{ zIndex: 1 }}>
@@ -128,13 +128,13 @@ export default function DashboardPage() {
         {/* ── Header ── */}
         <div className="flex items-start justify-between gap-4 mb-6" style={{ animation: 'fadeInUp 0.5s ease both' }}>
           <div>
-            <p style={{ fontSize: 13, color: '#999', fontWeight: 600, marginBottom: 4 }}>
+            <p style={{ fontSize: 13, color: '#8C8880', fontWeight: 600, marginBottom: 4 }}>
               {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
             <h1 style={{ fontSize: 28, fontWeight: 900, color: '#2D2D2D', lineHeight: 1.2 }}>
               Welcome back{firstName ? `, ${firstName}` : ''}! 👋
             </h1>
-            <p className="mt-1" style={{ fontSize: 14, color: '#7A7A7A' }}>
+            <p className="mt-1" style={{ fontSize: 14, color: '#6B6860' }}>
               {isPro ? 'You have unlimited access to all tools.' : `${lessonsLeft} free lesson${lessonsLeft !== 1 ? 's' : ''} remaining this month.`}
             </p>
           </div>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
               <div style={{ fontWeight: 700, color: '#2D2D2D', fontSize: 14 }}>
                 {lessonsLeft === 0 ? "You've used all free lessons this month" : `Only ${lessonsLeft} free lesson${lessonsLeft !== 1 ? 's' : ''} left`}
               </div>
-              <div style={{ fontSize: 12, color: '#7A7A7A', marginTop: 2 }}>Upgrade to Pro for unlimited lessons, worksheets, and PDF export.</div>
+              <div style={{ fontSize: 12, color: '#6B6860', marginTop: 2 }}>Upgrade to Pro for unlimited lessons, worksheets, and PDF export.</div>
             </div>
             <Link href="/pricing" style={{ background: 'linear-gradient(135deg,#2D6A4F,#40916C)', color: 'white', fontWeight: 700, fontSize: 13, padding: '8px 18px', borderRadius: 999, boxShadow: '0 4px 12px rgba(45,106,79,0.2)' }}>
               Upgrade — $19/mo
@@ -173,10 +173,10 @@ export default function DashboardPage() {
           ].map(s => (
             <div key={s.label} style={{ ...glass, padding: '16px 18px' }}>
               <div className="flex items-center justify-between mb-2">
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#999', letterSpacing: '0.5px', textTransform: 'uppercase' as const }}>{s.label}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#8C8880', letterSpacing: '0.5px', textTransform: 'uppercase' as const }}>{s.label}</span>
                 <span style={{ fontSize: 18 }}>{s.emoji}</span>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#2D2D2D', lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: '#2D2D2D', lineHeight: 1 }}>{s.value}</div>
               <div style={{ fontSize: 11, color: '#2D6A4F', fontWeight: 600, marginTop: 4 }}>{s.trend}</div>
             </div>
           ))}
@@ -189,9 +189,9 @@ export default function DashboardPage() {
               🌍
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#6B6B6B', letterSpacing: '1.2px', textTransform: 'uppercase' as const, marginBottom: 2 }}>ACTIVE CLASS</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#8C8880', letterSpacing: '1.2px', textTransform: 'uppercase' as const, marginBottom: 2 }}>ACTIVE CLASS</div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#2D2D2D' }}>{activeClass.class_name}</div>
-              <div style={{ fontSize: 12, color: '#7A7A7A', marginTop: 1 }}>{activeClass.cefr_level} · {activeClass.student_nationality} · {activeClass.student_age_group}</div>
+              <div style={{ fontSize: 12, color: '#6B6860', marginTop: 1 }}>{activeClass.cefr_level} · {activeClass.student_nationality} · {activeClass.student_age_group}</div>
               {activeClass.weak_areas.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {activeClass.weak_areas.slice(0, 3).map(area => (
@@ -226,10 +226,10 @@ export default function DashboardPage() {
                   <span style={{ fontSize: 20, flexShrink: 0 }}>{item.emoji}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: '#2D2D2D', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
-                    <div style={{ fontSize: 11, color: '#999', marginTop: 1 }}>{item.sub}</div>
+                    <div style={{ fontSize: 11, color: '#8C8880', marginTop: 1 }}>{item.sub}</div>
                   </div>
                   <Pill label={item.type} c={item.tc} />
-                  <span style={{ fontSize: 11, color: '#BBB', flexShrink: 0, marginLeft: 4 }}>{formatDate(item.date)}</span>
+                  <span style={{ fontSize: 11, color: '#9E9C98', flexShrink: 0, marginLeft: 4 }}>{formatDate(item.date)}</span>
                 </div>
               ))}
             </div>
@@ -248,7 +248,7 @@ function ToolCard({ tool }: { tool: typeof toolCards[0] }) {
       style={{
         display: 'block', textDecoration: 'none',
         background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.6)', borderRadius: 16, overflow: 'hidden',
+        border: '1px solid rgba(232,228,222,0.8)', borderRadius: 16, overflow: 'hidden',
         transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
         transform: hovered ? 'translateY(-4px) scale(1.01)' : 'none',
         boxShadow: hovered ? '0 16px 40px rgba(0,0,0,0.08)' : 'none',
@@ -262,7 +262,7 @@ function ToolCard({ tool }: { tool: typeof toolCards[0] }) {
           {tool.emoji}
         </div>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#2D2D2D', marginBottom: 4 }}>{tool.label}</div>
-        <div style={{ fontSize: 12.5, color: '#7A7A7A', lineHeight: 1.55, marginBottom: 12 }}>{tool.desc}</div>
+        <div style={{ fontSize: 12.5, color: '#6B6860', lineHeight: 1.55, marginBottom: 12 }}>{tool.desc}</div>
         <div className="flex flex-wrap gap-1.5">
           {tool.tags.map(tag => <Pill key={tag.label} label={tag.label} c={tag.c} />)}
         </div>

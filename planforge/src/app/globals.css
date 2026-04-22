@@ -9,8 +9,8 @@
   --terra: #E07A5F;
   --bg: #FAFAF8;
   --text: #2D2D2D;
-  --text-secondary: #7A7A7A;
-  --text-muted: #999;
+  --text-secondary: #6B6860;
+  --text-muted: #8C8880;
   --border: #E8E4DE;
   --divider: #EDEBE8;
 }
@@ -57,18 +57,17 @@ body {
     background-size: 28px 28px;
   }
   .glass-card {
-    background: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.80);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.6);
+    border: 1px solid rgba(232,228,222,0.9);
     border-radius: 16px;
   }
   .gradient-text {
-    background: linear-gradient(135deg, #2D6A4F, #52B788, #2D6A4F);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: gradientShift 4s ease infinite;
+    color: #2D6A4F;
+    text-decoration: underline;
+    text-decoration-color: rgba(45,106,79,0.3);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 5px;
   }
   .btn-primary {
     background: linear-gradient(135deg, #2D6A4F, #40916C);
