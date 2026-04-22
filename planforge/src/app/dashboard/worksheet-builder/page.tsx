@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { WorksheetContent, WorksheetFormData, ClassProfile, ClassContext } from '@/types'
 import { STUDENT_LEVELS, EXERCISE_TYPES } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
@@ -14,6 +15,17 @@ import toast from 'react-hot-toast'
 const QUESTION_COUNTS = [5, 10, 15, 20]
 
 export default function WorksheetBuilderPage() {
+  const supabase = createClient()
+  const [teacherName, setTeacherName] = useState('Teacher')
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      supabase.from('users').select('full_name').eq('id', session.user.id).single()
+        .then(({ data }) => { if (data?.full_name) setTeacherName(data.full_name) })
+    })
+  }, [])
+
   const [form, setForm] = useState<WorksheetFormData>({
     exerciseTypes: ['Gap fill'],
     topic: '',
@@ -122,7 +134,7 @@ export default function WorksheetBuilderPage() {
   const handleDownload = async () => {
     if (!worksheet) return
     try {
-      await generateWorksheetPDF(worksheet, formatDate(new Date().toISOString()))
+      await generateWorksheetPDF(worksheet, formatDate(new Date().toISOString()), teacherName)
       toast.success('PDF downloaded!')
     } catch {
       toast.error('PDF generation failed.')

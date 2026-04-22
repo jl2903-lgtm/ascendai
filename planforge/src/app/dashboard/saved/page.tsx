@@ -38,17 +38,21 @@ export default function SavedPage() {
     open: false, file: null, title: '', subject: '', level: 'B1', isPublic: false, uploading: false,
   })
 
+  const [teacherName, setTeacherName] = useState('Teacher')
+
   const load = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    const [{ data: l }, { data: w }, { data: p }] = await Promise.all([
+    const [{ data: l }, { data: w }, { data: p }, { data: profile }] = await Promise.all([
       supabase.from('lessons').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
       supabase.from('worksheets').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
       supabase.from('practice_sessions').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
+      supabase.from('users').select('full_name').eq('id', session.user.id).single(),
     ])
     setLessons(l || [])
     setWorksheets(w || [])
     setPracticeSessions((p || []) as PracticeSession[])
+    if (profile?.full_name) setTeacherName(profile.full_name)
     setLoading(false)
   }
 
@@ -85,7 +89,7 @@ export default function SavedPage() {
 
   const handleDownloadLesson = async (lesson: Lesson) => {
     try {
-      await generateLessonPDF(lesson.lesson_content, { level: lesson.student_level, topic: lesson.topic, date: formatDate(lesson.created_at) })
+      await generateLessonPDF(lesson.lesson_content, { level: lesson.student_level, topic: lesson.topic, date: formatDate(lesson.created_at) }, teacherName)
     } catch {
       toast.error('PDF generation failed.')
     }
@@ -93,7 +97,7 @@ export default function SavedPage() {
 
   const handleDownloadWorksheet = async (ws: Worksheet) => {
     try {
-      await generateWorksheetPDF(ws.content, formatDate(ws.created_at))
+      await generateWorksheetPDF(ws.content, formatDate(ws.created_at), teacherName)
       toast.success('PDF downloaded!')
     } catch {
       toast.error('PDF generation failed.')

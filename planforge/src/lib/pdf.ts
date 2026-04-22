@@ -1,284 +1,509 @@
-import { LessonContent, WorksheetContent } from '@/types'
+import type { LessonContent, WorksheetContent, DemoLesson } from '@/types'
+import { G, PAGE, drawPageHeader, drawPageFooters } from './pdf-styles'
 
-export async function generateLessonPDF(lesson: LessonContent, meta: { level: string; topic: string; date: string }) {
-  const { jsPDF } = await import('jspdf')
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+// ── Document context ──────────────────────────────────────────────────────────
+// Wraps a jsPDF instance with stateful y-tracking and convenience helpers.
 
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const margin = 20
-  const contentWidth = pageWidth - margin * 2
-  let y = 20
+function makeCtx(doc: any, startY: number) {
+  let y = startY
+  const { M, W, CW, FOOTER_Y } = PAGE
+  const CONT_Y = PAGE.M + 4  // y for continuation pages (no header)
 
-  const checkPageBreak = (needed: number) => {
-    if (y + needed > doc.internal.pageSize.getHeight() - 25) {
+  const chk = (needed: number) => {
+    if (y + needed > FOOTER_Y - 4) {
       doc.addPage()
-      y = 20
+      y = CONT_Y
     }
   }
 
-  const addText = (text: string, fontSize: number, color: [number, number, number], bold = false, indent = 0) => {
-    doc.setFontSize(fontSize)
-    doc.setTextColor(...color)
+  const txt = (s: string, fs: number, c: [number,number,number], bold = false, indent = 0) => {
+    const str = s?.trim()
+    if (!str) return
+    doc.setFontSize(fs)
+    doc.setTextColor(c[0], c[1], c[2])
     doc.setFont('helvetica', bold ? 'bold' : 'normal')
-    const lines = doc.splitTextToSize(text, contentWidth - indent)
-    checkPageBreak(lines.length * (fontSize * 0.4) + 4)
-    doc.text(lines, margin + indent, y)
-    y += lines.length * (fontSize * 0.4) + 4
+    const lines: string[] = doc.splitTextToSize(str, CW - indent)
+    const lh = fs * 0.42
+    chk(lines.length * lh + 2)
+    doc.text(lines, M + indent, y)
+    y += lines.length * lh + 1
   }
 
-  const addSection = (title: string) => {
-    checkPageBreak(12)
-    doc.setFillColor(13, 148, 136)
-    doc.roundedRect(margin, y - 4, contentWidth, 10, 2, 2, 'F')
+  const gap = (mm = 4) => { y += mm }
+
+  // Section header: 3 mm coloured left bar + bold label
+  const sHdr = (label: string, c: [number,number,number] = G.green) => {
+    chk(10)
+    doc.setFillColor(c[0], c[1], c[2])
+    doc.rect(M, y, 3, 7, 'F')
     doc.setFontSize(11)
-    doc.setTextColor(255, 255, 255)
+    doc.setTextColor(G.dark[0], G.dark[1], G.dark[2])
     doc.setFont('helvetica', 'bold')
-    doc.text(title, margin + 4, y + 3)
-    y += 12
+    doc.text(label, M + 5, y + 5)
+    y += 10
   }
 
-  // Header
-  doc.setFillColor(15, 23, 42)
-  doc.rect(0, 0, pageWidth, 28, 'F')
-  doc.setFontSize(20)
-  doc.setTextColor(13, 148, 136)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Tyoutor Pro', margin, 16)
-  doc.setFontSize(10)
-  doc.setTextColor(148, 163, 184)
-  doc.setFont('helvetica', 'normal')
-  doc.text('tyoutorpro.io', margin, 23)
-  y = 38
-
-  // Title
-  addText(lesson.title, 18, [15, 23, 42], true)
-  y += 2
-
-  // Meta
-  const metaText = `Level: ${meta.level}  |  Topic: ${meta.topic}  |  Generated: ${meta.date}`
-  addText(metaText, 9, [100, 116, 139])
-  y += 6
-
-  // Overview
-  addSection('LESSON OVERVIEW')
-  addText(`Duration: ${lesson.overview.timing}`, 10, [30, 41, 59])
-  y += 2
-  addText('Objectives:', 10, [30, 41, 59], true)
-  lesson.overview.objectives.forEach(obj => addText(`• ${obj}`, 10, [51, 65, 85], false, 4))
-  addText('Materials:', 10, [30, 41, 59], true)
-  lesson.overview.materials.forEach(mat => addText(`• ${mat}`, 10, [51, 65, 85], false, 4))
-  y += 4
-
-  // Warmer
-  addSection(`WARMER (${lesson.warmer.duration})`)
-  addText(lesson.warmer.instructions, 10, [30, 41, 59])
-  if (lesson.warmer.teacherNotes) {
-    addText('Teacher Note:', 10, [13, 148, 136], true)
-    addText(lesson.warmer.teacherNotes, 10, [51, 65, 85])
-  }
-  y += 4
-
-  // Lead-in
-  addSection(`LEAD-IN (${lesson.leadIn.duration})`)
-  addText(lesson.leadIn.instructions, 10, [30, 41, 59])
-  y += 4
-
-  // Main Activity
-  addSection(`MAIN ACTIVITY (${lesson.mainActivity.duration})`)
-  addText(lesson.mainActivity.instructions, 10, [30, 41, 59])
-  if (lesson.mainActivity.variations) {
-    addText('Variations:', 10, [13, 148, 136], true)
-    addText(lesson.mainActivity.variations, 10, [51, 65, 85])
-  }
-  y += 4
-
-  // Language Focus
-  addSection('LANGUAGE FOCUS')
-  addText(lesson.languageFocus.grammar_or_vocab, 10, [30, 41, 59], true)
-  addText(lesson.languageFocus.explanation, 10, [30, 41, 59])
-  addText('Examples:', 10, [13, 148, 136], true)
-  lesson.languageFocus.examples.forEach(ex => addText(`• ${ex}`, 10, [51, 65, 85], false, 4))
-  y += 4
-
-  // L1 Notes
-  addSection(`L1-AWARE NOTES (${lesson.l1Notes.nationality})`)
-  addText('Common Challenges:', 10, [30, 41, 59], true)
-  lesson.l1Notes.specificChallenges.forEach(c => addText(`• ${c}`, 10, [51, 65, 85], false, 4))
-  addText('Tips:', 10, [13, 148, 136], true)
-  lesson.l1Notes.tips.forEach(t => addText(`• ${t}`, 10, [51, 65, 85], false, 4))
-  y += 4
-
-  // Exercises
-  addSection('PRACTICE EXERCISES')
-  lesson.exercises.forEach((ex, i) => {
-    addText(`Exercise ${i + 1}: ${ex.type}`, 10, [30, 41, 59], true)
-    addText(ex.instructions, 10, [30, 41, 59])
-    addText(ex.content, 10, [51, 65, 85])
-    addText(`Answer Key: ${ex.answerKey}`, 9, [13, 148, 136])
-    y += 2
-  })
-
-  // Speaking Task
-  addSection(`SPEAKING TASK (${lesson.speakingTask.duration})`)
-  addText(lesson.speakingTask.instructions, 10, [30, 41, 59])
-  lesson.speakingTask.prompts.forEach(p => addText(`• ${p}`, 10, [51, 65, 85], false, 4))
-  y += 4
-
-  // Exit Ticket
-  addSection('EXIT TICKET')
-  addText(lesson.exitTicket.instructions, 10, [30, 41, 59])
-  lesson.exitTicket.questions.forEach(q => addText(`• ${q}`, 10, [51, 65, 85], false, 4))
-  y += 4
-
-  // Homework
-  if (lesson.homework.instructions) {
-    addSection('HOMEWORK (Optional)')
-    addText(lesson.homework.instructions, 10, [30, 41, 59])
+  // Dashed divider line
+  const dash = () => {
+    chk(6)
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2])
+    doc.setLineDashPattern([2, 2], 0)
+    doc.line(M, y, W - M, y)
+    doc.setLineDashPattern([], 0)
+    y += 5
   }
 
-  // Footer on every page
-  const pageCount = doc.getNumberOfPages()
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i)
-    doc.setFillColor(15, 23, 42)
-    doc.rect(0, doc.internal.pageSize.getHeight() - 14, pageWidth, 14, 'F')
-    doc.setFontSize(8)
-    doc.setTextColor(100, 116, 139)
-    doc.text(`Generated by Tyoutor Pro — tyoutorpro.io | ${meta.level} | ${meta.topic} | ${meta.date}`, margin, doc.internal.pageSize.getHeight() - 5)
-    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, doc.internal.pageSize.getHeight() - 5, { align: 'right' })
+  // Thin solid rule
+  const rule = () => {
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2])
+    doc.setLineWidth(0.3)
+    doc.line(M, y, W - M, y)
+    y += 4
   }
 
-  doc.save(`tyoutorpro-lesson-${Date.now()}.pdf`)
+  const blt = (s: string, indent = 5) => { txt(`• ${s}`, 10, G.body, false, indent); gap(1) }
+
+  const num = (s: string, n: number, indent = 5) => {
+    txt(`${n}. ${s.replace(/^\d+[\.\)]\s*/, '')}`, 10, G.body, false, indent)
+    gap(2)
+  }
+
+  return {
+    txt, gap, sHdr, dash, rule, blt, num, chk, doc,
+    getY: () => y,
+    setY: (v: number) => { y = v },
+  }
 }
 
-export async function generateWorksheetPDF(worksheet: WorksheetContent, date: string) {
+// ── Lesson Plan PDF ───────────────────────────────────────────────────────────
+
+export async function generateLessonPDF(
+  lesson: LessonContent,
+  meta: { level: string; topic: string; date: string },
+  teacherName = 'Teacher',
+): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const margin = 20
-  const contentWidth = pageWidth - margin * 2
-  let y = 20
 
-  const checkPageBreak = (needed: number) => {
-    if (y + needed > doc.internal.pageSize.getHeight() - 25) {
-      doc.addPage()
-      y = 20
+  const firstName = teacherName.split(' ')[0] || 'Teacher'
+  const subtitle = `${meta.level}  ·  ${meta.topic}  ·  ${meta.date}`
+  const startY = drawPageHeader(doc, lesson.title, subtitle, firstName)
+  const ctx = makeCtx(doc, startY)
+  const { txt, gap, sHdr, dash, blt, doc: d } = ctx
+
+  // ── Lesson Overview ─────────────────────────────────────────────────────────
+  sHdr('LESSON OVERVIEW')
+  txt(`Duration: ${lesson.overview.timing}`, 10, G.dark, true)
+  gap(2)
+  txt('Objectives:', 10, G.dark, true)
+  lesson.overview.objectives.forEach(o => blt(o))
+  gap(1)
+  txt('Materials:', 10, G.dark, true)
+  lesson.overview.materials.forEach(m => blt(m))
+  gap(5)
+
+  // ── Warmer ──────────────────────────────────────────────────────────────────
+  sHdr(`WARMER  ·  ${lesson.warmer.duration}`)
+  txt(lesson.warmer.instructions, 10, G.body)
+  if (lesson.warmer.teacherNotes) {
+    gap(2)
+    txt('Teacher note:', 9, G.accent, true, 3)
+    txt(lesson.warmer.teacherNotes, 9, G.sub, false, 3)
+  }
+  gap(5)
+
+  // ── Lead-in ─────────────────────────────────────────────────────────────────
+  sHdr(`LEAD-IN  ·  ${lesson.leadIn.duration}`)
+  txt(lesson.leadIn.instructions, 10, G.body)
+  if (lesson.leadIn.context) {
+    gap(2)
+    txt(lesson.leadIn.context, 9, G.sub, false, 3)
+  }
+  gap(5)
+
+  // ── Main Activity ───────────────────────────────────────────────────────────
+  sHdr(`MAIN ACTIVITY  ·  ${lesson.mainActivity.duration}`)
+  txt(lesson.mainActivity.instructions, 10, G.body)
+  if (lesson.mainActivity.variations) {
+    gap(2)
+    txt('Variations:', 9, G.accent, true, 3)
+    txt(lesson.mainActivity.variations, 9, G.sub, false, 3)
+  }
+  if (lesson.mainActivity.teacherNotes) {
+    gap(2)
+    txt('Teacher note:', 9, G.accent, true, 3)
+    txt(lesson.mainActivity.teacherNotes, 9, G.sub, false, 3)
+  }
+  gap(5)
+
+  // ── Language Focus ──────────────────────────────────────────────────────────
+  sHdr('LANGUAGE FOCUS')
+  txt(lesson.languageFocus.grammar_or_vocab, 11, G.dark, true)
+  gap(2)
+  txt(lesson.languageFocus.explanation, 10, G.body)
+  gap(2)
+  txt('Examples:', 10, G.dark, true)
+  lesson.languageFocus.examples.forEach(e => blt(e))
+  if (lesson.languageFocus.commonErrors?.length) {
+    gap(1)
+    txt('Common errors to watch for:', 10, G.dark, true)
+    lesson.languageFocus.commonErrors.forEach(e => blt(e))
+  }
+  gap(5)
+
+  // ── L1-Aware Notes (terra cotta) ────────────────────────────────────────────
+  sHdr(`L1-AWARE NOTES  ·  ${lesson.l1Notes.nationality}`, G.terra)
+  txt('Common challenges:', 10, G.dark, true)
+  lesson.l1Notes.specificChallenges.forEach(c => blt(c))
+  gap(2)
+  txt('Teaching tips:', 10, G.dark, true)
+  lesson.l1Notes.tips.forEach(t => blt(t))
+  gap(5)
+
+  // ── Cultural Note (if flagged) ──────────────────────────────────────────────
+  if (lesson.culturalNote?.hasCulturalConsideration && lesson.culturalNote.note) {
+    sHdr('CULTURAL NOTE', G.accent)
+    txt(lesson.culturalNote.note, 10, G.body)
+    gap(5)
+  }
+
+  // ── Practice Exercises ──────────────────────────────────────────────────────
+  sHdr('PRACTICE EXERCISES')
+  const answerKeys: Array<{ num: number; type: string; key: string }> = []
+
+  lesson.exercises.forEach((ex, i) => {
+    ctx.chk(14)
+    txt(`Exercise ${i + 1}: ${ex.type}`, 11, G.dark, true)
+    gap(1)
+    txt(ex.instructions, 10, G.sub, false, 3)
+    gap(2)
+    txt(ex.content, 10, G.body, false, 3)
+    if (ex.answerKey) {
+      answerKeys.push({ num: i + 1, type: ex.type, key: ex.answerKey })
     }
+    gap(4)
+  })
+
+  // ── Speaking Task ───────────────────────────────────────────────────────────
+  sHdr(`SPEAKING TASK  ·  ${lesson.speakingTask.duration}`)
+  txt(lesson.speakingTask.instructions, 10, G.body)
+  gap(2)
+  lesson.speakingTask.prompts.forEach(p => blt(p))
+  gap(5)
+
+  // ── Exit Ticket ─────────────────────────────────────────────────────────────
+  sHdr('EXIT TICKET')
+  txt(lesson.exitTicket.instructions, 10, G.body)
+  gap(2)
+  lesson.exitTicket.questions.forEach(q => blt(q))
+  gap(5)
+
+  // ── Homework (optional) ─────────────────────────────────────────────────────
+  if (lesson.homework?.instructions) {
+    sHdr('HOMEWORK  ·  Optional')
+    txt(lesson.homework.instructions, 10, G.body)
+    gap(5)
   }
 
-  const addText = (text: string, fontSize: number, color: [number, number, number], bold = false, indent = 0) => {
-    doc.setFontSize(fontSize)
-    doc.setTextColor(...color)
-    doc.setFont('helvetica', bold ? 'bold' : 'normal')
-    const lines = doc.splitTextToSize(text, contentWidth - indent)
-    checkPageBreak(lines.length * (fontSize * 0.4) + 3)
-    doc.text(lines, margin + indent, y)
-    y += lines.length * (fontSize * 0.4) + 3
+  // ── Answer Key ──────────────────────────────────────────────────────────────
+  if (answerKeys.length > 0) {
+    gap(2)
+    dash()
+    sHdr('ANSWER KEY')
+    answerKeys.forEach(ak => {
+      txt(`Exercise ${ak.num}  (${ak.type})`, 10, G.dark, true)
+      txt(ak.key, 9, G.sub, false, 5)
+      gap(3)
+    })
   }
 
-  // Header
-  doc.setFillColor(15, 23, 42)
-  doc.rect(0, 0, pageWidth, 28, 'F')
-  doc.setFontSize(18)
-  doc.setTextColor(13, 148, 136)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Tyoutor Pro', margin, 15)
-  doc.setFontSize(9)
-  doc.setTextColor(148, 163, 184)
-  doc.text('Worksheet', margin, 22)
-  y = 38
+  drawPageFooters(d, `${meta.level} · ${meta.topic}`)
+  d.save(`tyoutorpro-lesson-${Date.now()}.pdf`)
+}
 
-  addText(worksheet.title, 16, [15, 23, 42], true)
-  addText(`Level: ${worksheet.level}  |  Topic: ${worksheet.topic}  |  Date: ${date}`, 9, [100, 116, 139])
-  y += 6
+// ── Worksheet PDF ─────────────────────────────────────────────────────────────
 
-  // Name / Date line
-  doc.setDrawColor(203, 213, 225)
-  doc.line(margin, y, margin + 80, y)
+export async function generateWorksheetPDF(
+  worksheet: WorksheetContent,
+  date: string,
+  teacherName = 'Teacher',
+): Promise<void> {
+  const { jsPDF } = await import('jspdf')
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+
+  const firstName = teacherName.split(' ')[0] || 'Teacher'
+  const subtitle = `${worksheet.level}  ·  ${worksheet.topic}  ·  ${date}`
+  const startY = drawPageHeader(doc, `Worksheet: ${worksheet.topic}`, subtitle, firstName)
+  const { M, W, CW } = PAGE
+
+  // ── Student name / date fields ──────────────────────────────────────────────
+  let y = startY
   doc.setFontSize(9)
-  doc.setTextColor(100, 116, 139)
-  doc.text('Name:', margin, y - 2)
-  doc.line(margin + 100, y, margin + 180, y)
-  doc.text('Date:', margin + 100, y - 2)
+  doc.setTextColor(G.sub[0], G.sub[1], G.sub[2])
+  doc.setFont('helvetica', 'normal')
+  doc.text('Name:', M, y)
+  doc.setDrawColor(G.border[0], G.border[1], G.border[2])
+  doc.setLineWidth(0.4)
+  doc.line(M + 12, y, M + 90, y)
+  doc.text('Date:', M + 100, y)
+  doc.line(M + 112, y, M + 165, y)
   y += 10
 
+  const ctx = makeCtx(doc, y)
+  ctx.setY(y)
+  const { txt, gap, sHdr, doc: d } = ctx
+
+  // Collect answer keys for final page
+  type AKEntry = { num: number; type: string; isMatching: boolean; compact?: string; items: string[]; keys: string[] }
+  const answerKeys: AKEntry[] = []
+
   worksheet.exercises.forEach((ex, i) => {
-    checkPageBreak(20)
-    doc.setFillColor(241, 245, 249)
-    doc.roundedRect(margin, y - 4, contentWidth, 9, 2, 2, 'F')
-    doc.setFontSize(11)
-    doc.setTextColor(15, 23, 42)
-    doc.setFont('helvetica', 'bold')
-    doc.text(`Exercise ${i + 1}: ${ex.type}`, margin + 3, y + 2)
-    y += 12
+    // ── Exercise header ──────────────────────────────────────────────────────
+    sHdr(`${i + 1}.  ${ex.type}`)
+    txt(ex.instructions, 10, G.sub)
+    gap(3)
 
-    addText(ex.instructions, 10, [30, 41, 59])
-    y += 2
+    // ── Reading passage ──────────────────────────────────────────────────────
+    if (ex.passage) {
+      const passLines: string[] = d.splitTextToSize(ex.passage, CW - 8)
+      const boxH = passLines.length * (10 * 0.42) + 8
+      ctx.chk(boxH + 4)
+      const py = ctx.getY()
+      d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+      d.setDrawColor(G.border[0], G.border[1], G.border[2])
+      d.setLineWidth(0.3)
+      d.rect(M, py - 2, CW, boxH, 'FD')
+      d.setFontSize(10)
+      d.setTextColor(G.body[0], G.body[1], G.body[2])
+      d.setFont('helvetica', 'italic')
+      d.text(passLines, M + 4, py + 3)
+      ctx.setY(py + boxH + 4)
+    }
 
+    // ── Matching exercise ────────────────────────────────────────────────────
     if (ex.matchingPairs && ex.matchingPairs.length > 0 && ex.shuffledRight) {
-      const midX = margin + contentWidth / 2
-      const colWidth = contentWidth / 2 - 8
-      const startY = y
+      const midX = M + CW / 2
+      const colW = CW / 2 - 6
+      const startRow = ctx.getY()
 
       ex.matchingPairs.forEach((pair, j) => {
-        const leftText = `${j + 1}.  ${pair.word}`
+        const leftTxt = `${j + 1}.  ${pair.word}`
         const rightEntry = ex.shuffledRight![j]
-        const rightText = `${rightEntry.letter}.  ${rightEntry.definition}`
-        doc.setFontSize(10)
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(51, 65, 85)
-        const leftLines = doc.splitTextToSize(leftText, colWidth)
-        const rightLines = doc.splitTextToSize(rightText, colWidth)
-        const rowLines = Math.max(leftLines.length, rightLines.length)
-        checkPageBreak(rowLines * 5 + 3)
-        doc.text(leftLines, margin + 4, y)
-        doc.text(rightLines, midX + 4, y)
-        y += rowLines * (10 * 0.4) + 3
+        const rightTxt = `${rightEntry.letter}.  ${rightEntry.definition}`
+        d.setFontSize(10)
+        d.setFont('helvetica', 'normal')
+        d.setTextColor(G.body[0], G.body[1], G.body[2])
+        const lLines: string[] = d.splitTextToSize(leftTxt, colW)
+        const rLines: string[] = d.splitTextToSize(rightTxt, colW)
+        const rowH = Math.max(lLines.length, rLines.length) * (10 * 0.42) + 3
+        ctx.chk(rowH)
+        const ry = ctx.getY()
+        d.text(lLines, M + 2, ry)
+        d.text(rLines, midX + 2, ry)
+        ctx.setY(ry + rowH)
       })
 
-      doc.setDrawColor(210, 220, 230)
-      doc.line(midX, startY - 2, midX, y - 1)
+      // Vertical divider between columns
+      d.setDrawColor(G.border[0], G.border[1], G.border[2])
+      d.setLineWidth(0.3)
+      d.line(midX, startRow - 1, midX, ctx.getY())
 
       if (ex.compactAnswerKey) {
-        y += 4
-        doc.setDrawColor(203, 213, 225)
-        doc.setLineDashPattern([2, 2], 0)
-        doc.line(margin, y, margin + contentWidth, y)
-        doc.setLineDashPattern([], 0)
-        y += 4
-        addText(`Answer Key: ${ex.compactAnswerKey}`, 9, [13, 148, 136], false)
+        answerKeys.push({ num: i + 1, type: ex.type, isMatching: true, compact: ex.compactAnswerKey, items: [], keys: [] })
       }
     } else {
+      // ── Regular items ──────────────────────────────────────────────────────
       ex.items.forEach((item, j) => {
-        const cleanItem = item.replace(/^\d+[\.\)]\s*/, '')
-        addText(`${j + 1}. ${cleanItem}`, 10, [51, 65, 85], false, 4)
-        y += 3
+        const clean = item.replace(/^\d+[\.\)]\s*/, '')
+        txt(`${j + 1}.  ${clean}`, 10, G.body, false, 5)
+        gap(4)
       })
 
       if (ex.answerKey && ex.answerKey.length > 0) {
-        y += 4
-        doc.setDrawColor(203, 213, 225)
-        doc.setLineDashPattern([2, 2], 0)
-        doc.line(margin, y, margin + contentWidth, y)
-        doc.setLineDashPattern([], 0)
-        y += 4
-        addText('Answer Key:', 9, [13, 148, 136], true)
-        ex.answerKey.forEach((ans, j) => addText(`${j + 1}. ${ans.replace(/^\d+[\.\)]\s*/, '')}`, 9, [51, 65, 85], false, 4))
+        answerKeys.push({ num: i + 1, type: ex.type, isMatching: false, items: ex.items, keys: ex.answerKey })
       }
     }
-    y += 8
+
+    gap(6)
   })
 
-  const pageCount = doc.getNumberOfPages()
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i)
-    doc.setFillColor(15, 23, 42)
-    doc.rect(0, doc.internal.pageSize.getHeight() - 12, pageWidth, 12, 'F')
-    doc.setFontSize(8)
-    doc.setTextColor(100, 116, 139)
-    doc.text(`Generated by Tyoutor Pro — tyoutorpro.io | ${worksheet.level} | ${date}`, margin, doc.internal.pageSize.getHeight() - 4)
-    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, doc.internal.pageSize.getHeight() - 4, { align: 'right' })
+  // ── Answer Key page ─────────────────────────────────────────────────────────
+  const hasAnswers = answerKeys.length > 0 && answerKeys.some(a => a.compact || a.keys.length > 0)
+  if (hasAnswers) {
+    d.addPage()
+    let ay = PAGE.M + 6
+
+    // "ANSWER KEY" title
+    d.setFillColor(G.green[0], G.green[1], G.green[2])
+    d.rect(M, ay, 3, 9, 'F')
+    d.setFontSize(14)
+    d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
+    d.setFont('helvetica', 'bold')
+    d.text('ANSWER KEY', M + 6, ay + 6.5)
+    ay += 14
+
+    d.setDrawColor(G.border[0], G.border[1], G.border[2])
+    d.setLineWidth(0.3)
+    d.line(M, ay, W - M, ay)
+    ay += 6
+
+    answerKeys.forEach(ak => {
+      if (ay > PAGE.FOOTER_Y - 30) { d.addPage(); ay = PAGE.M + 6 }
+
+      d.setFontSize(11)
+      d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
+      d.setFont('helvetica', 'bold')
+      d.text(`${ak.num}.  ${ak.type}`, M, ay)
+      ay += 6
+
+      if (ak.isMatching && ak.compact) {
+        d.setFontSize(10)
+        d.setTextColor(G.body[0], G.body[1], G.body[2])
+        d.setFont('helvetica', 'normal')
+        const lines: string[] = d.splitTextToSize(ak.compact, CW - 5)
+        d.text(lines, M + 5, ay)
+        ay += lines.length * 5 + 4
+      } else {
+        ak.keys.forEach((ans, j) => {
+          const clean = ans.replace(/^\d+[\.\)]\s*/, '')
+          d.setFontSize(10)
+          d.setTextColor(G.body[0], G.body[1], G.body[2])
+          d.setFont('helvetica', 'normal')
+          d.text(`${j + 1}.  ${clean}`, M + 5, ay)
+          ay += 5
+        })
+        ay += 2
+      }
+      ay += 4
+    })
   }
 
-  doc.save(`tyoutorpro-worksheet-${Date.now()}.pdf`)
+  drawPageFooters(d, `${worksheet.level} · ${worksheet.topic}`)
+  d.save(`tyoutorpro-worksheet-${Date.now()}.pdf`)
+}
+
+// ── Demo Lesson PDF ───────────────────────────────────────────────────────────
+
+export async function generateDemoLessonPDF(
+  demo: DemoLesson,
+  teacherName = 'Teacher',
+): Promise<void> {
+  const { jsPDF } = await import('jspdf')
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const { M, W, CW } = PAGE
+
+  const displayName = teacherName || 'Teacher'
+  const subtitle = `${demo.overview.level}  ·  ${demo.overview.duration}  ·  ${demo.targetSchool}`
+  const startY = drawPageHeader(doc, demo.title, subtitle, displayName)
+  const ctx = makeCtx(doc, startY)
+  const { txt, gap, sHdr, blt, doc: d } = ctx
+
+  // ── Prepared by (prominent — interviews need the name visible) ──────────────
+  ctx.chk(10)
+  d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+  d.setDrawColor(G.border[0], G.border[1], G.border[2])
+  d.setLineWidth(0.3)
+  d.rect(M, ctx.getY() - 1, CW, 9, 'FD')
+  d.setFontSize(10)
+  d.setTextColor(G.sub[0], G.sub[1], G.sub[2])
+  d.setFont('helvetica', 'normal')
+  d.text('Prepared by', M + 4, ctx.getY() + 5)
+  d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
+  d.setFont('helvetica', 'bold')
+  d.text(displayName, M + 30, ctx.getY() + 5)
+  ctx.setY(ctx.getY() + 13)
+
+  // ── Learning Objectives ─────────────────────────────────────────────────────
+  sHdr('LEARNING OBJECTIVES')
+  demo.overview.objectives.forEach(o => blt(o))
+  if (demo.overview.methodology) {
+    gap(2)
+    txt(`Methodology: ${demo.overview.methodology}`, 10, G.sub, false, 3)
+  }
+  gap(5)
+
+  // ── Lesson Stages ───────────────────────────────────────────────────────────
+  sHdr('LESSON STAGES')
+  gap(2)
+
+  demo.stages.forEach((stage, i) => {
+    ctx.chk(30)
+    const stageY = ctx.getY()
+
+    // Stage header bar
+    d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+    d.setDrawColor(G.border[0], G.border[1], G.border[2])
+    d.setLineWidth(0.3)
+    d.rect(M, stageY - 1, CW, 9, 'FD')
+
+    // Stage number circle
+    d.setFillColor(G.green[0], G.green[1], G.green[2])
+    d.circle(M + 5, stageY + 3.5, 3.5, 'F')
+    d.setFontSize(8)
+    d.setTextColor(G.white[0], G.white[1], G.white[2])
+    d.setFont('helvetica', 'bold')
+    d.text(`${i + 1}`, M + 5, stageY + 5.5, { align: 'center' })
+
+    // Stage name
+    d.setFontSize(11)
+    d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
+    d.setFont('helvetica', 'bold')
+    d.text(stage.name, M + 12, stageY + 5.5)
+
+    // Duration (right-aligned)
+    d.setFontSize(9)
+    d.setTextColor(G.sub[0], G.sub[1], G.sub[2])
+    d.setFont('helvetica', 'normal')
+    d.text(`⏱ ${stage.duration}`, W - M, stageY + 5.5, { align: 'right' })
+
+    ctx.setY(stageY + 12)
+
+    // Activities block
+    txt('Activities:', 10, G.dark, true, 2)
+    txt(stage.activities, 10, G.body, false, 4)
+    gap(3)
+
+    // "Why This Works" block — green left border + light bg
+    const whyLines: string[] = d.splitTextToSize(stage.whyItWorks, CW - 18)
+    const whyH = whyLines.length * (10 * 0.42) + 10
+    ctx.chk(whyH + 2)
+    const wy = ctx.getY()
+
+    d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+    d.rect(M, wy - 1, CW, whyH, 'F')
+    d.setFillColor(G.green[0], G.green[1], G.green[2])
+    d.rect(M, wy - 1, 3, whyH, 'F')
+
+    d.setFontSize(9)
+    d.setTextColor(G.green[0], G.green[1], G.green[2])
+    d.setFont('helvetica', 'bold')
+    d.text('WHY THIS WORKS', M + 6, wy + 4)
+
+    d.setFontSize(9)
+    d.setTextColor(G.body[0], G.body[1], G.body[2])
+    d.setFont('helvetica', 'italic')
+    d.text(whyLines, M + 6, wy + 9)
+
+    ctx.setY(wy + whyH + 5)
+    gap(3)
+  })
+
+  // ── Anticipated Problems ────────────────────────────────────────────────────
+  // (demo.interviewTips doubles as anticipated-problem guidance)
+  if (demo.interviewTips?.length) {
+    ctx.chk(14)
+    sHdr('INTERVIEW TIPS & ANTICIPATED PROBLEMS', G.terra)
+    demo.interviewTips.forEach(t => blt(t))
+    gap(5)
+  }
+
+  // ── Methodology Notes ───────────────────────────────────────────────────────
+  if (demo.methodologyNotes) {
+    sHdr('METHODOLOGY NOTES')
+    txt(demo.methodologyNotes, 10, G.body)
+    gap(4)
+  }
+
+  drawPageFooters(d, `Demo Lesson · ${demo.overview.level}`)
+  d.save(`tyoutorpro-demo-lesson-${Date.now()}.pdf`)
 }

@@ -213,6 +213,25 @@ export interface WorksheetFormData {
   includeAnswerKey: boolean
 }
 
+export interface DemoLesson {
+  title: string
+  targetSchool: string
+  overview: {
+    level: string
+    duration: string
+    objectives: string[]
+    methodology: string
+  }
+  stages: Array<{
+    name: string
+    duration: string
+    activities: string
+    whyItWorks: string
+  }>
+  methodologyNotes: string
+  interviewTips: string[]
+}
+
 export interface ErrorCoachFormData {
   text: string
   level: string

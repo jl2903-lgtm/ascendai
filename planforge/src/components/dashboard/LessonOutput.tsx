@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LessonContent, LessonFormData } from '@/types'
 import { generateLessonPDF } from '@/lib/pdf'
 import { formatDate } from '@/lib/utils'
@@ -37,7 +37,16 @@ const sections = [
 
 export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
   const supabase = createClient()
+  const [teacherName, setTeacherName] = useState('Teacher')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      supabase.from('users').select('full_name').eq('id', session.user.id).single()
+        .then(({ data }) => { if (data?.full_name) setTeacherName(data.full_name) })
+    })
+  }, [])
   const [saved, setSaved] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>(null)
@@ -76,7 +85,7 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
   const handleDownload = async () => {
     setDownloading(true)
     try {
-      await generateLessonPDF(lesson, { level: formData.level, topic: formData.topic, date: formatDate(new Date().toISOString()) })
+      await generateLessonPDF(lesson, { level: formData.level, topic: formData.topic, date: formatDate(new Date().toISOString()) }, teacherName)
       toast.success('PDF downloaded!')
     } catch {
       toast.error('PDF generation failed. Please try again.')

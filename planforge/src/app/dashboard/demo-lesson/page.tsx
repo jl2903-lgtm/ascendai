@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { STUDENT_LEVELS, SCHOOL_TYPES, EXPERIENCE_LEVELS, DEMO_LENGTHS } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
 import { ClassSelector } from '@/components/dashboard/ClassSelector'
-import { ClassProfile, ClassContext } from '@/types'
+import { ClassProfile, ClassContext, DemoLesson } from '@/types'
+import { generateDemoLessonPDF } from '@/lib/pdf'
+import { createClient } from '@/lib/supabase/client'
 import { Star, Zap, Download, Copy, ChevronDown, Info, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -20,16 +22,32 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   )
 }
 
-interface DemoLesson {
-  title: string
-  targetSchool: string
-  overview: { level: string; duration: string; objectives: string[]; methodology: string }
-  stages: Array<{ name: string; duration: string; activities: string; whyItWorks: string }>
-  methodologyNotes: string
-  interviewTips: string[]
-}
-
 export default function DemoLessonPage() {
+  const supabase = createClient()
+  const [teacherName, setTeacherName] = useState('Teacher')
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      supabase.from('users').select('full_name').eq('id', session.user.id).single()
+        .then(({ data }) => { if (data?.full_name) setTeacherName(data.full_name) })
+    })
+  }, [])
+
+  const handleDownloadPdf = async () => {
+    if (!result) return
+    setDownloadingPdf(true)
+    try {
+      await generateDemoLessonPDF(result, teacherName)
+      toast.success('PDF downloaded!')
+    } catch {
+      toast.error('PDF generation failed. Please try again.')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
+
   const [form, setForm] = useState({
     schoolType: 'Language school',
     country: '',
@@ -286,9 +304,9 @@ export default function DemoLessonPage() {
                   <Copy className="w-4 h-4" />
                   Copy Lesson
                 </button>
-                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-[#E8E4DE] hover:border-amber-400 text-[#4A473E] hover:text-amber-700 transition-all">
+                <button onClick={handleDownloadPdf} disabled={downloadingPdf} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-[#E8E4DE] hover:border-amber-400 text-[#4A473E] hover:text-amber-700 disabled:opacity-50 transition-all">
                   <Download className="w-4 h-4" />
-                  Print View
+                  {downloadingPdf ? 'Generating…' : 'Download PDF'}
                 </button>
               </div>
             </div>
