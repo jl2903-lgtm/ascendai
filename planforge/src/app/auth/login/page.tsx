@@ -47,7 +47,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative isolate min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
-      {/* Background decorations */}
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-dot-pattern" style={{ zIndex: -1 }} />
       <div className="blob-mint w-80 h-80 top-10 -left-20 opacity-60" style={{ position: 'fixed', zIndex: -1 }} />
       <div className="blob-lavender w-72 h-72 bottom-20 right-10 opacity-50" style={{ position: 'fixed', zIndex: -1 }} />
@@ -57,11 +56,11 @@ export default function LoginPage() {
           <div className="mb-6 flex justify-center">
             <Logo size="lg" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-gray-500 mt-2 font-medium">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-[#2D2D2D]">Welcome back</h1>
+          <p className="text-[#6B6860] mt-2 font-medium">Sign in to your account</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-soft">
+        <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">
           {errors.general && (
             <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm mb-6 font-medium">
               {errors.general}
@@ -70,28 +69,28 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-bold text-[#4A473E] mb-2">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className={`w-full bg-gray-50 border rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors font-medium ${errors.email ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
+                className={`w-full bg-[#F7F6F2] border rounded-xl px-4 py-3 text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 transition-colors font-medium ${errors.email ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-[#E8E4DE] focus:border-teal-500 focus:ring-teal-500'}`}
               />
               {errors.email && <p className="text-red-600 text-xs mt-1 font-medium">{errors.email}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-bold text-[#4A473E] mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className={`w-full bg-gray-50 border rounded-xl px-4 py-3 pr-12 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 transition-colors font-medium ${errors.password ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
+                  className={`w-full bg-[#F7F6F2] border rounded-xl px-4 py-3 pr-12 text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 transition-colors font-medium ${errors.password ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-[#E8E4DE] focus:border-teal-500 focus:ring-teal-500'}`}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8C8880] hover:text-[#6B6860] transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -116,7 +115,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-gray-600 text-sm mt-6 font-medium">
+        <p className="text-center text-[#6B6860] text-sm mt-6 font-medium">
           Don&apos;t have an account?{' '}
           <Link href="/auth/signup" className="text-teal-600 hover:text-teal-500 font-bold transition-colors">
             Sign up free

@@ -27,12 +27,12 @@ export function Header({ userProfile, onMenuClick }: HeaderProps) {
   }
 
   return (
-    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-6">
+    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-[#E8E4DE] bg-white px-4 lg:px-6">
       {/* Left — hamburger (mobile) + user info */}
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
-          className="lg:hidden -ml-1 p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          className="lg:hidden -ml-1 p-2 rounded-lg text-[#6B6860] hover:bg-[#F4F2EE] transition-colors"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
@@ -41,11 +41,11 @@ export function Header({ userProfile, onMenuClick }: HeaderProps) {
           <User className="h-4 w-4" />
         </div>
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-bold text-gray-900 truncate max-w-[200px]">
+          <span className="text-sm font-bold text-[#2D2D2D] truncate max-w-[200px]">
             {displayName}
           </span>
           {userProfile.full_name?.trim() && (
-            <span className="text-xs text-gray-500 truncate max-w-[200px]">
+            <span className="text-xs text-[#6B6860] truncate max-w-[200px]">
               {userProfile.email}
             </span>
           )}
