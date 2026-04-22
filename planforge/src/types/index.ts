@@ -61,6 +61,8 @@ export interface UserProfile {
   lessons_reset_date: string
   created_at: string
   onboarding_completed: boolean
+  onboarding_completed_at: string | null
+  teaching_context: 'private_tutor' | 'classroom' | 'both' | null
   default_level: string | null
   default_nationality: string | null
   default_age_group: string | null

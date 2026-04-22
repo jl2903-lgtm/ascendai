@@ -7,6 +7,7 @@ import { UserProfile, Lesson, Worksheet, ClassProfile } from '@/types'
 import { formatDate, FREE_LIMITS } from '@/lib/utils'
 import { useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { WelcomeModal } from '@/components/onboarding/WelcomeModal'
 
 interface UserStats {
   total_lessons_created: number
@@ -73,6 +74,7 @@ export default function DashboardPage() {
   const [activeClass, setActiveClass] = useState<ClassProfile | null>(null)
   const [recentLessons, setRecentLessons] = useState<Lesson[]>([])
   const [recentWorksheets, setRecentWorksheets] = useState<Worksheet[]>([])
+  const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -85,7 +87,10 @@ export default function DashboardPage() {
         supabase.from('lessons').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(4),
         supabase.from('worksheets').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(2),
       ])
-      if (p) setProfile(p)
+      if (p) {
+        setProfile(p)
+        if (p.onboarding_completed === false) setShowWelcome(true)
+      }
       if (stats) {
         const lastReset = new Date(stats.last_weekly_reset)
         const weekExpired = (Date.now() - lastReset.getTime()) > 7 * 24 * 60 * 60 * 1000
@@ -117,6 +122,16 @@ export default function DashboardPage() {
   return (
     <div className="relative max-w-6xl mx-auto pb-10" style={{ zIndex: 1 }}>
       <Suspense fallback={null}><UpgradeToast /></Suspense>
+
+      <WelcomeModal
+        isOpen={showWelcome}
+        firstName={firstName}
+        onClose={() => setShowWelcome(false)}
+        onComplete={() => {
+          setShowWelcome(false)
+          setProfile(p => p ? { ...p, onboarding_completed: true } : p)
+        }}
+      />
 
       {/* Background */}
       <div aria-hidden className="pointer-events-none fixed inset-0 bg-dot-pattern" style={{ zIndex: 0 }} />
