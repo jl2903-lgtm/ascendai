@@ -63,67 +63,73 @@ export default function PricingPage() {
         </div>
 
         {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto pt-6">
-          {/* Free */}
-          <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 flex flex-col">
-            <div className="mb-8">
-              <div className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider mb-3">Free</div>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-5xl font-extrabold">$0</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+
+          {/* Free column — h-10 spacer matches the badge row height in the Pro column */}
+          <div className="flex flex-col">
+            <div className="h-10" />
+            <div className="flex-1 bg-white border border-[#E8E4DE] rounded-2xl p-8 flex flex-col">
+              <div className="mb-8">
+                <div className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider mb-3">Free</div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-5xl font-extrabold">$0</span>
+                </div>
+                <p className="text-[#6B6860] text-sm">Forever free · No credit card</p>
               </div>
-              <p className="text-[#6B6860] text-sm">Forever free · No credit card</p>
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {FREE_FEATURES.map(f => (
+                  <li key={f.text} className={`flex items-center gap-3 text-sm ${f.included ? 'text-[#4A473E]' : 'text-[#8C8880]'}`}>
+                    {f.included ? (
+                      <CheckCircle className="w-4 h-4 text-teal-500 flex-shrink-0" />
+                    ) : (
+                      <X className="w-4 h-4 text-[#C4C0BA] flex-shrink-0" />
+                    )}
+                    <span className={f.included ? '' : 'line-through'}>{f.text}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/auth/signup" className="block w-full text-center border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-teal-700 font-semibold px-6 py-3.5 rounded-xl transition-colors">
+                Get Started Free
+              </Link>
             </div>
-
-            <ul className="space-y-3 mb-8 flex-1">
-              {FREE_FEATURES.map(f => (
-                <li key={f.text} className={`flex items-center gap-3 text-sm ${f.included ? 'text-[#4A473E]' : 'text-[#8C8880]'}`}>
-                  {f.included ? (
-                    <CheckCircle className="w-4 h-4 text-teal-500 flex-shrink-0" />
-                  ) : (
-                    <X className="w-4 h-4 text-[#C4C0BA] flex-shrink-0" />
-                  )}
-                  <span className={f.included ? '' : 'line-through'}>{f.text}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Link href="/auth/signup" className="block w-full text-center border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-teal-700 font-semibold px-6 py-3.5 rounded-xl transition-colors">
-              Get Started Free
-            </Link>
           </div>
 
-          {/* Pro */}
-          <div className="relative bg-gradient-to-b from-teal-900/40 via-[#1E293B] to-white border border-teal-600/60 rounded-2xl p-8 shadow-xl shadow-teal-200/60 flex flex-col">
-            <div className="absolute -top-4 left-0 right-0 flex justify-center">
-              <span className="bg-teal-600 text-white text-xs font-bold px-5 py-1.5 rounded-full">
+          {/* Pro column — badge sits above card in normal flow, no absolute positioning */}
+          <div className="flex flex-col">
+            <div className="h-10 flex items-center justify-center">
+              <span className="bg-teal-600 text-white text-xs font-bold px-5 py-1.5 rounded-full tracking-wide">
                 MOST POPULAR
               </span>
             </div>
-
-            <div className="mb-8">
-              <div className="text-sm font-semibold text-teal-400 uppercase tracking-wider mb-3">Pro</div>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-5xl font-extrabold text-teal-400">$12</span>
-                <span className="text-[#6B6860] text-lg">/month</span>
+            <div className="flex-1 bg-gradient-to-b from-teal-900/40 via-[#1E293B] to-white border border-teal-600/60 rounded-2xl p-8 shadow-xl shadow-teal-200/60 flex flex-col">
+              <div className="mb-8">
+                <div className="text-sm font-semibold text-teal-400 uppercase tracking-wider mb-3">Pro</div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-5xl font-extrabold text-teal-400">$12</span>
+                  <span className="text-[#6B6860] text-lg">/month</span>
+                </div>
+                <p className="text-[#6B6860] text-sm">Cancel anytime · No hidden fees</p>
               </div>
-              <p className="text-[#6B6860] text-sm">Cancel anytime · No hidden fees</p>
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {PRO_FEATURES.map(f => (
+                  <li key={f.text} className="flex items-center gap-3 text-sm text-[#4A473E]">
+                    <CheckCircle className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                    {f.text}
+                  </li>
+                ))}
+              </ul>
+
+              <PricingUpgradeButton
+                className="block w-full text-center bg-teal-600 hover:bg-teal-500 disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
+              >
+                Upgrade to Pro
+              </PricingUpgradeButton>
             </div>
-
-            <ul className="space-y-3 mb-8 flex-1">
-              {PRO_FEATURES.map(f => (
-                <li key={f.text} className="flex items-center gap-3 text-sm text-[#4A473E]">
-                  <CheckCircle className="w-4 h-4 text-teal-400 flex-shrink-0" />
-                  {f.text}
-                </li>
-              ))}
-            </ul>
-
-            <PricingUpgradeButton
-              className="block w-full text-center bg-teal-600 hover:bg-teal-500 disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
-            >
-              Upgrade to Pro
-            </PricingUpgradeButton>
           </div>
+
         </div>
 
         {/* Feature comparison */}
