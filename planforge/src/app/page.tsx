@@ -227,13 +227,14 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Free */}
-            <div className="bg-white rounded-2xl p-8 card-lift" style={{ border:'1px solid #E8E4DE' }}>
+            <div className="bg-white rounded-2xl p-8 card-lift flex flex-col" style={{ border:'1px solid #E8E4DE' }}>
+              <div className="h-7 mb-4 flex-shrink-0" />
               <div className="mb-6">
                 <h3 className="text-xl font-extrabold mb-1" style={{ color:'#2D2D2D' }}>Free</h3>
                 <div className="text-4xl font-extrabold" style={{ color:'#2D2D2D' }}>$0</div>
                 <div className="text-sm mt-1 font-medium" style={{ color:'#8C8880' }}>Forever free</div>
               </div>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-1">
                 {['5 lessons free', '5 worksheets free', 'Basic lesson generator', 'Error Coach (3 uses)', 'Demo Lesson (1 use)', 'Class Profiles (unlimited)'].map(f => (
                   <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color:'#4A473E' }}>
                     <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color:'#2D6A4F' }} />
@@ -252,9 +253,11 @@ export default function LandingPage() {
               </Link>
             </div>
             {/* Pro — dark forest card */}
-            <div className="rounded-2xl p-8 relative card-lift overflow-hidden" style={{ background:'#1B4332', border:'1.5px solid #2D6A4F' }}>
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-extrabold px-4 py-1 rounded-full" style={{ background:'#2D6A4F' }}>
-                MOST POPULAR
+            <div className="rounded-2xl p-8 card-lift flex flex-col" style={{ background:'#1B4332', border:'1.5px solid #2D6A4F' }}>
+              <div className="flex justify-center mb-4 flex-shrink-0">
+                <span className="text-white text-xs font-extrabold px-4 py-1.5 rounded-full" style={{ background:'#2D6A4F' }}>
+                  MOST POPULAR
+                </span>
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-extrabold mb-1 text-white">Pro</h3>
@@ -263,7 +266,7 @@ export default function LandingPage() {
                 </div>
                 <div className="text-sm mt-1 font-medium" style={{ color:'rgba(255,255,255,0.45)' }}>Cancel anytime</div>
               </div>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-1">
                 {['Unlimited lessons', 'Unlimited worksheets', 'All 6 tools — unlimited', 'PDF export on everything', 'Save & organise your library', 'Class Profiles — AI auto-fill', 'Priority generation'].map(f => (
                   <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color:'rgba(255,255,255,0.85)' }}>
                     <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color:'#52B788' }} />
