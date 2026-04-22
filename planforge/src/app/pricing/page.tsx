@@ -63,9 +63,9 @@ export default function PricingPage() {
         </div>
 
         {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto pt-6">
           {/* Free */}
-          <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8">
+          <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 flex flex-col">
             <div className="mb-8">
               <div className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider mb-3">Free</div>
               <div className="flex items-baseline gap-1 mb-1">
@@ -74,7 +74,7 @@ export default function PricingPage() {
               <p className="text-[#6B6860] text-sm">Forever free · No credit card</p>
             </div>
 
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-3 mb-8 flex-1">
               {FREE_FEATURES.map(f => (
                 <li key={f.text} className={`flex items-center gap-3 text-sm ${f.included ? 'text-[#4A473E]' : 'text-[#8C8880]'}`}>
                   {f.included ? (
@@ -87,13 +87,13 @@ export default function PricingPage() {
               ))}
             </ul>
 
-            <Link href="/auth/signup" className="block w-full text-center border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-white font-semibold px-6 py-3.5 rounded-xl transition-colors">
+            <Link href="/auth/signup" className="block w-full text-center border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-teal-700 font-semibold px-6 py-3.5 rounded-xl transition-colors">
               Get Started Free
             </Link>
           </div>
 
           {/* Pro */}
-          <div className="relative bg-gradient-to-b from-teal-900/40 via-[#1E293B] to-white border border-teal-600/60 rounded-2xl p-8 shadow-xl shadow-teal-200/60">
+          <div className="relative bg-gradient-to-b from-teal-900/40 via-[#1E293B] to-white border border-teal-600/60 rounded-2xl p-8 shadow-xl shadow-teal-200/60 flex flex-col">
             <div className="absolute -top-4 left-0 right-0 flex justify-center">
               <span className="bg-teal-600 text-white text-xs font-bold px-5 py-1.5 rounded-full">
                 MOST POPULAR
@@ -109,7 +109,7 @@ export default function PricingPage() {
               <p className="text-[#6B6860] text-sm">Cancel anytime · No hidden fees</p>
             </div>
 
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-3 mb-8 flex-1">
               {PRO_FEATURES.map(f => (
                 <li key={f.text} className="flex items-center gap-3 text-sm text-[#4A473E]">
                   <CheckCircle className="w-4 h-4 text-teal-400 flex-shrink-0" />
