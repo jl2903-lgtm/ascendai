@@ -13,12 +13,12 @@ function SelectField({ label, value, onChange, options }: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-500 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-[#6B6860] mb-2">{label}</label>
       <div className="relative">
-        <select value={value} onChange={e => onChange(e.target.value)} className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 pr-9">
+        <select value={value} onChange={e => onChange(e.target.value)} className="w-full appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 pr-9">
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
       </div>
     </div>
   )
@@ -205,8 +205,8 @@ export default function JobAssistantPage() {
           <Briefcase className="w-5 h-5 text-rose-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Job Application Assistant</h1>
-          <p className="text-sm text-gray-500">Cover letters and CV optimisation for ELT teachers</p>
+          <h1 className="text-xl font-bold text-[#2D2D2D]">Job Application Assistant</h1>
+          <p className="text-sm text-[#6B6860]">Cover letters and CV optimisation for ELT teachers</p>
         </div>
       </div>
 
@@ -219,7 +219,7 @@ export default function JobAssistantPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key as typeof tab)}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab === t.key ? 'bg-gray-50 text-gray-900 shadow' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab === t.key ? 'bg-[#F7F6F2] text-[#2D2D2D] shadow' : 'text-[#6B6860] hover:text-[#4A473E]'}`}
           >
             {t.label}
           </button>
@@ -231,18 +231,18 @@ export default function JobAssistantPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2">
             <div className="glass-card p-6 space-y-5 sticky top-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Your Details</h2>
+              <h2 className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider">Your Details</h2>
 
               <SelectField label="Type of School" value={form.schoolType} onChange={v => setForm(f => ({ ...f, schoolType: v }))} options={SCHOOL_TYPES} />
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Country Applying To <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-[#6B6860] mb-2">Country Applying To <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   value={form.country}
                   onChange={e => { setForm(f => ({ ...f, country: e.target.value })); setCoverErrors({}) }}
                   placeholder="e.g. South Korea, Thailand, UAE"
-                  className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${coverErrors.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
+                  className={`w-full bg-[#F7F6F2] border rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 ${coverErrors.country ? 'border-red-500 focus:ring-red-500' : 'border-[#E8E4DE] focus:border-teal-500 focus:ring-teal-500'}`}
                 />
                 {coverErrors.country && <p className="text-red-400 text-xs mt-1">{coverErrors.country}</p>}
               </div>
@@ -250,13 +250,13 @@ export default function JobAssistantPage() {
               <SelectField label="Your Experience Level" value={form.experienceLevel} onChange={v => setForm(f => ({ ...f, experienceLevel: v }))} options={EXPERIENCE_LEVELS} />
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Certifications <span className="text-gray-400 font-normal">(optional)</span></label>
-                <input type="text" value={form.certifications} onChange={e => setForm(f => ({ ...f, certifications: e.target.value }))} placeholder="e.g. CELTA, 120-hour TEFL, MA TESOL" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+                <label className="block text-sm font-medium text-[#6B6860] mb-2">Certifications <span className="text-[#8C8880] font-normal">(optional)</span></label>
+                <input type="text" value={form.certifications} onChange={e => setForm(f => ({ ...f, certifications: e.target.value }))} placeholder="e.g. CELTA, 120-hour TEFL, MA TESOL" className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Why do you want to teach there? <span className="text-gray-400 font-normal">(optional)</span></label>
-                <textarea value={form.motivation} onChange={e => setForm(f => ({ ...f, motivation: e.target.value }))} placeholder="Any personal reasons, goals, or relevant experience..." rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 resize-none" />
+                <label className="block text-sm font-medium text-[#6B6860] mb-2">Why do you want to teach there? <span className="text-[#8C8880] font-normal">(optional)</span></label>
+                <textarea value={form.motivation} onChange={e => setForm(f => ({ ...f, motivation: e.target.value }))} placeholder="Any personal reasons, goals, or relevant experience..." rows={3} className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 resize-none" />
               </div>
 
               <button onClick={generateCoverLetter} disabled={coverLoading} className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -272,18 +272,18 @@ export default function JobAssistantPage() {
               <div className="space-y-4">
                 <div className="glass-card p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900">Cover Letter</h3>
-                    <button onClick={generateCoverLetter} className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-teal-600 px-3 py-1.5 rounded-lg transition-all">
+                    <h3 className="font-semibold text-[#2D2D2D]">Cover Letter</h3>
+                    <button onClick={generateCoverLetter} className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-teal-600 px-3 py-1.5 rounded-lg transition-all">
                       <RefreshCw className="w-3 h-3" /> Regenerate
                     </button>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-5 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-serif">{coverResult.content}</div>
+                  <div className="bg-[#F7F6F2] rounded-xl p-5 text-sm text-[#4A473E] leading-relaxed whitespace-pre-wrap font-serif">{coverResult.content}</div>
                 </div>
                 {coverResult.tips?.length > 0 && (
                   <div className="glass-card p-5">
-                    <h3 className="font-semibold text-gray-900 mb-3">Application Tips</h3>
+                    <h3 className="font-semibold text-[#2D2D2D] mb-3">Application Tips</h3>
                     <ul className="space-y-2">{coverResult.tips.map((tip, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-500"><span className="text-rose-400 flex-shrink-0">→</span>{tip}</li>
+                      <li key={i} className="flex items-start gap-2 text-sm text-[#6B6860]"><span className="text-rose-400 flex-shrink-0">→</span>{tip}</li>
                     ))}</ul>
                   </div>
                 )}
@@ -296,8 +296,8 @@ export default function JobAssistantPage() {
             ) : (
               <div className="glass-card min-h-[400px] flex flex-col items-center justify-center text-center p-8">
                 <div className="w-16 h-16 bg-rose-600/10 rounded-2xl flex items-center justify-center mb-4"><Briefcase className="w-8 h-8 text-rose-600/50" /></div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Your cover letter will appear here</h3>
-                <p className="text-sm text-gray-500 max-w-xs">Written in a genuine, human tone. No corporate boilerplate. Tailored to the school type and country you&apos;re applying to.</p>
+                <h3 className="text-lg font-semibold text-[#2D2D2D] mb-2">Your cover letter will appear here</h3>
+                <p className="text-sm text-[#6B6860] max-w-xs">Written in a genuine, human tone. No corporate boilerplate. Tailored to the school type and country you&apos;re applying to.</p>
               </div>
             )}
           </div>
@@ -309,11 +309,11 @@ export default function JobAssistantPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2">
             <div className="glass-card p-6 space-y-5 sticky top-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">CV Details</h2>
+              <h2 className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider">CV Details</h2>
 
               {/* CV Upload / Paste */}
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Your CV <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-[#6B6860] mb-2">Your CV <span className="text-red-400">*</span></label>
                 {cvFileName ? (
                   <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-xl px-4 py-2.5">
                     <FileText className="w-4 h-4 text-teal-600 flex-shrink-0" />
@@ -324,7 +324,7 @@ export default function JobAssistantPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={extracting}
-                    className="w-full flex items-center gap-2 bg-gray-50 border border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/30 rounded-xl px-4 py-2.5 text-sm text-gray-500 hover:text-teal-600 transition-all disabled:opacity-50"
+                    className="w-full flex items-center gap-2 bg-[#F7F6F2] border border-dashed border-[#D4D0CA] hover:border-teal-400 hover:bg-teal-50/30 rounded-xl px-4 py-2.5 text-sm text-[#6B6860] hover:text-teal-600 transition-all disabled:opacity-50"
                   >
                     <Upload className="w-4 h-4 flex-shrink-0" />
                     {extracting ? 'Reading your CV...' : 'Upload CV (.txt, .pdf, .docx)'}
@@ -342,31 +342,31 @@ export default function JobAssistantPage() {
                   onChange={e => { setCvText(e.target.value); setCvErrors(p => ({ ...p, cvText: '' })); if (showPasteHint && e.target.value) setShowPasteHint(false) }}
                   placeholder={showPasteHint ? 'Paste your CV text here...' : 'Or paste your CV text here...'}
                   rows={6}
-                  className={`mt-2 w-full bg-gray-50 border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 resize-none ${cvErrors.cvText ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
+                  className={`mt-2 w-full bg-[#F7F6F2] border rounded-xl px-4 py-3 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 resize-none ${cvErrors.cvText ? 'border-red-500 focus:ring-red-500' : 'border-[#E8E4DE] focus:border-teal-500 focus:ring-teal-500'}`}
                 />
                 {cvErrors.cvText && <p className="text-red-400 text-xs mt-1">{cvErrors.cvText}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Job Title Applying For <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-[#6B6860] mb-2">Job Title Applying For <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   value={jobTitle}
                   onChange={e => { setJobTitle(e.target.value); setCvErrors(p => ({ ...p, jobTitle: '' })) }}
                   placeholder="e.g. English Teacher, Academic Manager"
-                  className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${cvErrors.jobTitle ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
+                  className={`w-full bg-[#F7F6F2] border rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 ${cvErrors.jobTitle ? 'border-red-500 focus:ring-red-500' : 'border-[#E8E4DE] focus:border-teal-500 focus:ring-teal-500'}`}
                 />
                 {cvErrors.jobTitle && <p className="text-red-400 text-xs mt-1">{cvErrors.jobTitle}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Target Country <span className="text-gray-400 font-normal">(optional)</span></label>
-                <input type="text" value={cvCountry} onChange={e => setCvCountry(e.target.value)} placeholder="e.g. Japan, Spain, Saudi Arabia" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+                <label className="block text-sm font-medium text-[#6B6860] mb-2">Target Country <span className="text-[#8C8880] font-normal">(optional)</span></label>
+                <input type="text" value={cvCountry} onChange={e => setCvCountry(e.target.value)} placeholder="e.g. Japan, Spain, Saudi Arabia" className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Job Description <span className="text-gray-400 font-normal">(optional)</span></label>
-                <textarea value={jobDescription} onChange={e => setJobDescription(e.target.value)} placeholder="Paste the job ad text for a more targeted review..." rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 resize-none" />
+                <label className="block text-sm font-medium text-[#6B6860] mb-2">Job Description <span className="text-[#8C8880] font-normal">(optional)</span></label>
+                <textarea value={jobDescription} onChange={e => setJobDescription(e.target.value)} placeholder="Paste the job ad text for a more targeted review..." rows={3} className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 resize-none" />
               </div>
 
               <SelectField label="Your Experience Level" value={cvExperience} onChange={setCvExperience} options={EXPERIENCE_LEVELS} />
@@ -385,24 +385,24 @@ export default function JobAssistantPage() {
                 {/* Score */}
                 <div className="glass-card p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">CV Score</h3>
-                    <span className={`text-3xl font-bold ${scoreColor(cvResult.overallScore)}`}>{cvResult.overallScore}<span className="text-base font-normal text-gray-400">/10</span></span>
+                    <h3 className="font-semibold text-[#2D2D2D]">CV Score</h3>
+                    <span className={`text-3xl font-bold ${scoreColor(cvResult.overallScore)}`}>{cvResult.overallScore}<span className="text-base font-normal text-[#8C8880]">/10</span></span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
+                  <div className="h-2 bg-[#F0EEE9] rounded-full overflow-hidden mb-4">
                     <div className={`h-full rounded-full transition-all duration-700 ${scoreBarColor(cvResult.overallScore)}`} style={{ width: `${cvResult.overallScore * 10}%` }} />
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{cvResult.summary}</p>
+                  <p className="text-sm text-[#4A473E] leading-relaxed">{cvResult.summary}</p>
                 </div>
 
                 {/* Strengths */}
                 <div className="glass-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Star className="w-4 h-4 text-teal-500" />
-                    <h3 className="font-semibold text-gray-900">Strengths</h3>
+                    <h3 className="font-semibold text-[#2D2D2D]">Strengths</h3>
                   </div>
                   <ul className="space-y-2">
                     {cvResult.strengths.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <li key={i} className="flex items-start gap-2 text-sm text-[#4A473E]">
                         <span className="text-teal-500 flex-shrink-0 mt-0.5">✓</span>{s}
                       </li>
                     ))}
@@ -413,14 +413,14 @@ export default function JobAssistantPage() {
                 <div className="glass-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
-                    <h3 className="font-semibold text-gray-900">Improvements</h3>
+                    <h3 className="font-semibold text-[#2D2D2D]">Improvements</h3>
                   </div>
                   <div className="space-y-3">
                     {cvResult.improvements.map((imp, i) => (
                       <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                         <div className="text-xs font-semibold text-amber-700 mb-1">{imp.section}</div>
-                        <p className="text-xs text-gray-500 mb-2">{imp.issue}</p>
-                        <p className="text-sm text-gray-700"><span className="font-medium text-amber-700">Fix: </span>{imp.suggestion}</p>
+                        <p className="text-xs text-[#6B6860] mb-2">{imp.issue}</p>
+                        <p className="text-sm text-[#4A473E]"><span className="font-medium text-amber-700">Fix: </span>{imp.suggestion}</p>
                       </div>
                     ))}
                   </div>
@@ -431,7 +431,7 @@ export default function JobAssistantPage() {
                   <div className="glass-card p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <Tag className="w-4 h-4 text-purple-500" />
-                      <h3 className="font-semibold text-gray-900">Keywords to Add</h3>
+                      <h3 className="font-semibold text-[#2D2D2D]">Keywords to Add</h3>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {cvResult.keywordsToAdd.map((kw, i) => (
@@ -445,25 +445,25 @@ export default function JobAssistantPage() {
                 {cvResult.rewrittenSummary && (
                   <div className="glass-card p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900">Rewritten Professional Summary</h3>
+                      <h3 className="font-semibold text-[#2D2D2D]">Rewritten Professional Summary</h3>
                       <button
                         onClick={() => { navigator.clipboard.writeText(cvResult.rewrittenSummary); toast.success('Copied!') }}
-                        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-teal-600 transition-colors"
+                        className="flex items-center gap-1.5 text-xs text-[#8C8880] hover:text-teal-600 transition-colors"
                       >
                         <Copy className="w-3.5 h-3.5" /> Copy
                       </button>
                     </div>
-                    <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-4 font-serif">{cvResult.rewrittenSummary}</p>
+                    <p className="text-sm text-[#4A473E] leading-relaxed bg-[#F7F6F2] rounded-xl p-4 font-serif">{cvResult.rewrittenSummary}</p>
                   </div>
                 )}
 
                 {/* Tailoring tips */}
                 {cvResult.tailoringTips?.length > 0 && (
                   <div className="glass-card p-5">
-                    <h3 className="font-semibold text-gray-900 mb-3">Country / Role Tailoring Tips</h3>
+                    <h3 className="font-semibold text-[#2D2D2D] mb-3">Country / Role Tailoring Tips</h3>
                     <ul className="space-y-2">
                       {cvResult.tailoringTips.map((tip, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-500">
+                        <li key={i} className="flex items-start gap-2 text-sm text-[#6B6860]">
                           <span className="text-rose-400 flex-shrink-0">→</span>{tip}
                         </li>
                       ))}
@@ -477,7 +477,7 @@ export default function JobAssistantPage() {
                   </button>
                   <button
                     onClick={() => { navigator.clipboard.writeText(cvResult.rewrittenSummary); toast.success('Summary copied!') }}
-                    className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-teal-400 text-gray-500 hover:text-teal-600 transition-all"
+                    className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-[#E8E4DE] hover:border-teal-400 text-[#6B6860] hover:text-teal-600 transition-all"
                   >
                     <Download className="w-4 h-4" />Copy Summary
                   </button>
@@ -488,8 +488,8 @@ export default function JobAssistantPage() {
                 <div className="w-16 h-16 bg-rose-600/10 rounded-2xl flex items-center justify-center mb-4">
                   <FileText className="w-8 h-8 text-rose-600/50" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">CV analysis will appear here</h3>
-                <p className="text-sm text-gray-500 max-w-xs">Upload or paste your CV, add the job title you&apos;re targeting, and get a detailed score, improvements, missing keywords, and a rewritten professional summary.</p>
+                <h3 className="text-lg font-semibold text-[#2D2D2D] mb-2">CV analysis will appear here</h3>
+                <p className="text-sm text-[#6B6860] max-w-xs">Upload or paste your CV, add the job title you&apos;re targeting, and get a detailed score, improvements, missing keywords, and a rewritten professional summary.</p>
               </div>
             )}
           </div>

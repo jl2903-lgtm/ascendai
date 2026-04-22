@@ -138,19 +138,19 @@ export default function OnboardingPage() {
           <Logo size="lg" href="/" />
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-soft">
+        <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">
           {/* Progress bar */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Step {step} of {STEPS.length}</span>
+              <span className="text-xs font-bold text-[#8C8880] uppercase tracking-widest">Step {step} of {STEPS.length}</span>
               <button
                 onClick={handleSkip}
-                className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
+                className="text-xs text-[#8C8880] hover:text-[#6B6860] font-medium transition-colors"
               >
                 Skip setup
               </button>
             </div>
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#EDEBE8' }}>
               <div
                 className="h-full bg-teal-500 rounded-full transition-all duration-500"
                 style={{ width: `${(step / STEPS.length) * 100}%` }}
@@ -163,8 +163,8 @@ export default function OnboardingPage() {
             <div className="w-14 h-14 bg-teal-50 border border-teal-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Icon className="w-7 h-7 text-teal-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">{current.title}</h2>
-            <p className="text-sm text-gray-500 font-medium">{current.subtitle}</p>
+            <h2 className="text-xl font-bold text-[#2D2D2D] mb-1">{current.title}</h2>
+            <p className="text-sm text-[#6B6860] font-medium">{current.subtitle}</p>
           </div>
 
           {/* Step content */}
@@ -176,24 +176,24 @@ export default function OnboardingPage() {
                 onChange={e => setForm(f => ({ ...f, class_name: e.target.value }))}
                 placeholder='e.g. "Tuesday B2 Adults" or "Morning Conversation"'
                 autoFocus
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:border-teal-500 focus:ring-teal-500 font-medium text-sm"
+                className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-3 text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 focus:border-teal-500 focus:ring-teal-500 font-medium text-sm"
               />
             )}
 
             {step === 2 && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Student Nationality / L1</label>
+                  <label className="block text-sm font-bold text-[#4A473E] mb-2">Student Nationality / L1</label>
                   <select
                     value={form.student_nationality}
                     onChange={e => setForm(f => ({ ...f, student_nationality: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+                    className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-3 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
                   >
                     {NATIONALITIES.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Age Group</label>
+                  <label className="block text-sm font-bold text-[#4A473E] mb-2">Age Group</label>
                   <div className="grid grid-cols-2 gap-2">
                     {AGE_GROUPS.map(a => (
                       <button
@@ -203,7 +203,7 @@ export default function OnboardingPage() {
                           'py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all',
                           form.student_age_group === a.value
                             ? 'border-teal-500 bg-teal-50 text-teal-700'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            : 'border-[#E8E4DE] text-[#6B6860] hover:border-[#C4C0BA]'
                         )}
                       >
                         {a.label}
@@ -212,7 +212,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Class Size</label>
+                  <label className="block text-sm font-bold text-[#4A473E] mb-2">Class Size</label>
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
@@ -222,7 +222,7 @@ export default function OnboardingPage() {
                       onChange={e => setForm(f => ({ ...f, class_size: Number(e.target.value) }))}
                       className="flex-1 accent-teal-600"
                     />
-                    <span className="w-10 text-center text-sm font-bold text-gray-900">{form.class_size}</span>
+                    <span className="w-10 text-center text-sm font-bold text-[#2D2D2D]">{form.class_size}</span>
                   </div>
                 </div>
               </div>
@@ -239,7 +239,7 @@ export default function OnboardingPage() {
                         'py-3 rounded-xl border text-sm font-bold transition-all',
                         form.cefr_level === l
                           ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-sm'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          : 'border-[#E8E4DE] text-[#6B6860] hover:border-[#C4C0BA]'
                       )}
                     >
                       {l}
@@ -247,7 +247,7 @@ export default function OnboardingPage() {
                   ))}
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 mt-4">Course Type</label>
+                  <label className="block text-sm font-bold text-[#4A473E] mb-2 mt-4">Course Type</label>
                   <div className="grid grid-cols-2 gap-2">
                     {COURSE_TYPES.map(c => (
                       <button
@@ -257,7 +257,7 @@ export default function OnboardingPage() {
                           'py-2 px-3 rounded-xl border text-xs font-semibold transition-all text-left',
                           form.course_type === c
                             ? 'border-teal-500 bg-teal-50 text-teal-700'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            : 'border-[#E8E4DE] text-[#6B6860] hover:border-[#C4C0BA]'
                         )}
                       >
                         {c}
@@ -278,7 +278,7 @@ export default function OnboardingPage() {
                       'px-4 py-2 rounded-full border text-sm font-semibold transition-all',
                       form.weak_areas.includes(area)
                         ? 'border-teal-500 bg-teal-50 text-teal-700'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        : 'border-[#E8E4DE] text-[#6B6860] hover:border-[#C4C0BA]'
                     )}
                   >
                     {area}
@@ -297,7 +297,7 @@ export default function OnboardingPage() {
                       'px-4 py-2 rounded-full border text-sm font-semibold transition-all',
                       form.focus_skills.includes(skill)
                         ? 'border-teal-500 bg-teal-50 text-teal-700'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        : 'border-[#E8E4DE] text-[#6B6860] hover:border-[#C4C0BA]'
                     )}
                   >
                     {skill}
@@ -313,9 +313,9 @@ export default function OnboardingPage() {
                   value={form.textbook}
                   onChange={e => setForm(f => ({ ...f, textbook: e.target.value }))}
                   placeholder='e.g. "Headway Upper-Intermediate", "New English File B2"'
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:border-teal-500 focus:ring-teal-500 font-medium text-sm"
+                  className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-3 text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 focus:border-teal-500 focus:ring-teal-500 font-medium text-sm"
                 />
-                <p className="text-xs text-gray-400 font-medium">Leave blank if you don't use a set textbook.</p>
+                <p className="text-xs text-[#8C8880] font-medium">Leave blank if you don't use a set textbook.</p>
               </div>
             )}
           </div>
@@ -325,7 +325,7 @@ export default function OnboardingPage() {
             {step > 1 ? (
               <button
                 onClick={() => setStep(s => s - 1)}
-                className="text-sm text-gray-500 hover:text-gray-700 font-semibold transition-colors"
+                className="text-sm text-[#6B6860] hover:text-[#2D2D2D] font-semibold transition-colors"
               >
                 ← Back
               </button>

@@ -55,12 +55,12 @@ export function ThinkingLoader({ className }: ThinkingLoaderProps) {
       </div>
 
       {/* "Thinking..." heading */}
-      <p className="text-lg font-semibold text-gray-900 tracking-wide">Thinking...</p>
+      <p className="text-lg font-semibold text-[#2D2D2D] tracking-wide">Thinking...</p>
 
       {/* Rotating message with fade transition */}
       <p
         className={cn(
-          'text-sm text-gray-500 max-w-xs transition-opacity duration-300',
+          'text-sm text-[#6B6860] max-w-xs transition-opacity duration-300',
           visible ? 'opacity-100' : 'opacity-0'
         )}
       >

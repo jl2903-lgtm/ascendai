@@ -159,8 +159,8 @@ export default function ErrorCoachPage() {
             <CheckCircle className="w-5 h-5 text-purple-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Error Correction Coach</h1>
-            <p className="text-sm text-gray-500">Analyse student writing, categorise errors, get focus recommendations</p>
+            <h1 className="text-xl font-bold text-[#2D2D2D]">Error Correction Coach</h1>
+            <p className="text-sm text-[#6B6860]">Analyse student writing, categorise errors, get focus recommendations</p>
           </div>
         </div>
         <ClassSelector onClassSelected={handleClassSelected} />
@@ -177,7 +177,7 @@ export default function ErrorCoachPage() {
         <div className="md:col-span-2 space-y-3">
           {/* Photo upload area */}
           {photoPreview ? (
-            <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+            <div className="relative rounded-2xl overflow-hidden border border-[#E8E4DE] bg-[#F7F6F2]">
               <img src={photoPreview} alt="Uploaded handwriting" className="w-full max-h-48 object-contain" />
               <button
                 onClick={clearPhoto}
@@ -199,7 +199,7 @@ export default function ErrorCoachPage() {
           ) : (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center gap-3 bg-white border border-dashed border-gray-300 hover:border-purple-400 hover:bg-purple-50/30 rounded-2xl px-5 py-3.5 text-sm text-gray-500 hover:text-purple-600 transition-all"
+              className="w-full flex items-center gap-3 bg-white border border-dashed border-[#D4D0CA] hover:border-purple-400 hover:bg-purple-50/30 rounded-2xl px-5 py-3.5 text-sm text-[#6B6860] hover:text-purple-600 transition-all"
             >
               <ImageIcon className="w-4 h-4 flex-shrink-0" />
               <span>Upload a photo of handwritten work — AI will transcribe it automatically</span>
@@ -215,7 +215,7 @@ export default function ErrorCoachPage() {
             className="hidden"
           />
 
-          <label className="block text-sm font-medium text-gray-500 mb-1">Student&apos;s Writing</label>
+          <label className="block text-sm font-medium text-[#6B6860] mb-1">Student&apos;s Writing</label>
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
@@ -224,37 +224,37 @@ export default function ErrorCoachPage() {
 Example:
 Yesterday I go to the market and I buyed a lot of food. The weather was very good and I have been very happy. My friend, she come with me and we eat lunch at a restaurant. It was very delicious food."
             rows={10}
-            className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none leading-relaxed"
+            className="w-full bg-white border border-[#E8E4DE] rounded-2xl px-5 py-4 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none leading-relaxed"
           />
-          <div className="text-xs text-gray-400 text-right">{text.split(/\s+/).filter(Boolean).length} words</div>
+          <div className="text-xs text-[#8C8880] text-right">{text.split(/\s+/).filter(Boolean).length} words</div>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-2">Student Level</label>
+            <label className="block text-sm font-medium text-[#6B6860] mb-2">Student Level</label>
             <div className="relative">
-              <select value={level} onChange={e => setLevel(e.target.value)} className="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 pr-9">
+              <select value={level} onChange={e => setLevel(e.target.value)} className="w-full appearance-none bg-white border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 pr-9">
                 {STUDENT_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-2">Student Nationality</label>
+            <label className="block text-sm font-medium text-[#6B6860] mb-2">Student Nationality</label>
             <div className="relative">
-              <select value={nationality} onChange={e => setNationality(e.target.value)} className="w-full appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 pr-9">
+              <select value={nationality} onChange={e => setNationality(e.target.value)} className="w-full appearance-none bg-white border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 pr-9">
                 {NATIONALITIES.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
             </div>
           </div>
 
           <div className="glass-card p-4 space-y-2">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Error Types</div>
+            <div className="text-xs font-semibold text-[#6B6860] uppercase tracking-wider">Error Types</div>
             {Object.entries(ERROR_LABELS).map(([key, label]) => (
               <div key={key} className="flex items-center gap-2">
                 <div className={`w-3 h-3 rounded-full border ${ERROR_COLORS[key].split(' ').slice(0, 2).join(' ')}`} />
-                <span className="text-xs text-gray-500">{label}</span>
+                <span className="text-xs text-[#6B6860]">{label}</span>
               </div>
             ))}
           </div>
@@ -282,11 +282,11 @@ Yesterday I go to the market and I buyed a lot of food. The weather was very goo
       {result && !loading && (
         <div className="space-y-6">
           {/* Summary bar */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <span className="font-semibold text-gray-900">{result.summary.total} Error{result.summary.total !== 1 ? 's' : ''} Found</span>
+                <span className="font-semibold text-[#2D2D2D]">{result.summary.total} Error{result.summary.total !== 1 ? 's' : ''} Found</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(result.summary.byType).map(([type, count]) => count > 0 ? (
@@ -299,48 +299,48 @@ Yesterday I go to the market and I buyed a lot of food. The weather was very goo
             {result.focusRecommendation && (
               <div className="bg-teal-50 border border-teal-200 rounded-xl p-3">
                 <div className="text-xs font-semibold text-teal-600 mb-1">Focus Area Recommendation</div>
-                <p className="text-sm text-gray-700">{result.focusRecommendation}</p>
+                <p className="text-sm text-[#4A473E]">{result.focusRecommendation}</p>
               </div>
             )}
           </div>
 
           {/* Two-column comparison */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+            <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 rounded-full bg-red-400" />
-                <span className="text-sm font-semibold text-gray-900">Original — Errors Highlighted</span>
+                <span className="text-sm font-semibold text-[#2D2D2D]">Original — Errors Highlighted</span>
               </div>
               <div
-                className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"
+                className="text-sm text-[#4A473E] leading-relaxed whitespace-pre-wrap"
                 dangerouslySetInnerHTML={{ __html: highlightErrors(text, result.errors) }}
               />
             </div>
-            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+            <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 rounded-full bg-teal-400" />
-                <span className="text-sm font-semibold text-gray-900">Corrected Version</span>
+                <span className="text-sm font-semibold text-[#2D2D2D]">Corrected Version</span>
               </div>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{result.correctedText}</p>
+              <p className="text-sm text-[#4A473E] leading-relaxed whitespace-pre-wrap">{result.correctedText}</p>
             </div>
           </div>
 
           {/* Error list */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
-            <h3 className="font-semibold text-gray-900 mb-4">Error Explanations</h3>
+          <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5">
+            <h3 className="font-semibold text-[#2D2D2D] mb-4">Error Explanations</h3>
             <div className="space-y-3">
               {result.errors.map((err, i) => (
-                <div key={i} className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <div key={i} className="flex items-start gap-3 bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl p-4">
                   <span className={`text-xs px-2 py-0.5 rounded-full border font-medium flex-shrink-0 ${ERROR_COLORS[err.type]}`}>
                     {ERROR_LABELS[err.type]}
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-red-500 text-sm line-through">{err.original}</span>
-                      <span className="text-gray-400">→</span>
+                      <span className="text-[#8C8880]">→</span>
                       <span className="text-teal-600 text-sm font-medium">{err.corrected}</span>
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">{err.explanation}</p>
+                    <p className="text-xs text-[#6B6860] leading-relaxed">{err.explanation}</p>
                   </div>
                 </div>
               ))}

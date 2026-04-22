@@ -35,7 +35,7 @@ export function Navbar() {
             <li key={href}>
               <a
                 href={href}
-                className="text-[13px] font-semibold text-[#6B6B6B] hover:text-[#2D2D2D] transition-colors"
+                className="text-[13px] font-semibold text-[#6B6860] hover:text-[#2D2D2D] transition-colors"
               >
                 {label}
               </a>
@@ -46,7 +46,7 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             href="/auth/login"
-            className="text-[13px] font-semibold text-[#6B6B6B] hover:text-[#2D2D2D] transition-colors px-3 py-1.5"
+            className="text-[13px] font-semibold text-[#6B6860] hover:text-[#2D2D2D] transition-colors px-3 py-1.5"
           >
             Log in
           </Link>

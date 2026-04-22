@@ -63,7 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-gray-500">Loading your workspace...</span>
+          <span className="text-[#6B6860]">Loading your workspace...</span>
         </div>
       </div>
     )
@@ -73,7 +73,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 mb-4">Unable to load your profile.</p>
+          <p className="text-[#6B6860] mb-4">Unable to load your profile.</p>
           <button
             onClick={() => window.location.reload()}
             className="text-teal-600 hover:text-teal-500 text-sm underline"

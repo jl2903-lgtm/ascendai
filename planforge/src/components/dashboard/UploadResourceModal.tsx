@@ -43,7 +43,7 @@ function FileTypeIcon({ mimeType }: { mimeType: string }) {
     'image/png':  { bg: 'bg-purple-50 border-purple-200', text: 'text-purple-600', label: 'PNG' },
     'image/jpeg': { bg: 'bg-purple-50 border-purple-200', text: 'text-purple-600', label: 'JPG' },
   }
-  const c = colors[mimeType] ?? { bg: 'bg-gray-50 border-gray-200', text: 'text-gray-500', label: 'FILE' }
+  const c = colors[mimeType] ?? { bg: 'bg-[#F7F6F2] border-[#E8E4DE]', text: 'text-[#6B6860]', label: 'FILE' }
   return (
     <div className={`w-10 h-10 rounded-xl border flex flex-col items-center justify-center flex-shrink-0 ${c.bg}`}>
       {isImage
@@ -185,7 +185,7 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
     }
   }
 
-  const selectStyle = 'w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 cursor-pointer font-medium'
+  const selectStyle = 'w-full appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-3 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 cursor-pointer font-medium'
 
   return (
     <div
@@ -198,16 +198,16 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
         style={{ border: '1px solid rgba(255,255,255,0.6)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[#EDEBE8]">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Share a Resource</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Help the community — upload a lesson material</p>
+            <h2 className="text-lg font-bold text-[#2D2D2D]">Share a Resource</h2>
+            <p className="text-xs text-[#8C8880] mt-0.5">Help the community — upload a lesson material</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             disabled={isUploading}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C8880] hover:text-[#4A473E] hover:bg-[#F0EEE9] transition-colors disabled:opacity-40"
           >
             <X className="w-4 h-4" />
           </button>
@@ -217,7 +217,7 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
 
           {/* ── File drop zone ── */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+            <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
               File <span className="text-red-400">*</span>
             </label>
 
@@ -225,8 +225,8 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
               <div className="flex items-center gap-3 p-3 bg-sky-50 border border-sky-200 rounded-xl">
                 <FileTypeIcon mimeType={file.type} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{file.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{formatBytes(file.size)}</p>
+                  <p className="text-sm font-semibold text-[#2D2D2D] truncate">{file.name}</p>
+                  <p className="text-xs text-[#8C8880] mt-0.5">{formatBytes(file.size)}</p>
                 </div>
                 {!isUploading && (
                   <button
@@ -248,15 +248,15 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
                   flex flex-col items-center justify-center gap-2 p-8 rounded-xl border-2 border-dashed cursor-pointer transition-all
                   ${isDragging
                     ? 'border-sky-400 bg-sky-50'
-                    : 'border-gray-200 bg-gray-50 hover:border-sky-300 hover:bg-sky-50/50'}
+                    : 'border-[#E8E4DE] bg-[#F7F6F2] hover:border-sky-300 hover:bg-sky-50/50'}
                 `}
               >
-                <UploadCloud className={`w-8 h-8 ${isDragging ? 'text-sky-500' : 'text-gray-300'}`} />
+                <UploadCloud className={`w-8 h-8 ${isDragging ? 'text-sky-500' : 'text-[#C4C0BA]'}`} />
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-gray-600">
+                  <p className="text-sm font-semibold text-[#4A473E]">
                     {isDragging ? 'Drop it here' : 'Drag & drop or click to browse'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">PDF, DOCX, PPTX, XLSX, PNG, JPG — max 10 MB</p>
+                  <p className="text-xs text-[#8C8880] mt-0.5">PDF, DOCX, PPTX, XLSX, PNG, JPG — max 10 MB</p>
                 </div>
               </div>
             )}
@@ -280,11 +280,11 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
           {/* ── Upload progress ── */}
           {isUploading && (
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
+              <div className="flex items-center justify-between text-xs font-semibold text-[#6B6860]">
                 <span>{phase === 'uploading' ? 'Uploading file...' : 'Saving to library...'}</span>
                 {phase === 'uploading' && <span>{uploadProgress}%</span>}
               </div>
-              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-2 w-full bg-[#F0EEE9] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{
@@ -298,7 +298,7 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
 
           {/* ── Title ── */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+            <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
               Title <span className="text-red-400">*</span>
             </label>
             <input
@@ -307,15 +307,15 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
               onChange={e => setTitle(e.target.value.slice(0, 120))}
               placeholder="e.g. Past Perfect Speaking Activity"
               disabled={isUploading}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-60"
+              className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-3 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-60"
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/120</p>
+            <p className="text-xs text-[#8C8880] mt-1 text-right">{title.length}/120</p>
           </div>
 
           {/* ── Description ── */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-              Description <span className="text-gray-400 font-normal normal-case">(optional)</span>
+            <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
+              Description <span className="text-[#8C8880] font-normal normal-case">(optional)</span>
             </label>
             <textarea
               value={description}
@@ -323,16 +323,16 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
               placeholder="What's in this resource? Who is it for?"
               rows={3}
               disabled={isUploading}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 resize-none disabled:opacity-60 font-inherit"
+              className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-3 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 resize-none disabled:opacity-60 font-inherit"
               style={{ fontFamily: 'inherit' }}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/500</p>
+            <p className="text-xs text-[#8C8880] mt-1 text-right">{description.length}/500</p>
           </div>
 
           {/* ── Dropdowns row 1: CEFR + Age Group ── */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
                 CEFR Level <span className="text-red-400">*</span>
               </label>
               <div className="relative">
@@ -345,11 +345,11 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
                   <option value="">Select level</option>
                   {CEFR_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880]" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
                 Age Group <span className="text-red-400">*</span>
               </label>
               <div className="relative">
@@ -362,7 +362,7 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
                   <option value="">Select group</option>
                   {AGE_GROUPS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880]" />
               </div>
             </div>
           </div>
@@ -370,7 +370,7 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
           {/* ── Dropdowns row 2: Subject + Resource Type ── */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
                 Subject <span className="text-red-400">*</span>
               </label>
               <div className="relative">
@@ -383,11 +383,11 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
                   <option value="">Select subject</option>
                   {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880]" />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
                 Type <span className="text-red-400">*</span>
               </label>
               <div className="relative">
@@ -400,15 +400,15 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
                   <option value="">Select type</option>
                   {RESOURCE_TYPES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880]" />
               </div>
             </div>
           </div>
 
           {/* ── Tags ── */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-              Tags <span className="text-gray-400 font-normal normal-case">(optional, comma-separated)</span>
+            <label className="block text-xs font-bold text-[#6B6860] uppercase tracking-wide mb-2">
+              Tags <span className="text-[#8C8880] font-normal normal-case">(optional, comma-separated)</span>
             </label>
             <input
               type="text"
@@ -416,7 +416,7 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
               onChange={e => setTags(e.target.value)}
               placeholder="e.g. past tense, group activity, B2+"
               disabled={isUploading}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-60"
+              className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-3 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 disabled:opacity-60"
             />
           </div>
 
@@ -458,7 +458,7 @@ export function UploadResourceModal({ onClose, onSuccess }: UploadResourceModalP
             )}
           </button>
 
-          <p className="text-center text-xs text-gray-400">
+          <p className="text-center text-xs text-[#8C8880]">
             By sharing, you confirm this resource is your own work or freely shareable.
           </p>
 

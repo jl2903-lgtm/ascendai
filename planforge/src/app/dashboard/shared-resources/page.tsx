@@ -96,7 +96,7 @@ function ResourceCard({
   const avatarBg = getAvatarBg(uploaderName)
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-3 hover:border-sky-300 hover:shadow-md transition-all duration-200">
+    <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5 flex flex-col gap-3 hover:border-sky-300 hover:shadow-md transition-all duration-200">
 
       {/* ── TOP: file type icon + title ── */}
       <div className="flex items-start gap-3">
@@ -109,7 +109,7 @@ function ResourceCard({
             : <FileText className="w-4 h-4" style={{ color: ft.color }} />}
           <span className="text-[8px] font-bold mt-px" style={{ color: ft.color }}>{ft.label}</span>
         </div>
-        <h3 className="font-bold text-gray-900 text-[14px] leading-snug line-clamp-2 pt-0.5">
+        <h3 className="font-bold text-[#2D2D2D] text-[14px] leading-snug line-clamp-2 pt-0.5">
           {resource.title}
         </h3>
       </div>
@@ -136,10 +136,10 @@ function ResourceCard({
               {getInitials(uploaderName)}
             </div>
           )}
-          <span className="text-xs font-semibold text-gray-600 truncate">{uploaderName}</span>
+          <span className="text-xs font-semibold text-[#4A473E] truncate">{uploaderName}</span>
         </button>
-        <span className="text-gray-300 text-xs flex-shrink-0">·</span>
-        <span className="text-xs text-gray-400 flex-shrink-0">{timeAgo(resource.created_at)}</span>
+        <span className="text-[#C4C0BA] text-xs flex-shrink-0">·</span>
+        <span className="text-xs text-[#8C8880] flex-shrink-0">{timeAgo(resource.created_at)}</span>
       </div>
 
       {/* ── TAG CHIPS ── */}
@@ -165,7 +165,7 @@ function ResourceCard({
           </span>
         )}
         {resource.tags?.map(tag => (
-          <span key={tag} className="text-[11px] px-2 py-0.5 bg-gray-100 border border-gray-200 text-gray-500 rounded-full font-medium">
+          <span key={tag} className="text-[11px] px-2 py-0.5 bg-[#F0EEE9] border border-[#E8E4DE] text-[#6B6860] rounded-full font-medium">
             {tag}
           </span>
         ))}
@@ -173,7 +173,7 @@ function ResourceCard({
 
       {/* ── DESCRIPTION ── */}
       {resource.description && (
-        <p className="text-[12.5px] text-gray-500 leading-relaxed line-clamp-2">
+        <p className="text-[12.5px] text-[#6B6860] leading-relaxed line-clamp-2">
           {resource.description.length > 120
             ? resource.description.slice(0, 120) + '…'
             : resource.description}
@@ -181,7 +181,7 @@ function ResourceCard({
       )}
 
       {/* ── BOTTOM: file size + download count + button ── */}
-      <div className="flex items-center justify-between text-[11px] text-gray-400 mt-auto">
+      <div className="flex items-center justify-between text-[11px] text-[#8C8880] mt-auto">
         <span>{resource.file_size_bytes ? formatBytes(resource.file_size_bytes) : ft.label}</span>
         <span>
           {resource.download_count > 0
@@ -204,7 +204,7 @@ function ResourceCard({
         <button
           type="button"
           onClick={() => onReport?.(resource)}
-          className="flex items-center gap-1 text-[11px] text-gray-300 hover:text-red-400 transition-colors"
+          className="flex items-center gap-1 text-[11px] text-[#C4C0BA] hover:text-red-400 transition-colors"
         >
           <Flag className="w-3 h-3" />
           Report
@@ -218,24 +218,24 @@ function ResourceCard({
 
 function SkeletonCard() {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 animate-pulse space-y-3">
+    <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5 animate-pulse space-y-3">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 bg-gray-100 rounded-xl flex-shrink-0" />
+        <div className="w-10 h-10 bg-[#F0EEE9] rounded-xl flex-shrink-0" />
         <div className="flex-1 space-y-2 pt-1">
-          <div className="h-3.5 bg-gray-100 rounded w-4/5" />
-          <div className="h-3 bg-gray-100 rounded w-3/5" />
+          <div className="h-3.5 bg-[#F0EEE9] rounded w-4/5" />
+          <div className="h-3 bg-[#F0EEE9] rounded w-3/5" />
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-gray-100 rounded-full" />
-        <div className="h-3 bg-gray-100 rounded w-24" />
+        <div className="w-6 h-6 bg-[#F0EEE9] rounded-full" />
+        <div className="h-3 bg-[#F0EEE9] rounded w-24" />
       </div>
       <div className="flex gap-1.5">
-        <div className="h-5 bg-gray-100 rounded-full w-10" />
-        <div className="h-5 bg-gray-100 rounded-full w-16" />
-        <div className="h-5 bg-gray-100 rounded-full w-14" />
+        <div className="h-5 bg-[#F0EEE9] rounded-full w-10" />
+        <div className="h-5 bg-[#F0EEE9] rounded-full w-16" />
+        <div className="h-5 bg-[#F0EEE9] rounded-full w-14" />
       </div>
-      <div className="h-8 bg-gray-100 rounded-xl w-full mt-2" />
+      <div className="h-8 bg-[#F0EEE9] rounded-xl w-full mt-2" />
     </div>
   )
 }
@@ -253,11 +253,11 @@ function FilterSelect({
 }) {
   return (
     <div className="relative">
-      <Icon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+      <Icon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880] pointer-events-none" />
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="appearance-none bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-6 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-medium cursor-pointer"
+        className="appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl pl-8 pr-6 py-2 text-[13px] text-[#4A473E] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-medium cursor-pointer"
       >
         <option value="All">{allLabel}</option>
         {options.filter(o => o !== 'All').map(o => (
@@ -391,8 +391,8 @@ export default function SharedResourcesPage() {
             <Globe className="w-5 h-5 text-sky-500" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Shared Resources</h1>
-            <p className="text-sm text-gray-500">Community-uploaded lesson materials from Tyoutor Pro teachers</p>
+            <h1 className="text-xl font-bold text-[#2D2D2D]">Shared Resources</h1>
+            <p className="text-sm text-[#6B6860]">Community-uploaded lesson materials from Tyoutor Pro teachers</p>
           </div>
         </div>
         <button
@@ -407,16 +407,16 @@ export default function SharedResourcesPage() {
       </div>
 
       {/* ── Search + Filters ── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3">
+      <div className="bg-white border border-[#E8E4DE] rounded-2xl p-4 space-y-3">
         {/* Search row */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by title, description, subject, or teacher name..."
-            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            className="w-full pl-9 pr-4 py-2.5 bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
           />
         </div>
 
@@ -453,11 +453,11 @@ export default function SharedResourcesPage() {
 
           {/* Sort */}
           <div className="relative ml-auto">
-            <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880] pointer-events-none" />
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value as typeof sortBy)}
-              className="appearance-none bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-6 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-medium cursor-pointer"
+              className="appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl pl-8 pr-6 py-2 text-[13px] text-[#4A473E] focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-medium cursor-pointer"
             >
               <option value="newest">Newest first</option>
               <option value="popular">Most downloaded</option>
@@ -469,7 +469,7 @@ export default function SharedResourcesPage() {
 
       {/* ── Results count ── */}
       {!loading && (
-        <p className="text-sm text-gray-400 -mt-2">
+        <p className="text-sm text-[#8C8880] -mt-2">
           {filtered.length === 0
             ? 'No resources match your filters'
             : `${filtered.length} resource${filtered.length !== 1 ? 's' : ''} found`}
@@ -482,14 +482,14 @@ export default function SharedResourcesPage() {
           {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl min-h-[360px] flex flex-col items-center justify-center text-center p-8">
+        <div className="bg-white border border-[#E8E4DE] rounded-2xl min-h-[360px] flex flex-col items-center justify-center text-center p-8">
           <div className="w-16 h-16 bg-sky-600/10 rounded-2xl flex items-center justify-center mb-4">
             <Globe className="w-8 h-8 text-sky-500/50" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-[#2D2D2D] mb-2">
             {hasActiveFilters ? 'No resources found' : 'No resources yet'}
           </h3>
-          <p className="text-sm text-gray-500 max-w-xs mb-5">
+          <p className="text-sm text-[#6B6860] max-w-xs mb-5">
             {hasActiveFilters
               ? 'Try different filters or be the first to upload!'
               : 'Be the first to share a teaching material with the community.'}

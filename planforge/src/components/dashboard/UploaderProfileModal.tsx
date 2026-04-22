@@ -133,19 +133,19 @@ export function UploaderProfileModal({ userId, uploaderName, uploaderAvatarUrl, 
       <div className="fixed inset-y-0 right-0 w-full max-w-[520px] bg-white shadow-2xl z-50 flex flex-col">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-bold text-gray-900">Teacher profile</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EDEBE8]">
+          <h2 className="text-base font-bold text-[#2D2D2D]">Teacher profile</h2>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-xl bg-[#F0EEE9] hover:bg-[#E8E4DE] flex items-center justify-center transition-colors"
           >
-            <X className="w-4 h-4 text-gray-500" />
+            <X className="w-4 h-4 text-[#6B6860]" />
           </button>
         </div>
 
         {/* ── Profile hero ── */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-4">
+        <div className="px-6 py-5 border-b border-[#EDEBE8] flex items-center gap-4">
           {uploaderAvatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -162,9 +162,9 @@ export function UploaderProfileModal({ userId, uploaderName, uploaderAvatarUrl, 
             </div>
           )}
           <div>
-            <p className="text-lg font-bold text-gray-900">{uploaderName}</p>
+            <p className="text-lg font-bold text-[#2D2D2D]">{uploaderName}</p>
             {!loading && (
-              <p className="text-sm text-gray-400 mt-0.5">
+              <p className="text-sm text-[#8C8880] mt-0.5">
                 {resources.length} resource{resources.length !== 1 ? 's' : ''}
                 &nbsp;·&nbsp;
                 {totalDownloads.toLocaleString()} download{totalDownloads !== 1 ? 's' : ''}
@@ -177,18 +177,18 @@ export function UploaderProfileModal({ userId, uploaderName, uploaderAvatarUrl, 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="animate-pulse flex items-center gap-3 p-3 rounded-xl border border-gray-100">
-                <div className="w-10 h-10 bg-gray-100 rounded-xl flex-shrink-0" />
+              <div key={i} className="animate-pulse flex items-center gap-3 p-3 rounded-xl border border-[#EDEBE8]">
+                <div className="w-10 h-10 bg-[#F0EEE9] rounded-xl flex-shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3.5 bg-gray-100 rounded w-3/4" />
-                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-3.5 bg-[#F0EEE9] rounded w-3/4" />
+                  <div className="h-3 bg-[#F0EEE9] rounded w-1/2" />
                 </div>
-                <div className="w-24 h-8 bg-gray-100 rounded-xl flex-shrink-0" />
+                <div className="w-24 h-8 bg-[#F0EEE9] rounded-xl flex-shrink-0" />
               </div>
             ))
           ) : resources.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
-              <p className="text-sm text-gray-400">No public resources yet.</p>
+              <p className="text-sm text-[#8C8880]">No public resources yet.</p>
             </div>
           ) : (
             resources.map(resource => {
@@ -196,7 +196,7 @@ export function UploaderProfileModal({ userId, uploaderName, uploaderAvatarUrl, 
               return (
                 <div
                   key={resource.id}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-sky-200 hover:bg-sky-50/30 transition-all"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-[#EDEBE8] hover:border-sky-200 hover:bg-sky-50/30 transition-all"
                 >
                   {/* File type badge */}
                   <div
@@ -211,7 +211,7 @@ export function UploaderProfileModal({ userId, uploaderName, uploaderAvatarUrl, 
 
                   {/* Title + chips */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-gray-900 truncate">{resource.title}</p>
+                    <p className="text-[13px] font-semibold text-[#2D2D2D] truncate">{resource.title}</p>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       {resource.cefr_level && (
                         <span className="text-[10px] px-1.5 py-px bg-sky-50 border border-sky-200 text-sky-700 rounded-full font-semibold">
@@ -223,7 +223,7 @@ export function UploaderProfileModal({ userId, uploaderName, uploaderAvatarUrl, 
                           {resource.subject}
                         </span>
                       )}
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-[#8C8880]">
                         {resource.download_count > 0
                           ? `${resource.download_count.toLocaleString()} ↓`
                           : 'No downloads yet'}

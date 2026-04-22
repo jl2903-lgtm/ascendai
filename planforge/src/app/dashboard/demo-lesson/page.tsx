@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-500 mb-2">{label}</label>
+      <label className="block text-sm font-medium text-[#6B6860] mb-2">{label}</label>
       {children}
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
@@ -110,8 +110,8 @@ export default function DemoLessonPage() {
             <Star className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Demo Lesson Builder</h1>
-            <p className="text-sm text-gray-500">Interview-ready lesson plans that impress hiring panels</p>
+            <h1 className="text-xl font-bold text-[#2D2D2D]">Demo Lesson Builder</h1>
+            <p className="text-sm text-[#6B6860]">Interview-ready lesson plans that impress hiring panels</p>
           </div>
         </div>
         <ClassSelector onClassSelected={handleClassSelected} />
@@ -134,14 +134,14 @@ export default function DemoLessonPage() {
         {/* Form */}
         <div className="lg:col-span-2">
           <div className="glass-card p-6 space-y-5 sticky top-6">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Interview Details</h2>
+            <h2 className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider">Interview Details</h2>
 
             <Field label="Target School Type">
               <div className="relative">
-                <select value={form.schoolType} onChange={e => setForm(f => ({ ...f, schoolType: e.target.value }))} className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 pr-9">
+                <select value={form.schoolType} onChange={e => setForm(f => ({ ...f, schoolType: e.target.value }))} className="w-full appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 pr-9">
                   {SCHOOL_TYPES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
               </div>
             </Field>
 
@@ -151,7 +151,7 @@ export default function DemoLessonPage() {
                 value={form.country}
                 onChange={e => { setForm(f => ({ ...f, country: e.target.value })); setErrors(p => ({ ...p, country: '' })) }}
                 placeholder="e.g. South Korea, Vietnam, Spain"
-                className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${errors.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
+                className={`w-full bg-[#F7F6F2] border rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 ${errors.country ? 'border-red-500 focus:ring-red-500' : 'border-[#E8E4DE] focus:border-teal-500 focus:ring-teal-500'}`}
               />
             </Field>
 
@@ -161,16 +161,16 @@ export default function DemoLessonPage() {
                 value={form.topic}
                 onChange={e => { setForm(f => ({ ...f, topic: e.target.value })); setErrors(p => ({ ...p, topic: '' })) }}
                 placeholder="e.g. Ordering food in a restaurant"
-                className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${errors.topic ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-teal-500 focus:ring-teal-500'}`}
+                className={`w-full bg-[#F7F6F2] border rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] placeholder-[#8C8880] focus:outline-none focus:ring-1 ${errors.topic ? 'border-red-500 focus:ring-red-500' : 'border-[#E8E4DE] focus:border-teal-500 focus:ring-teal-500'}`}
               />
             </Field>
 
             <Field label="Student Level">
               <div className="relative">
-                <select value={form.level} onChange={e => setForm(f => ({ ...f, level: e.target.value }))} className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 pr-9">
+                <select value={form.level} onChange={e => setForm(f => ({ ...f, level: e.target.value }))} className="w-full appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 pr-9">
                   {STUDENT_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
               </div>
             </Field>
 
@@ -180,7 +180,7 @@ export default function DemoLessonPage() {
                   <button
                     key={d.value}
                     onClick={() => setForm(f => ({ ...f, demoLength: d.value }))}
-                    className={`py-2 rounded-lg text-xs font-semibold transition-all ${form.demoLength === d.value ? 'bg-amber-600 text-white' : 'bg-gray-50 border border-gray-200 text-gray-500 hover:border-gray-300'}`}
+                    className={`py-2 rounded-lg text-xs font-semibold transition-all ${form.demoLength === d.value ? 'bg-amber-600 text-white' : 'bg-[#F7F6F2] border border-[#E8E4DE] text-[#6B6860] hover:border-[#D4D0CA]'}`}
                   >
                     {d.value}m
                   </button>
@@ -190,10 +190,10 @@ export default function DemoLessonPage() {
 
             <Field label="Your Experience Level">
               <div className="relative">
-                <select value={form.experienceLevel} onChange={e => setForm(f => ({ ...f, experienceLevel: e.target.value }))} className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 pr-9">
+                <select value={form.experienceLevel} onChange={e => setForm(f => ({ ...f, experienceLevel: e.target.value }))} className="w-full appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 pr-9">
                   {EXPERIENCE_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
               </div>
             </Field>
 
@@ -217,17 +217,17 @@ export default function DemoLessonPage() {
             <div className="space-y-4">
               {/* Title */}
               <div className="bg-gradient-to-br from-amber-50 to-white border border-amber-200 rounded-2xl p-6">
-                <h2 className="text-xl font-bold text-gray-900">{result.title}</h2>
+                <h2 className="text-xl font-bold text-[#2D2D2D]">{result.title}</h2>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {[result.targetSchool, result.overview.level, result.overview.duration].map(t => (
-                    <span key={t} className="text-xs px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-gray-600 font-medium">{t}</span>
+                    <span key={t} className="text-xs px-2.5 py-1 bg-white border border-[#E8E4DE] rounded-lg text-[#4A473E] font-medium">{t}</span>
                   ))}
                 </div>
                 <div className="mt-3">
-                  <div className="text-xs font-semibold text-gray-500 mb-2">Learning Objectives</div>
+                  <div className="text-xs font-semibold text-[#6B6860] mb-2">Learning Objectives</div>
                   <ul className="space-y-1">
                     {result.overview.objectives.map((o, i) => (
-                      <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                      <li key={i} className="text-sm text-[#4A473E] flex items-start gap-2">
                         <span className="text-amber-500 flex-shrink-0">•</span> {o}
                       </li>
                     ))}
@@ -238,27 +238,27 @@ export default function DemoLessonPage() {
               {/* Lesson stages */}
               <div className="space-y-4">
                 {result.stages.map((stage, i) => (
-                  <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                    <div className="bg-gray-50 px-5 py-3 flex items-center justify-between border-b border-gray-200">
+                  <div key={i} className="bg-white border border-[#E8E4DE] rounded-2xl overflow-hidden">
+                    <div className="bg-[#F7F6F2] px-5 py-3 flex items-center justify-between border-b border-[#E8E4DE]">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 bg-amber-600 rounded-full flex items-center justify-center text-xs font-bold text-white">{i + 1}</span>
-                        <span className="font-semibold text-gray-900 text-sm">{stage.name}</span>
+                        <span className="font-semibold text-[#2D2D2D] text-sm">{stage.name}</span>
                       </div>
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1 text-xs text-[#6B6860]">
                         <Clock className="w-3 h-3" /> {stage.duration}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#E8E4DE]">
                       <div className="p-5">
-                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Activities</div>
-                        <p className="text-sm text-gray-700 leading-relaxed">{stage.activities}</p>
+                        <div className="text-xs font-semibold text-[#6B6860] uppercase tracking-wider mb-2">Activities</div>
+                        <p className="text-sm text-[#4A473E] leading-relaxed">{stage.activities}</p>
                       </div>
                       <div className="p-5 bg-amber-50/50">
                         <div className="flex items-center gap-1.5 mb-2">
                           <Info className="w-3.5 h-3.5 text-amber-500" />
                           <div className="text-xs font-semibold text-amber-600">Why This Works</div>
                         </div>
-                        <p className="text-sm text-gray-600 leading-relaxed italic">{stage.whyItWorks}</p>
+                        <p className="text-sm text-[#4A473E] leading-relaxed italic">{stage.whyItWorks}</p>
                       </div>
                     </div>
                   </div>
@@ -267,11 +267,11 @@ export default function DemoLessonPage() {
 
               {/* Interview tips */}
               {result.interviewTips?.length > 0 && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                  <h3 className="font-semibold text-gray-900 mb-3">Interview Tips</h3>
+                <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5">
+                  <h3 className="font-semibold text-[#2D2D2D] mb-3">Interview Tips</h3>
                   <ul className="space-y-2">
                     {result.interviewTips.map((tip, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                      <li key={i} className="flex items-start gap-2 text-sm text-[#4A473E]">
                         <span className="text-amber-500 flex-shrink-0">💡</span>
                         {tip}
                       </li>
@@ -281,24 +281,24 @@ export default function DemoLessonPage() {
               )}
 
               {/* Actions */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-wrap gap-3">
+              <div className="bg-white border border-[#E8E4DE] rounded-2xl p-4 flex flex-wrap gap-3">
                 <button onClick={handleCopy} className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition-all">
                   <Copy className="w-4 h-4" />
                   Copy Lesson
                 </button>
-                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-amber-400 text-gray-600 hover:text-amber-700 transition-all">
+                <button onClick={() => window.print()} className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl border border-[#E8E4DE] hover:border-amber-400 text-[#4A473E] hover:text-amber-700 transition-all">
                   <Download className="w-4 h-4" />
                   Print View
                 </button>
               </div>
             </div>
           ) : (
-            <div className="bg-white border border-gray-200 rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center p-8">
+            <div className="bg-white border border-[#E8E4DE] rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center p-8">
               <div className="w-16 h-16 bg-amber-600/10 rounded-2xl flex items-center justify-center mb-4">
                 <Star className="w-8 h-8 text-amber-600/50" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Build your interview lesson</h3>
-              <p className="text-sm text-gray-500 max-w-xs">Every stage comes with a methodology explanation to help you speak confidently in your interview. Get the job.</p>
+              <h3 className="text-lg font-semibold text-[#2D2D2D] mb-2">Build your interview lesson</h3>
+              <p className="text-sm text-[#6B6860] max-w-xs">Every stage comes with a methodology explanation to help you speak confidently in your interview. Get the job.</p>
             </div>
           )}
         </div>

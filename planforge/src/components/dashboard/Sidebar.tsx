@@ -52,7 +52,7 @@ const FREE_LESSON_LIMIT = 5
 const SECTION_LABEL_STYLE: React.CSSProperties = {
   fontSize: 9,
   fontWeight: 700,
-  color: '#BBB',
+  color: '#8C8880',
   letterSpacing: '1.2px',
   textTransform: 'uppercase',
 }
@@ -88,11 +88,11 @@ export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) 
         href={href}
         className={cn(
           'flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13.5px] font-semibold transition-all duration-150',
-          active ? 'border text-[#2D6A4F]' : 'text-[#6B6B6B] hover:bg-gray-50 hover:text-gray-900'
+          active ? 'border text-[#2D6A4F]' : 'text-[#6B6860] hover:bg-[#F4F2EE] hover:text-[#2D2D2D]'
         )}
         style={active ? { background: 'linear-gradient(135deg, #E8F5E9, #F0FFF4)', borderColor: '#C6F6D5' } : {}}
       >
-        <Icon className={cn('h-4 w-4 flex-shrink-0', active ? 'text-[#2D6A4F]' : 'text-gray-400')} />
+        <Icon className={cn('h-4 w-4 flex-shrink-0', active ? 'text-[#2D6A4F]' : 'text-[#9E9C98]')} />
         {label}
       </Link>
     )
