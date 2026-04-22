@@ -348,7 +348,7 @@ export default function MagicPastePage() {
                   <select value={cefrLevel} onChange={e => setCefrLevel(e.target.value)} style={selectStyle}>
                     {STUDENT_LEVELS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880]" />
                 </div>
               </div>
               <div>
@@ -357,7 +357,7 @@ export default function MagicPastePage() {
                   <select value={duration} onChange={e => setDuration(Number(e.target.value))} style={selectStyle}>
                     {LESSON_LENGTHS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880]" />
                 </div>
               </div>
               <div>
@@ -366,7 +366,7 @@ export default function MagicPastePage() {
                   <select value={ageGroup} onChange={e => setAgeGroup(e.target.value)} style={selectStyle}>
                     {AGE_GROUPS.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#8C8880]" />
                 </div>
               </div>
             </div>

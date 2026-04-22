@@ -108,12 +108,12 @@ export default function SettingsPage() {
       <div aria-hidden style={{ position:'absolute',width:300,height:300,top:-60,right:-60,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#D4E8D0,#A7C4A0)',opacity:0.15,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
       <div aria-hidden style={{ position:'absolute',width:250,height:250,bottom:40,left:-40,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.13,pointerEvents:'none',zIndex:-1,animation:'blobFloat 8s ease-in-out 3s infinite alternate' }} />
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center">
-          <Settings className="w-5 h-5 text-gray-500" />
+        <div className="w-10 h-10 bg-white border border-[#E8E4DE] rounded-xl flex items-center justify-center">
+          <Settings className="w-5 h-5 text-[#6B6860]" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Settings</h1>
-          <p className="text-sm text-gray-500">Manage your account and preferences</p>
+          <h1 className="text-xl font-bold text-[#2D2D2D]">Settings</h1>
+          <p className="text-sm text-[#6B6860]">Manage your account and preferences</p>
         </div>
       </div>
 
@@ -121,12 +121,12 @@ export default function SettingsPage() {
       <Section icon={User} title="Profile">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-2">Full Name</label>
-            <input type="text" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+            <label className="block text-sm font-medium text-[#6B6860] mb-2">Full Name</label>
+            <input type="text" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-2">Email</label>
-            <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+            <label className="block text-sm font-medium text-[#6B6860] mb-2">Email</label>
+            <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
           </div>
           <button onClick={saveProfile} disabled={saving} className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
             <CheckCircle className="w-4 h-4" />
@@ -137,7 +137,7 @@ export default function SettingsPage() {
 
       {/* Default Preferences */}
       <Section icon={Settings} title="Default Preferences">
-        <p className="text-sm text-gray-500 mb-4">These will pre-fill your lesson generator form.</p>
+        <p className="text-sm text-[#6B6860] mb-4">These will pre-fill your lesson generator form.</p>
         <div className="space-y-4">
           {[
             { label: 'Default Level', key: 'default_level', options: STUDENT_LEVELS },
@@ -145,16 +145,16 @@ export default function SettingsPage() {
             { label: 'Default Age Group', key: 'default_age_group', options: AGE_GROUPS },
           ].map(({ label, key, options }) => (
             <div key={key}>
-              <label className="block text-sm font-medium text-gray-500 mb-2">{label}</label>
+              <label className="block text-sm font-medium text-[#6B6860] mb-2">{label}</label>
               <div className="relative">
                 <select
                   value={prefs[key as keyof typeof prefs]}
                   onChange={e => setPrefs(p => ({ ...p, [key]: e.target.value }))}
-                  className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 pr-9"
+                  className="w-full appearance-none bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 pr-9"
                 >
                   {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8880] pointer-events-none" />
               </div>
             </div>
           ))}
@@ -169,14 +169,14 @@ export default function SettingsPage() {
       <Section icon={Settings} title="Change Password">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-2">New Password</label>
-            <input type="password" value={passwordForm.newPassword} onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))} placeholder="Min. 8 characters" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-gray-400" />
+            <label className="block text-sm font-medium text-[#6B6860] mb-2">New Password</label>
+            <input type="password" value={passwordForm.newPassword} onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))} placeholder="Min. 8 characters" className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-[#8C8880]" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-500 mb-2">Confirm New Password</label>
-            <input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm(p => ({ ...p, confirm: e.target.value }))} placeholder="Repeat new password" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-gray-400" />
+            <label className="block text-sm font-medium text-[#6B6860] mb-2">Confirm New Password</label>
+            <input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm(p => ({ ...p, confirm: e.target.value }))} placeholder="Repeat new password" className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-[#8C8880]" />
           </div>
-          <button onClick={changePassword} disabled={savingPassword} className="flex items-center gap-2 bg-gray-100 hover:bg-[#475569] disabled:opacity-50 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+          <button onClick={changePassword} disabled={savingPassword} className="flex items-center gap-2 bg-[#F0EEE9] hover:bg-[#475569] disabled:opacity-50 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
             {savingPassword ? 'Updating...' : 'Update Password'}
           </button>
         </div>
@@ -187,17 +187,17 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${isPro ? 'bg-teal-600/20 text-teal-400 border border-teal-600/30' : 'bg-gray-100 text-gray-500'}`}>
+              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${isPro ? 'bg-teal-600/20 text-teal-400 border border-teal-600/30' : 'bg-[#F0EEE9] text-[#6B6860]'}`}>
                 {isPro ? 'Pro' : 'Free'} Plan
               </span>
-              {isPro && <span className="text-xs text-gray-500">Unlimited access to all tools</span>}
+              {isPro && <span className="text-xs text-[#6B6860]">Unlimited access to all tools</span>}
             </div>
             {!isPro && (
-              <p className="text-xs text-gray-500 mt-1">5 lessons, 5 worksheets per month</p>
+              <p className="text-xs text-[#6B6860] mt-1">5 lessons, 5 worksheets per month</p>
             )}
           </div>
           {isPro ? (
-            <button onClick={openBillingPortal} disabled={portalLoading} className="flex items-center gap-2 border border-gray-200 hover:border-teal-500 text-gray-500 hover:text-white font-medium px-4 py-2.5 rounded-xl text-sm transition-all disabled:opacity-50">
+            <button onClick={openBillingPortal} disabled={portalLoading} className="flex items-center gap-2 border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-white font-medium px-4 py-2.5 rounded-xl text-sm transition-all disabled:opacity-50">
               <ExternalLink className="w-4 h-4" />
               {portalLoading ? 'Opening...' : 'Manage Billing'}
             </button>
@@ -208,13 +208,13 @@ export default function SettingsPage() {
           )}
         </div>
         {isPro && (
-          <p className="text-xs text-gray-400">Manage your subscription, update payment methods, or cancel in the billing portal.</p>
+          <p className="text-xs text-[#8C8880]">Manage your subscription, update payment methods, or cancel in the billing portal.</p>
         )}
       </Section>
 
       {/* Danger zone */}
       <Section icon={Trash2} title="Danger Zone" danger>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-[#6B6860] mb-4">
           Deleting your account is permanent and cannot be undone. All your lessons and worksheets will be lost.
         </p>
         {deleteConfirm ? (
@@ -224,7 +224,7 @@ export default function SettingsPage() {
               <button onClick={deleteAccount} className="bg-red-600 hover:bg-red-500 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
                 Yes, delete my account
               </button>
-              <button onClick={() => setDeleteConfirm(false)} className="border border-gray-200 text-gray-500 hover:text-white px-4 py-2 rounded-lg text-sm transition-colors">
+              <button onClick={() => setDeleteConfirm(false)} className="border border-[#E8E4DE] text-[#6B6860] hover:text-white px-4 py-2 rounded-lg text-sm transition-colors">
                 Cancel
               </button>
             </div>
@@ -242,10 +242,10 @@ export default function SettingsPage() {
 
 function Section({ icon: Icon, title, children, danger }: { icon: React.FC<{ className?: string }>; title: string; children: React.ReactNode; danger?: boolean }) {
   return (
-    <div className={`bg-white border rounded-2xl p-6 ${danger ? 'border-red-500/20' : 'border-gray-200'}`}>
-      <div className="flex items-center gap-2 mb-5 pb-4 border-b border-gray-200">
-        <Icon className={`w-4 h-4 ${danger ? 'text-red-400' : 'text-gray-500'}`} />
-        <h2 className={`font-semibold text-sm ${danger ? 'text-red-400' : 'text-gray-900'}`}>{title}</h2>
+    <div className={`bg-white border rounded-2xl p-6 ${danger ? 'border-red-500/20' : 'border-[#E8E4DE]'}`}>
+      <div className="flex items-center gap-2 mb-5 pb-4 border-b border-[#E8E4DE]">
+        <Icon className={`w-4 h-4 ${danger ? 'text-red-400' : 'text-[#6B6860]'}`} />
+        <h2 className={`font-semibold text-sm ${danger ? 'text-red-400' : 'text-[#2D2D2D]'}`}>{title}</h2>
       </div>
       {children}
     </div>
