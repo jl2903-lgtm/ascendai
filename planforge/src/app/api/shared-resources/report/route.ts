@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
-import { getResend } from '@/lib/resend'
+import { sendEmail } from '@/lib/resend'
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,11 +40,8 @@ export async function POST(req: NextRequest) {
       ? String(reason).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       : null
 
-    const resend = getResend()
-    if (!resend) { console.warn('[report] RESEND_API_KEY not set, skipping email'); return NextResponse.json({ ok: true }) }
-    try { await resend.emails.send({
-      from: 'Tyoutor Pro <hello@tyoutorpro.app>',
-      to: 'info@tyoutor.io',
+    try { await sendEmail({
+      to: 'info@tyoutorpro.io',
       subject: `[Report] ${resource?.title ?? resource_id}`,
       html: `
         <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background: #FFFFFF; color: #2D2D2D; padding: 40px; border-radius: 16px; border: 1px solid #E5E7EB;">
