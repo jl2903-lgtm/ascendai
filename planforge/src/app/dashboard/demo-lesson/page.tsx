@@ -248,7 +248,7 @@ export default function DemoLessonPage() {
                         <Clock className="w-3 h-3" /> {stage.duration}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#E8E4DE]">
                       <div className="p-5">
                         <div className="text-xs font-semibold text-[#6B6860] uppercase tracking-wider mb-2">Activities</div>
                         <p className="text-sm text-[#4A473E] leading-relaxed">{stage.activities}</p>

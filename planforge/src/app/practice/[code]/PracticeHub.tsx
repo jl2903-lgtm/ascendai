@@ -14,28 +14,28 @@ export function PracticeHub({ session }: Props) {
   const [tab, setTab] = useState<Tab>('flashcards')
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="min-h-screen bg-[#F7F6F2]" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
+      <header className="bg-white border-b border-[#E8E4DE] px-4 py-3 sticky top-0 z-10">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#2D6A4F' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             </div>
             <div>
-              <div className="text-xs font-bold text-gray-900 leading-none">Tyoutor Pro</div>
-              <div className="text-xs text-gray-400 leading-none mt-0.5">Practice Session</div>
+              <div className="text-xs font-bold text-[#2D2D2D] leading-none">Tyoutor Pro</div>
+              <div className="text-xs text-[#8C8880] leading-none mt-0.5">Practice Session</div>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm font-semibold text-gray-900 truncate max-w-[160px]">{session.lesson_topic}</div>
+            <div className="text-sm font-semibold text-[#2D2D2D] truncate max-w-[160px]">{session.lesson_topic}</div>
             <div className="text-xs font-semibold px-2 py-0.5 rounded-full inline-block mt-0.5" style={{ background: '#E8F5E9', color: '#2D6A4F' }}>{session.lesson_level}</div>
           </div>
         </div>
       </header>
 
       {/* Tab bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-[57px] z-10">
+      <div className="bg-white border-b border-[#E8E4DE] sticky top-[57px] z-10">
         <div className="max-w-lg mx-auto flex">
           {([
             { key: 'flashcards', label: 'Flashcards 🃏' },
@@ -65,7 +65,7 @@ export function PracticeHub({ session }: Props) {
       </main>
 
       {/* Footer */}
-      <div className="text-center py-6 text-xs text-gray-400">
+      <div className="text-center py-6 text-xs text-[#8C8880]">
         Powered by Tyoutor Pro ·{' '}
         <Link href="/auth/signup" className="font-semibold" style={{ color: '#2D6A4F' }}>
           Sign up free →
@@ -91,12 +91,12 @@ function FlashcardsTab({ session }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="text-center text-sm font-medium text-gray-400">
+      <div className="text-center text-sm font-medium text-[#8C8880]">
         {index + 1} of {vocab.length} words
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[#E8E4DE] rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-300"
           style={{ width: `${((index + 1) / vocab.length) * 100}%`, background: '#2D6A4F' }}
@@ -127,11 +127,11 @@ function FlashcardsTab({ session }: Props) {
           </div>
           {/* Back */}
           <div
-            className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg bg-white border border-gray-200"
+            className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg bg-white border border-[#E8E4DE]"
             style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
           >
-            <div className="text-lg font-semibold text-gray-900 text-center mb-3">{current.definition}</div>
-            <div className="text-sm text-gray-500 text-center italic leading-relaxed">&ldquo;{current.example}&rdquo;</div>
+            <div className="text-lg font-semibold text-[#2D2D2D] text-center mb-3">{current.definition}</div>
+            <div className="text-sm text-[#6B6860] text-center italic leading-relaxed">&ldquo;{current.example}&rdquo;</div>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ function FlashcardsTab({ session }: Props) {
         <button
           onClick={() => go(-1)}
           disabled={index === 0}
-          className="flex-1 py-3.5 rounded-2xl text-sm font-bold border-2 border-gray-200 text-gray-500 disabled:opacity-30 active:scale-95 transition-transform"
+          className="flex-1 py-3.5 rounded-2xl text-sm font-bold border-2 border-[#E8E4DE] text-[#6B6860] disabled:opacity-30 active:scale-95 transition-transform"
         >
           ← Previous
         </button>
@@ -155,7 +155,7 @@ function FlashcardsTab({ session }: Props) {
         </button>
       </div>
 
-      <div className="text-center text-xs text-gray-400 bg-white rounded-xl px-4 py-2.5 border border-gray-200">
+      <div className="text-center text-xs text-[#8C8880] bg-white rounded-xl px-4 py-2.5 border border-[#E8E4DE]">
         Lesson: {session.lesson_topic} · {session.lesson_level}
       </div>
     </div>
@@ -209,12 +209,12 @@ function PracticeTab({ session }: Props) {
       <div className="text-center space-y-6 py-8">
         <div className="text-6xl">{pct >= 80 ? '🎉' : pct >= 60 ? '👍' : '💪'}</div>
         <div>
-          <div className="text-3xl font-bold text-gray-900">{score}/{sentences.length}</div>
-          <div className="text-lg text-gray-500 mt-1">
+          <div className="text-3xl font-bold text-[#2D2D2D]">{score}/{sentences.length}</div>
+          <div className="text-lg text-[#6B6860] mt-1">
             {pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : 'Keep practising!'}
           </div>
         </div>
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden mx-4">
+        <div className="h-3 bg-[#E8E4DE] rounded-full overflow-hidden mx-4">
           <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#2D6A4F' }} />
         </div>
         <button
@@ -231,17 +231,17 @@ function PracticeTab({ session }: Props) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-400 font-medium">{index + 1} of {sentences.length}</span>
+        <span className="text-[#8C8880] font-medium">{index + 1} of {sentences.length}</span>
         <span className="font-bold" style={{ color: '#2D6A4F' }}>Score: {score}</span>
       </div>
 
-      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-[#E8E4DE] rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all" style={{ width: `${(index / sentences.length) * 100}%`, background: '#2D6A4F' }} />
       </div>
 
-      <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-        <div className="text-base font-semibold text-gray-900 leading-relaxed mb-1">Fill in the blank:</div>
-        <div className="text-lg text-gray-700 leading-relaxed mt-2">{displaySentence}</div>
+      <div className="bg-white rounded-2xl p-5 border border-[#E8E4DE] shadow-sm">
+        <div className="text-base font-semibold text-[#2D2D2D] leading-relaxed mb-1">Fill in the blank:</div>
+        <div className="text-lg text-[#4A473E] leading-relaxed mt-2">{displaySentence}</div>
       </div>
 
       {showHint && (
@@ -274,7 +274,7 @@ function PracticeTab({ session }: Props) {
         {!result && (
           <button
             onClick={() => setShowHint(h => !h)}
-            className="px-4 py-3 rounded-2xl text-sm font-semibold border-2 border-gray-200 text-gray-500 active:scale-95 transition-transform"
+            className="px-4 py-3 rounded-2xl text-sm font-semibold border-2 border-[#E8E4DE] text-[#6B6860] active:scale-95 transition-transform"
           >
             💡 Hint
           </button>
@@ -345,7 +345,7 @@ function ChatTab({ session }: Props) {
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: 400 }}>
       {/* System intro */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-200 mb-4 text-sm text-gray-600 leading-relaxed">
+      <div className="bg-white rounded-2xl p-4 border border-[#E8E4DE] mb-4 text-sm text-[#4A473E] leading-relaxed">
         Hi! I&apos;m your English practice partner. We just studied <strong>{session.lesson_topic}</strong>. Let&apos;s practice together! 💬
       </div>
 
@@ -366,10 +366,10 @@ function ChatTab({ session }: Props) {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3" style={{ borderBottomLeftRadius: 4 }}>
+            <div className="bg-white border border-[#E8E4DE] rounded-2xl px-4 py-3" style={{ borderBottomLeftRadius: 4 }}>
               <div className="flex gap-1 items-center h-4">
                 {[0, 1, 2].map(i => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400" style={{ animation: `bounce 1s ${i * 0.2}s infinite` }} />
+                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#C4C0BA]" style={{ animation: `bounce 1s ${i * 0.2}s infinite` }} />
                 ))}
               </div>
             </div>
@@ -379,14 +379,14 @@ function ChatTab({ session }: Props) {
       </div>
 
       {/* Input */}
-      <div className="flex gap-2 pt-2 border-t border-gray-200">
+      <div className="flex gap-2 pt-2 border-t border-[#E8E4DE]">
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') send() }}
           placeholder="Type a message..."
-          className="flex-1 border-2 border-gray-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-green-500 transition-colors"
+          className="flex-1 border-2 border-[#E8E4DE] rounded-2xl px-4 py-3 text-sm outline-none focus:border-green-500 transition-colors"
         />
         <button
           onClick={send}
@@ -410,7 +410,7 @@ function ChatTab({ session }: Props) {
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="text-center py-16 text-gray-400">
+    <div className="text-center py-16 text-[#8C8880]">
       <div className="text-4xl mb-3">📚</div>
       <div className="text-sm">{text}</div>
     </div>
