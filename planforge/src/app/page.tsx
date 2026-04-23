@@ -119,7 +119,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="max-w-xl mx-auto mb-10 font-medium" style={{ fontSize:18, color:'#6B6860', lineHeight:1.65 }}>
-            Your students are unique — their lessons should be too. Set up your class once. Tyoutor Pro remembers their level, nationality, weak areas, and goals, then tailors every lesson automatically.
+            The L1-aware ESL lesson plan generator built for working teachers. Set up your class once — level, nationality, weak areas, goals — and Tyoutor Pro tailors every lesson, worksheet, and demo automatically.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -243,16 +243,16 @@ export default function LandingPage() {
         <div className="relative max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>The Toolkit</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Everything a TEFL Teacher Needs</h2>
-            <p className="text-lg font-medium" style={{ color:'#6B6860' }}>Seven powerful tools. All tailored to your class.</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Every ESL & TEFL lesson planning tool, in one place</h2>
+            <p className="text-lg font-medium" style={{ color:'#6B6860' }}>From the AI lesson planner to the ESL worksheet generator and error correction tool — all tailored to your class.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Users,        title: 'Class Profiles',          desc: 'Set up your class once — level, nationality, weak areas, focus skills. Every tool auto-fills from your profile.', tag: 'New',          iconBg:'#EDF6F0', iconColor:'#2D6A4F' },
-              { icon: BookOpen,     title: 'Lesson Generator',        desc: 'Complete lesson plans with warmers, activities, language focus, and L1-aware tips — in 60 seconds.',              tag: 'Most Popular', iconBg:'#EDF6F0', iconColor:'#2D6A4F' },
+              { icon: BookOpen,     title: 'AI Lesson Generator',     desc: 'A free ESL lesson plan generator — complete plans with warmers, activities, language focus, and L1-aware tips in 60 seconds.', tag: 'Most Popular', iconBg:'#EDF6F0', iconColor:'#2D6A4F' },
               { icon: FileText,     title: 'Worksheet Builder',       desc: 'Gap fills, matching, multiple choice, reading comprehension — custom worksheets at any level, with answer keys.',  tag: null,           iconBg:'#EBF5FB', iconColor:'#1A6FA8' },
               { icon: MessageSquare,title: 'Error Correction Coach',  desc: 'Upload a photo of handwritten work or paste text. Get errors highlighted, categorised, and explained.',           tag: null,           iconBg:'#F5EEF8', iconColor:'#7D3C98' },
-              { icon: Star,         title: 'Demo Lesson Builder',     desc: 'Interview-ready demo lessons with a "Why this works" sidebar. Impress any hiring panel.',                         tag: null,           iconBg:'#FFFBEB', iconColor:'#B7791F' },
+              { icon: Star,         title: 'Demo Lesson Builder',     desc: 'A demo lesson for your TEFL interview — methodology-sound, interview-ready, with a "Why this works" sidebar.', tag: null,           iconBg:'#FFFBEB', iconColor:'#B7791F' },
               { icon: GraduationCap,title: 'Shared Resources',        desc: 'Browse and share community lesson materials from teachers around the world.',                                     tag: null,           iconBg:'#EBF8FF', iconColor:'#2B6CB0' },
             ].map((feature, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 card-lift relative" style={{ border:'1px solid #E8E4DE' }}>
