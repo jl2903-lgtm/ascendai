@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/landing/Navbar'
 import { BlogListing } from './BlogListing'
+import { FALLBACK_POSTS } from '@/lib/blog-fallback'
 import type { BlogPost } from '@/types'
 
 export const metadata: Metadata = {
@@ -18,15 +19,25 @@ export const metadata: Metadata = {
 export const revalidate = 300
 
 export default async function BlogIndexPage() {
-  const supabase = createSupabaseServerClient()
-  const { data } = await supabase
-    .from('blog_posts')
-    .select('id, slug, title, excerpt, cover_image_url, category, tags, author_name, read_time_minutes, published_at')
-    .eq('published', true)
-    .order('published_at', { ascending: false })
+  let posts: Array<Pick<BlogPost,
+    'id' | 'slug' | 'title' | 'excerpt' | 'cover_image_url' | 'category' | 'tags' | 'author_name' | 'read_time_minutes' | 'published_at'>> = []
 
-  const posts = (data ?? []) as Array<Pick<BlogPost,
-    'id' | 'slug' | 'title' | 'excerpt' | 'cover_image_url' | 'category' | 'tags' | 'author_name' | 'read_time_minutes' | 'published_at'>>
+  try {
+    const supabase = createSupabaseServerClient()
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('id, slug, title, excerpt, cover_image_url, category, tags, author_name, read_time_minutes, published_at')
+      .eq('published', true)
+      .order('published_at', { ascending: false })
+
+    if (!error && data && data.length > 0) {
+      posts = data as typeof posts
+    } else {
+      posts = FALLBACK_POSTS
+    }
+  } catch {
+    posts = FALLBACK_POSTS
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#FAFAF8', color: '#2D2D2D' }}>

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/landing/Navbar'
+import { FALLBACK_POSTS } from '@/lib/blog-fallback'
 import type { BlogPost } from '@/types'
 
 export const revalidate = 300
@@ -12,27 +13,35 @@ type RelatedPost = Pick<BlogPost,
   'id' | 'slug' | 'title' | 'excerpt' | 'cover_image_url' | 'category' | 'author_name' | 'read_time_minutes' | 'published_at'>
 
 async function getPost(slug: string): Promise<BlogPost | null> {
-  const supabase = createSupabaseServerClient()
-  const { data } = await supabase
-    .from('blog_posts')
-    .select('*')
-    .eq('slug', slug)
-    .eq('published', true)
-    .maybeSingle()
-  return (data as BlogPost | null) ?? null
+  try {
+    const supabase = createSupabaseServerClient()
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('slug', slug)
+      .eq('published', true)
+      .maybeSingle()
+    if (!error && data) return data as BlogPost
+  } catch {}
+  return FALLBACK_POSTS.find(p => p.slug === slug) ?? null
 }
 
 async function getRelatedPosts(category: string, excludeId: string): Promise<RelatedPost[]> {
-  const supabase = createSupabaseServerClient()
-  const { data } = await supabase
-    .from('blog_posts')
-    .select('id, slug, title, excerpt, cover_image_url, category, author_name, read_time_minutes, published_at')
-    .eq('published', true)
-    .eq('category', category)
-    .neq('id', excludeId)
-    .order('published_at', { ascending: false })
-    .limit(3)
-  return (data ?? []) as RelatedPost[]
+  try {
+    const supabase = createSupabaseServerClient()
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('id, slug, title, excerpt, cover_image_url, category, author_name, read_time_minutes, published_at')
+      .eq('published', true)
+      .eq('category', category)
+      .neq('id', excludeId)
+      .order('published_at', { ascending: false })
+      .limit(3)
+    if (!error && data && data.length > 0) return data as RelatedPost[]
+  } catch {}
+  return FALLBACK_POSTS
+    .filter(p => p.category === category && p.id !== excludeId)
+    .slice(0, 3) as RelatedPost[]
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
