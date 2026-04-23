@@ -86,8 +86,8 @@ export async function generateLessonPDF(
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
   const firstName = teacherName.split(' ')[0] || 'Teacher'
-  const subtitle = `${meta.level}  ·  ${meta.topic}  ·  ${meta.date}`
-  const startY = drawPageHeader(doc, lesson.title, subtitle, firstName)
+  const pills = [meta.level, meta.topic].filter(Boolean)
+  const startY = drawPageHeader(doc, lesson.title, pills, meta.date, firstName)
   const ctx = makeCtx(doc, startY)
   const { txt, gap, sHdr, dash, blt, doc: d } = ctx
 
@@ -108,7 +108,7 @@ export async function generateLessonPDF(
   if (lesson.warmer.teacherNotes) {
     gap(2)
     txt('Teacher note:', 9, G.accent, true, 3)
-    txt(lesson.warmer.teacherNotes, 9, G.sub, false, 3)
+    txt(lesson.warmer.teacherNotes, 9, G.muted, false, 3)
   }
   gap(5)
 
@@ -117,7 +117,7 @@ export async function generateLessonPDF(
   txt(lesson.leadIn.instructions, 10, G.body)
   if (lesson.leadIn.context) {
     gap(2)
-    txt(lesson.leadIn.context, 9, G.sub, false, 3)
+    txt(lesson.leadIn.context, 9, G.muted, false, 3)
   }
   gap(5)
 
@@ -127,12 +127,12 @@ export async function generateLessonPDF(
   if (lesson.mainActivity.variations) {
     gap(2)
     txt('Variations:', 9, G.accent, true, 3)
-    txt(lesson.mainActivity.variations, 9, G.sub, false, 3)
+    txt(lesson.mainActivity.variations, 9, G.muted, false, 3)
   }
   if (lesson.mainActivity.teacherNotes) {
     gap(2)
     txt('Teacher note:', 9, G.accent, true, 3)
-    txt(lesson.mainActivity.teacherNotes, 9, G.sub, false, 3)
+    txt(lesson.mainActivity.teacherNotes, 9, G.muted, false, 3)
   }
   gap(5)
 
@@ -175,7 +175,7 @@ export async function generateLessonPDF(
     ctx.chk(14)
     txt(`Exercise ${i + 1}: ${ex.type}`, 11, G.dark, true)
     gap(1)
-    txt(ex.instructions, 10, G.sub, false, 3)
+    txt(ex.instructions, 10, G.muted, false, 3)
     gap(2)
     txt(ex.content, 10, G.body, false, 3)
     if (ex.answerKey) {
@@ -212,7 +212,7 @@ export async function generateLessonPDF(
     sHdr('ANSWER KEY')
     answerKeys.forEach(ak => {
       txt(`Exercise ${ak.num}  (${ak.type})`, 10, G.dark, true)
-      txt(ak.key, 9, G.sub, false, 5)
+      txt(ak.key, 9, G.muted, false, 5)
       gap(3)
     })
   }
@@ -232,14 +232,14 @@ export async function generateWorksheetPDF(
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
   const firstName = teacherName.split(' ')[0] || 'Teacher'
-  const subtitle = `${worksheet.level}  ·  ${worksheet.topic}  ·  ${date}`
-  const startY = drawPageHeader(doc, `Worksheet: ${worksheet.topic}`, subtitle, firstName)
+  const pills = [worksheet.level, worksheet.topic].filter(Boolean)
+  const startY = drawPageHeader(doc, `Worksheet: ${worksheet.topic}`, pills, date, firstName)
   const { M, W, CW } = PAGE
 
   // ── Student name / date fields ──────────────────────────────────────────────
   let y = startY
   doc.setFontSize(9)
-  doc.setTextColor(G.sub[0], G.sub[1], G.sub[2])
+  doc.setTextColor(G.muted[0], G.muted[1], G.muted[2])
   doc.setFont('helvetica', 'normal')
   doc.text('Name:', M, y)
   doc.setDrawColor(G.border[0], G.border[1], G.border[2])
@@ -260,7 +260,7 @@ export async function generateWorksheetPDF(
   worksheet.exercises.forEach((ex, i) => {
     // ── Exercise header ──────────────────────────────────────────────────────
     sHdr(`${i + 1}.  ${ex.type}`)
-    txt(ex.instructions, 10, G.sub)
+    txt(ex.instructions, 10, G.muted)
     gap(3)
 
     // ── Reading passage ──────────────────────────────────────────────────────
@@ -393,8 +393,8 @@ export async function generateDemoLessonPDF(
   const { M, W, CW } = PAGE
 
   const displayName = teacherName || 'Teacher'
-  const subtitle = `${demo.overview.level}  ·  ${demo.overview.duration}  ·  ${demo.targetSchool}`
-  const startY = drawPageHeader(doc, demo.title, subtitle, displayName)
+  const pills = [demo.overview.level, demo.overview.duration, demo.targetSchool].filter(Boolean)
+  const startY = drawPageHeader(doc, demo.title, pills, '', displayName)
   const ctx = makeCtx(doc, startY)
   const { txt, gap, sHdr, blt, doc: d } = ctx
 
@@ -405,7 +405,7 @@ export async function generateDemoLessonPDF(
   d.setLineWidth(0.3)
   d.rect(M, ctx.getY() - 1, CW, 9, 'FD')
   d.setFontSize(10)
-  d.setTextColor(G.sub[0], G.sub[1], G.sub[2])
+  d.setTextColor(G.muted[0], G.muted[1], G.muted[2])
   d.setFont('helvetica', 'normal')
   d.text('Prepared by', M + 4, ctx.getY() + 5)
   d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
@@ -418,7 +418,7 @@ export async function generateDemoLessonPDF(
   demo.overview.objectives.forEach(o => blt(o))
   if (demo.overview.methodology) {
     gap(2)
-    txt(`Methodology: ${demo.overview.methodology}`, 10, G.sub, false, 3)
+    txt(`Methodology: ${demo.overview.methodology}`, 10, G.muted, false, 3)
   }
   gap(5)
 
@@ -452,7 +452,7 @@ export async function generateDemoLessonPDF(
 
     // Duration (right-aligned)
     d.setFontSize(9)
-    d.setTextColor(G.sub[0], G.sub[1], G.sub[2])
+    d.setTextColor(G.muted[0], G.muted[1], G.muted[2])
     d.setFont('helvetica', 'normal')
     d.text(`⏱ ${stage.duration}`, W - M, stageY + 5.5, { align: 'right' })
 

@@ -28,17 +28,18 @@ export function Navbar() {
 
         <ul className="hidden md:flex items-center gap-8">
           {[
-            { label: 'Features',     href: '#features' },
-            { label: 'How It Works', href: '#how-it-works' },
-            { label: 'Pricing',      href: '#pricing' },
+            { label: 'Features',     href: '/#features' },
+            { label: 'How It Works', href: '/#how-it-works' },
+            { label: 'Pricing',      href: '/#pricing' },
+            { label: 'Blog',         href: '/blog' },
           ].map(({ label, href }) => (
             <li key={href}>
-              <a
+              <Link
                 href={href}
                 className="text-[13px] font-semibold text-[#6B6860] hover:text-[#2D2D2D] transition-colors"
               >
                 {label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
