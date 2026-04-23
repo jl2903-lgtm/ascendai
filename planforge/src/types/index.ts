@@ -263,3 +263,20 @@ export interface UsageLimits {
   demoLesson: { used: number; limit: number }
   jobAssistant: { used: number; limit: number }
 }
+
+export interface BlogPost {
+  id: string
+  slug: string
+  title: string
+  excerpt: string
+  content: string
+  cover_image_url: string | null
+  category: string
+  tags: string[]
+  author_name: string
+  read_time_minutes: number
+  published: boolean
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}

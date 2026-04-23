@@ -168,3 +168,56 @@ body {
   /* Button active */
   button:active:not(:disabled) { transform: scale(0.98); }
 }
+
+/* ── Blog post content (article prose) ─────────────────────────────────────── */
+.blog-content {
+  font-size: 17px;
+  line-height: 1.75;
+  color: #2D2D2D;
+}
+.blog-content p { margin-bottom: 1.2em; }
+.blog-content h2 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #1A1A1A;
+  margin-top: 2.2em;
+  margin-bottom: 0.7em;
+  line-height: 1.25;
+}
+.blog-content h3 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #1A1A1A;
+  margin-top: 1.8em;
+  margin-bottom: 0.5em;
+}
+.blog-content ul,
+.blog-content ol { margin: 1em 0 1.3em 1.25em; }
+.blog-content ul { list-style: disc; }
+.blog-content ol { list-style: decimal; }
+.blog-content li { margin-bottom: 0.4em; }
+.blog-content strong { color: #1A1A1A; font-weight: 700; }
+.blog-content em { font-style: italic; color: #444; }
+.blog-content a {
+  color: #2D6A4F;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(45,106,79,0.35);
+  text-underline-offset: 3px;
+}
+.blog-content a:hover { text-decoration-color: #2D6A4F; }
+.blog-content blockquote {
+  border-left: 3px solid #2D6A4F;
+  padding: 0.3em 0 0.3em 1.1em;
+  margin: 1.4em 0;
+  color: #444;
+  font-style: italic;
+}
+.blog-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+  background: #F4F2EE;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
