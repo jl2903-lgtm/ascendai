@@ -28,24 +28,28 @@ export const metadata: Metadata = {
 
 const HOMEPAGE_FAQS = [
   {
-    q: 'What makes Tyoutor Pro different from ChatGPT for lesson planning?',
-    a: 'Tyoutor Pro is L1-aware. It accounts for your students’ native language and predicts the specific errors they’re likely to make — so you stop reacting to mistakes and start preventing them. Generic AI treats every learner the same; we don’t.',
+    q: 'What is Tyoutor Pro?',
+    a: 'Tyoutor Pro is an AI lesson planning platform built exclusively for ESL and TEFL teachers. It generates complete lesson plans, worksheets, demo lessons, and error-correction reports tailored to your specific class — all in under 60 seconds.',
   },
   {
-    q: 'Is Tyoutor Pro really free to start?',
-    a: 'Yes. The free plan includes 5 lesson plans and 5 worksheets, plus class profiles and basic tools. No credit card required.',
+    q: 'How does the L1-aware feature work?',
+    a: 'You set up a class profile once: level, age group, nationality, weak areas. Tyoutor Pro then uses your students’ mother tongue (L1) to predict the exact grammar and pronunciation errors they’re likely to make, and automatically scaffolds every lesson and worksheet around those interference patterns.',
   },
   {
-    q: 'Which student levels and L1s are supported?',
-    a: 'All CEFR levels from A1 to C2. We support 25 first languages including Spanish, Portuguese, Arabic, Mandarin, Japanese, Korean, Vietnamese, Thai, Russian, Polish, Turkish, French, German, and more.',
+    q: 'Is Tyoutor Pro free?',
+    a: 'Yes — the free tier includes 5 lesson plans, 5 worksheets, basic Error Coach access, and unlimited Class Profiles, with no credit card required. Pro is $19/month and unlocks unlimited generation across all 6 tools, PDF export, saved library, and priority generation.',
   },
   {
-    q: 'How long does it take to generate a lesson?',
-    a: 'About 60 seconds. You select your class profile, pick a topic, and our AI returns a complete plan with warmer, main activity, language focus, and L1-specific notes — ready for PDF export.',
+    q: 'What types of lessons can I generate?',
+    a: 'All of them. The toolkit includes the Lesson Generator (full plans with warmers, activities, language focus), Worksheet Builder (gap fills, matching, multiple choice, reading comprehension, with answer keys), Error Correction Coach (analyses student writing), Demo Lesson Builder, Class Profiles, and Shared Resources.',
   },
   {
-    q: 'Can I cancel my Pro subscription anytime?',
-    a: 'Yes. Cancel from settings any time. You keep Pro access until the end of your billing period and your saved lessons remain in your account.',
+    q: 'Can I use Tyoutor Pro for CELTA or DELTA?',
+    a: 'Yes. The Demo Lesson Builder is designed for exactly that — interview demos, observed lessons, CELTA TPs, and DELTA assessments. Every demo plan includes methodology notes (a "Why this works" sidebar) so you can explain your pedagogical decisions to assessors and hiring panels with confidence.',
+  },
+  {
+    q: 'Which countries do your teachers come from?',
+    a: 'Tyoutor Pro is used by 2,400+ ESL and TEFL teachers across 50+ countries — from private tutors in Spain and Korea to in-school teachers in Vietnam, Saudi Arabia, Brazil, Japan, and beyond.',
   },
 ]
 
@@ -93,6 +97,7 @@ export default function LandingPage() {
 
       <Navbar />
 
+      <main>
       {/* ── Hero ── */}
       <section className="relative isolate pt-28 pb-20 px-6 overflow-hidden">
         <div aria-hidden style={{ position:'absolute',width:600,height:400,top:-80,right:-120,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.18,pointerEvents:'none',animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
@@ -106,15 +111,15 @@ export default function LandingPage() {
           </div>
 
           <h1 className="font-extrabold tracking-tight mb-6" style={{ fontSize:'clamp(2.2rem,6vw,4.75rem)', letterSpacing:'-2px', lineHeight:1.08 }}>
-            <span style={{ color:'#2D2D2D' }}>Your students are unique.</span>
+            <span style={{ color:'#2D2D2D' }}>AI Lesson Planning</span>
             <br />
             <span style={{ color:'#2D6A4F', textDecoration:'underline', textDecorationColor:'rgba(45,106,79,0.25)', textDecorationThickness:'3px', textUnderlineOffset:'7px' }}>
-              Their lessons should be too.
+              for ESL &amp; TEFL Teachers
             </span>
           </h1>
 
           <p className="max-w-xl mx-auto mb-10 font-medium" style={{ fontSize:18, color:'#6B6860', lineHeight:1.65 }}>
-            Set up your class once. Tyoutor Pro remembers their level, nationality, weak areas, and goals — then tailors every lesson automatically.
+            Your students are unique — their lessons should be too. Set up your class once. Tyoutor Pro remembers their level, nationality, weak areas, and goals, then tailors every lesson automatically.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -272,7 +277,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>Social Proof</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Teachers Love Tyoutor Pro</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>What teachers are saying</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
@@ -372,7 +377,7 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>FAQ</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Common questions</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Frequently asked questions</h2>
           </div>
           <div className="space-y-4">
             {HOMEPAGE_FAQS.map(({ q, a }) => (
@@ -399,16 +404,18 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+      </main>
 
       {/* ── Footer ── */}
       <footer className="py-12 px-6" style={{ borderTop:'1px solid #E8E4DE', background:'white' }}>
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <Logo size="sm" href="/" />
-          <div className="flex gap-8 text-sm font-semibold" style={{ color:'#6B6860' }}>
+          <nav aria-label="Footer" className="flex gap-8 text-sm font-semibold" style={{ color:'#6B6860' }}>
             <Link href="/pricing" className="transition-colors hover:text-[#2D2D2D]">Pricing</Link>
+            <Link href="/blog" className="transition-colors hover:text-[#2D2D2D]">Blog</Link>
             <Link href="/auth/login" className="transition-colors hover:text-[#2D2D2D]">Log in</Link>
             <Link href="/auth/signup" className="transition-colors hover:text-[#2D2D2D]">Sign up</Link>
-          </div>
+          </nav>
           <p className="text-sm font-medium" style={{ color:'#8C8880' }}>© {new Date().getFullYear()} Tyoutor Pro. Built for teachers.</p>
         </div>
       </footer>

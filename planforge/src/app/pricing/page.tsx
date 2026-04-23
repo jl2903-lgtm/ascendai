@@ -97,7 +97,7 @@ export default function PricingPage() {
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-20">
+      <main className="max-w-5xl mx-auto px-6 py-20">
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
@@ -226,7 +226,7 @@ export default function PricingPage() {
             Start Free Today
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

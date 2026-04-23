@@ -121,12 +121,12 @@ function RevealCard({ post, delay }: { post: PreviewPost; delay: number }) {
         </span>
       </div>
       <div className="p-5">
-        <h2
+        <h3
           className="font-bold mb-2 leading-snug line-clamp-2"
           style={{ fontSize: 18, color: '#1A1A1A', letterSpacing: '-0.3px' }}
         >
           {post.title}
-        </h2>
+        </h3>
         <p
           className="font-medium leading-relaxed line-clamp-2 mb-4"
           style={{ fontSize: 14, color: '#666666' }}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -86,7 +87,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
 
   const related = await getRelatedPosts(post.category, post.id)
 
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tyoutorpro.io'
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -112,19 +113,51 @@ export default async function BlogPostPage({ params }: { params: Params }) {
     articleSection: post.category,
   }
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${siteUrl}/blog` },
+      { '@type': 'ListItem', position: 3, name: post.title, item: `${siteUrl}/blog/${post.slug}` },
+    ],
+  }
+
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#FAFAF8', color: '#2D2D2D' }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
 
       <Navbar />
 
+      <main>
       <article className="pt-12 pb-20">
         {/* Header */}
         <header className="px-6">
           <div className="max-w-[720px] mx-auto text-center">
+            {/* Breadcrumb */}
+            <nav aria-label="Breadcrumb" className="mb-6">
+              <ol className="flex flex-wrap items-center justify-center gap-1.5 text-[12px] font-semibold" style={{ color: '#8C8880' }}>
+                <li>
+                  <Link href="/" className="transition-colors hover:text-[#2D2D2D]">Home</Link>
+                </li>
+                <li aria-hidden style={{ color: '#C8C4BC' }}>/</li>
+                <li>
+                  <Link href="/blog" className="transition-colors hover:text-[#2D2D2D]">Blog</Link>
+                </li>
+                <li aria-hidden style={{ color: '#C8C4BC' }}>/</li>
+                <li className="line-clamp-1 max-w-[280px]" style={{ color: '#2D2D2D' }} aria-current="page">
+                  {post.title}
+                </li>
+              </ol>
+            </nav>
+
             <Link
               href="/blog"
               className="inline-flex items-center gap-2 text-[13px] font-semibold mb-10 transition-colors hover:text-[#2D2D2D]"
@@ -193,18 +226,21 @@ export default async function BlogPostPage({ params }: { params: Params }) {
         {post.cover_image_url && (
           <div className="px-6 mt-12">
             <div
-              className="max-w-[800px] mx-auto overflow-hidden"
+              className="relative max-w-[800px] mx-auto overflow-hidden"
               style={{
                 aspectRatio: '16 / 9',
                 borderRadius: 12,
                 boxShadow: '0 12px 48px rgba(0,0,0,0.08)',
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={post.cover_image_url}
-                alt={post.title}
-                className="w-full h-full object-cover"
+                alt={`${post.title} — Tyoutor Pro blog cover image`}
+                fill
+                priority
+                fetchPriority="high"
+                sizes="(max-width: 832px) 100vw, 800px"
+                className="object-cover"
               />
             </div>
           </div>
@@ -276,9 +312,10 @@ export default async function BlogPostPage({ params }: { params: Params }) {
 
         {/* Related posts */}
         {related.length > 0 && (
-          <section className="px-6 mt-20">
+          <aside className="px-6 mt-20" aria-labelledby="related-posts-heading">
             <div className="max-w-6xl mx-auto">
               <h2
+                id="related-posts-heading"
                 className="font-extrabold mb-8"
                 style={{ fontSize: 24, letterSpacing: '-0.5px', color: '#1A1A1A' }}
               >
@@ -290,9 +327,10 @@ export default async function BlogPostPage({ params }: { params: Params }) {
                 ))}
               </div>
             </div>
-          </section>
+          </aside>
         )}
       </article>
+      </main>
 
       <footer className="py-12 px-6 border-t" style={{ borderColor: '#E8E4DE' }}>
         <div className="max-w-6xl mx-auto text-center">
@@ -314,12 +352,13 @@ function RelatedCard({ post }: { post: RelatedPost }) {
     >
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: '16 / 9', background: '#F4F2EE' }}>
         {post.cover_image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={post.cover_image_url}
-            alt={post.title}
+            alt={`${post.title} — blog post cover`}
+            fill
             loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 400px"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
           <div className="w-full h-full" style={{ background: 'linear-gradient(135deg,#EDF6F0,#DCEDE0)' }} />

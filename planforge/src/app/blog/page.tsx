@@ -55,6 +55,7 @@ export default async function BlogIndexPage() {
     <div className="min-h-screen overflow-x-hidden" style={{ background: '#FAFAF8', color: '#2D2D2D' }}>
       <Navbar />
 
+      <main>
       {/* Hero */}
       <section className="relative isolate px-6 pt-20 pb-12 overflow-hidden" style={{ background: '#F8F7F2' }}>
         <div aria-hidden style={{ position:'absolute',width:500,height:400,top:-80,right:-120,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.18,pointerEvents:'none',animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
@@ -78,6 +79,7 @@ export default async function BlogIndexPage() {
       </section>
 
       <BlogListing posts={posts} />
+      </main>
 
       {/* Footer */}
       <footer className="py-12 px-6 border-t" style={{ borderColor: '#E8E4DE' }}>
