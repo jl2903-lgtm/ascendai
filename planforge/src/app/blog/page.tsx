@@ -5,14 +5,26 @@ import { BlogListing } from './BlogListing'
 import { FALLBACK_POSTS } from '@/lib/blog-fallback'
 import type { BlogPost } from '@/types'
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
+
 export const metadata: Metadata = {
-  title: 'Blog — Tyoutor Pro',
-  description: 'Tips, guides, and resources for ESL & TEFL teachers. Practical teaching advice, lesson planning frameworks, and career guidance from classroom-tested educators.',
+  title: 'Tyoutor Pro Blog — ESL Teaching Tips, Lesson Ideas & Career Guides',
+  description: 'Expert tips, lesson ideas, and career advice for ESL and TEFL teachers worldwide.',
   keywords: 'ESL blog, TEFL blog, ESL teaching tips, TEFL career, lesson planning, ESL resources',
+  alternates: { canonical: `${SITE_URL}/blog` },
   openGraph: {
-    title: 'Tyoutor Pro Blog — Tips for ESL & TEFL Teachers',
-    description: 'Tips, guides, and resources for ESL & TEFL teachers.',
+    title: 'Tyoutor Pro Blog — ESL Teaching Tips, Lesson Ideas & Career Guides',
+    description: 'Expert tips, lesson ideas, and career advice for ESL and TEFL teachers worldwide.',
     type: 'website',
+    url: `${SITE_URL}/blog`,
+    siteName: 'Tyoutor Pro',
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tyoutor Pro Blog' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tyoutor Pro Blog — ESL Teaching Tips, Lesson Ideas & Career Guides',
+    description: 'Expert tips, lesson ideas, and career advice for ESL and TEFL teachers worldwide.',
+    images: ['/og-default.jpg'],
   },
 }
 

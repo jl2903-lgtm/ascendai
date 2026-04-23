@@ -11,20 +11,40 @@ const nunito = Nunito({
   variable: '--font-nunito',
 })
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
+
 export const metadata: Metadata = {
-  title: 'Tyoutor Pro — AI-Powered ESL Lesson Planning',
-  description: 'Tyoutor Pro — AI-powered lesson planning built exclusively for ESL & TEFL teachers. Generate tailored lesson plans, worksheets, and teaching materials in seconds.',
-  keywords: 'ESL lesson planner, EFL teaching materials, TEFL resources, AI lesson generator, English teacher tools, class profiles, Tyoutor Pro',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+    template: '%s | Tyoutor Pro',
+  },
+  description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers. Worksheets, error coaching, demo lessons, class profiles. Free to start.',
+  keywords: 'ESL lesson planner, EFL teaching materials, TEFL resources, AI lesson generator, English teacher tools, class profiles, L1-aware lessons, Tyoutor Pro',
+  applicationName: 'Tyoutor Pro',
+  authors: [{ name: 'Tyoutor Pro' }],
+  creator: 'Tyoutor Pro',
+  publisher: 'Tyoutor Pro',
+  formatDetection: { email: false, address: false, telephone: false },
   openGraph: {
-    title: 'Tyoutor Pro — AI-Powered ESL Lesson Planning',
-    description: 'Tyoutor Pro — AI-powered lesson planning built exclusively for ESL & TEFL teachers. Generate tailored lesson plans, worksheets, and teaching materials in seconds.',
+    title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers.',
     type: 'website',
-    url: process.env.NEXT_PUBLIC_APP_URL,
+    url: SITE_URL,
+    siteName: 'Tyoutor Pro',
+    locale: 'en_US',
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tyoutor Pro — AI-Powered ESL Lesson Planning',
-    description: 'Tyoutor Pro — AI-powered lesson planning built exclusively for ESL & TEFL teachers. Generate tailored lesson plans, worksheets, and teaching materials in seconds.',
+    title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers.',
+    images: ['/og-default.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
   },
 }
 

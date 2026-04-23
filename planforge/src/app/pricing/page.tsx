@@ -3,9 +3,54 @@ import { BookOpen, CheckCircle, X } from 'lucide-react'
 import type { Metadata } from 'next'
 import { PricingUpgradeButton } from '@/components/pricing/PricingUpgradeButton'
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
+
 export const metadata: Metadata = {
-  title: 'Pricing — Tyoutor Pro',
-  description: 'Start free with 5 lessons. Upgrade to Pro for unlimited AI-powered lesson plans, worksheets, and all 6 teaching tools.',
+  title: 'Pricing — Tyoutor Pro | Free & Pro Plans for ESL Teachers',
+  description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools for $19/month. Cancel anytime.',
+  alternates: { canonical: `${SITE_URL}/pricing` },
+  openGraph: {
+    title: 'Pricing — Tyoutor Pro | Free & Pro Plans for ESL Teachers',
+    description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools for $19/month. Cancel anytime.',
+    type: 'website',
+    url: `${SITE_URL}/pricing`,
+    siteName: 'Tyoutor Pro',
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tyoutor Pro Pricing' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pricing — Tyoutor Pro',
+    description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools.',
+    images: ['/og-default.jpg'],
+  },
+}
+
+const PRODUCT_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Tyoutor Pro',
+  description: 'AI-powered lesson planning for ESL & TEFL teachers. L1-aware lesson generator, worksheet builder, error coach, demo lesson builder, and class profiles.',
+  brand: { '@type': 'Brand', name: 'Tyoutor Pro' },
+  offers: [
+    {
+      '@type': 'Offer',
+      name: 'Free',
+      price: '0',
+      priceCurrency: 'USD',
+      url: `${SITE_URL}/auth/signup`,
+      availability: 'https://schema.org/InStock',
+      description: '5 lesson plans, 5 worksheets, basic tools, class profiles',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Pro',
+      price: '12',
+      priceCurrency: 'USD',
+      url: `${SITE_URL}/auth/signup`,
+      availability: 'https://schema.org/InStock',
+      description: 'Unlimited lessons, unlimited worksheets, all 6 tools, PDF export, priority generation',
+    },
+  ],
 }
 
 const FREE_FEATURES = [
@@ -35,6 +80,7 @@ const PRO_FEATURES = [
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-[#F7F6F2] text-[#2D2D2D]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PRODUCT_JSON_LD) }} />
       {/* Nav */}
       <nav className="border-b border-[#E8E4DE]/50 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">

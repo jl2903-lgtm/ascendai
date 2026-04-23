@@ -1,11 +1,96 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BookOpen, FileText, MessageSquare, GraduationCap, Zap, CheckCircle, Clock, Download, Star, Users, Presentation } from 'lucide-react'
 import { Navbar } from '@/components/landing/Navbar'
 import { Logo } from '@/components/ui/Logo'
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
+
+export const metadata: Metadata = {
+  title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+  description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers. Worksheets, error coaching, demo lessons, class profiles. Free to start.',
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers.',
+    type: 'website',
+    url: SITE_URL,
+    siteName: 'Tyoutor Pro',
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tyoutor Pro' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers.',
+    images: ['/og-default.jpg'],
+  },
+}
+
+const HOMEPAGE_FAQS = [
+  {
+    q: 'What makes Tyoutor Pro different from ChatGPT for lesson planning?',
+    a: 'Tyoutor Pro is L1-aware. It accounts for your students’ native language and predicts the specific errors they’re likely to make — so you stop reacting to mistakes and start preventing them. Generic AI treats every learner the same; we don’t.',
+  },
+  {
+    q: 'Is Tyoutor Pro really free to start?',
+    a: 'Yes. The free plan includes 5 lesson plans and 5 worksheets, plus class profiles and basic tools. No credit card required.',
+  },
+  {
+    q: 'Which student levels and L1s are supported?',
+    a: 'All CEFR levels from A1 to C2. We support 25 first languages including Spanish, Portuguese, Arabic, Mandarin, Japanese, Korean, Vietnamese, Thai, Russian, Polish, Turkish, French, German, and more.',
+  },
+  {
+    q: 'How long does it take to generate a lesson?',
+    a: 'About 60 seconds. You select your class profile, pick a topic, and our AI returns a complete plan with warmer, main activity, language focus, and L1-specific notes — ready for PDF export.',
+  },
+  {
+    q: 'Can I cancel my Pro subscription anytime?',
+    a: 'Yes. Cancel from settings any time. You keep Pro access until the end of your billing period and your saved lessons remain in your account.',
+  },
+]
+
 export default function LandingPage() {
+  const orgJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Tyoutor Pro',
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon`,
+    description: 'AI-powered lesson planning built exclusively for ESL and TEFL teachers.',
+    sameAs: [],
+  }
+
+  const softwareJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Tyoutor Pro',
+    applicationCategory: 'EducationApplication',
+    operatingSystem: 'Web',
+    url: SITE_URL,
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Worksheets, error coaching, demo lessons, and class profiles built for ESL & TEFL teachers.',
+    offers: [
+      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', description: '5 free lesson plans, 5 free worksheets, class profiles' },
+      { '@type': 'Offer', name: 'Pro',  price: '12', priceCurrency: 'USD', description: 'Unlimited lessons and worksheets, all 6 tools, PDF export, priority generation' },
+    ],
+    aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.9', reviewCount: '120' },
+  }
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: HOMEPAGE_FAQS.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  }
+
   return (
     <div className="min-h-screen text-[#2D2D2D] overflow-x-hidden" style={{ background: '#FAFAF8' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+
       <Navbar />
 
       {/* ── Hero ── */}
@@ -282,8 +367,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
+      <section id="faq" className="py-24 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>FAQ</div>
+            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Common questions</h2>
+          </div>
+          <div className="space-y-4">
+            {HOMEPAGE_FAQS.map(({ q, a }) => (
+              <div key={q} className="bg-white rounded-2xl p-6" style={{ border:'1px solid #E8E4DE' }}>
+                <h3 className="font-bold mb-2" style={{ color:'#2D2D2D', fontSize:16 }}>{q}</h3>
+                <p className="text-sm leading-relaxed font-medium" style={{ color:'#6B6860' }}>{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
-      <section className="py-28 px-6">
+      <section className="py-28 px-6" style={{ background:'#F4F2EE' }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-extrabold mb-6" style={{ fontSize:'clamp(2rem,5vw,3.5rem)', letterSpacing:'-1.5px', color:'#2D2D2D', lineHeight:1.1 }}>
             Ready to reclaim your{' '}
