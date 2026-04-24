@@ -747,7 +747,7 @@ export async function generateWorksheetPDF(
   doc.save(`tyoutorpro-worksheet-${Date.now()}.pdf`)
 }
 
-// ── Demo Lesson PDF ───────────────────────────────────────────────────────────
+// ── Demo Lesson PDF (redesigned — premium interview document) ─────────────────
 
 export async function generateDemoLessonPDF(
   demo: DemoLesson,
@@ -755,120 +755,276 @@ export async function generateDemoLessonPDF(
 ): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  const { M, W, CW } = PAGE
+  const { M, W, CW, FOOTER_Y } = PAGE
 
   const displayName = teacherName || 'Teacher'
-  const pills = [demo.overview.level, demo.overview.duration, demo.targetSchool].filter(Boolean)
-  const startY = drawPageHeader(doc, demo.title, pills, '', displayName)
-  const ctx = makeCtx(doc, startY)
-  const { txt, gap, sHdr, blt, doc: d } = ctx
 
-  // ── Prepared by (prominent — interviews need the name visible) ──────────────
-  ctx.chk(10)
-  d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
-  d.setDrawColor(G.border[0], G.border[1], G.border[2])
-  d.setLineWidth(0.3)
-  d.rect(M, ctx.getY() - 1, CW, 9, 'FD')
-  d.setFontSize(10)
-  d.setTextColor(G.muted[0], G.muted[1], G.muted[2])
-  d.setFont('helvetica', 'normal')
-  d.text('Prepared by', M + 4, ctx.getY() + 5)
-  d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
-  d.setFont('helvetica', 'bold')
-  d.text(displayName, M + 30, ctx.getY() + 5)
-  ctx.setY(ctx.getY() + 13)
+  // Brand bar + title (targetSchool as context pill in header)
+  const startY = drawPageHeader(doc, demo.title, [demo.targetSchool].filter(Boolean) as string[], '', displayName)
 
-  // ── Learning Objectives ─────────────────────────────────────────────────────
-  sHdr('LEARNING OBJECTIVES')
-  demo.overview.objectives.forEach(o => blt(o))
-  if (demo.overview.methodology) {
-    gap(2)
-    txt(`Methodology: ${demo.overview.methodology}`, 10, G.muted, false, 3)
+  // ── Layout constants ──────────────────────────────────────────────────────────
+  const PAD = 4
+  const HDR_H = 7
+  const BAR_W = 1.2
+  const CARD_GAP = 5
+  const CX = M + BAR_W + 4
+  const CW2 = CW - BAR_W - 8
+  const SAFE_BOTTOM = FOOTER_Y - 4
+
+  let y = startY
+  let si = 0
+
+  // ── Measure helpers ───────────────────────────────────────────────────────────
+  const mText = (s: string, fs: number, indent = 0): number => {
+    if (!s?.trim()) return 0
+    doc.setFontSize(fs)
+    const lines: string[] = doc.splitTextToSize(s.trim(), CW2 - indent)
+    return lines.length * (fs * 0.42) + 1
   }
-  gap(5)
+  const mGap = (mm = 4) => mm
+  const mBlt = (s: string) => mText(`• ${s}`, 10, 5) + 1
 
-  // ── Lesson Stages ───────────────────────────────────────────────────────────
-  sHdr('LESSON STAGES')
-  gap(2)
+  // ── Draw helpers ──────────────────────────────────────────────────────────────
+  const dText = (s: string, fs: number, c: [number, number, number], bold = false, indent = 0) => {
+    const str = s?.trim()
+    if (!str) return
+    doc.setFontSize(fs); doc.setTextColor(c[0], c[1], c[2]); doc.setFont('helvetica', bold ? 'bold' : 'normal')
+    const lines: string[] = doc.splitTextToSize(str, CW2 - indent)
+    doc.text(lines, CX + indent, y)
+    y += lines.length * (fs * 0.42) + 1
+  }
+  const dGap = (mm = 4) => { y += mm }
+  const dBlt = (s: string) => { dText(`• ${s}`, 10, G.body, false, 5); y += 1 }
+  const newPage = () => { doc.addPage(); y = PAGE.M + 4 }
 
-  demo.stages.forEach((stage, i) => {
-    ctx.chk(30)
-    const stageY = ctx.getY()
+  // ── Two-pass section card (stageNum adds a numbered circle before label) ──────
+  const card = (
+    label: string,
+    timing: string | undefined,
+    measureFn: () => number,
+    drawFn: () => void,
+    stageNum?: number,
+  ) => {
+    const contentH = measureFn()
+    const cardH = PAD + HDR_H + contentH + PAD
+    const maxFit = SAFE_BOTTOM - (PAGE.M + 4)
+    if (cardH <= maxFit && y + cardH > SAFE_BOTTOM) newPage()
 
-    // Stage header bar
-    d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
-    d.setDrawColor(G.border[0], G.border[1], G.border[2])
-    d.setLineWidth(0.3)
-    d.rect(M, stageY - 1, CW, 9, 'FD')
+    const cardY = y
+    const bg: [number, number, number] = si % 2 === 0 ? [250, 250, 246] : [255, 255, 255]
+    si++
 
-    // Stage number circle
-    d.setFillColor(G.green[0], G.green[1], G.green[2])
-    d.circle(M + 5, stageY + 3.5, 3.5, 'F')
-    d.setFontSize(8)
-    d.setTextColor(G.white[0], G.white[1], G.white[2])
-    d.setFont('helvetica', 'bold')
-    d.text(`${i + 1}`, M + 5, stageY + 5.5, { align: 'center' })
+    doc.setFillColor(bg[0], bg[1], bg[2])
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+    doc.roundedRect(M, cardY, CW, cardH, 1.6, 1.6, 'FD')
 
-    // Stage name
-    d.setFontSize(11)
-    d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
-    d.setFont('helvetica', 'bold')
-    d.text(stage.name, M + 12, stageY + 5.5)
+    doc.setFillColor(G.green[0], G.green[1], G.green[2])
+    doc.rect(M, cardY + 2, BAR_W, cardH - 4, 'F')
 
-    // Duration (right-aligned)
-    d.setFontSize(9)
-    d.setTextColor(G.muted[0], G.muted[1], G.muted[2])
-    d.setFont('helvetica', 'normal')
-    d.text(`⏱ ${stage.duration}`, W - M, stageY + 5.5, { align: 'right' })
+    // Optional numbered circle in header
+    let labelX = CX
+    if (stageNum !== undefined) {
+      const cx = CX + 3; const cy = cardY + HDR_H / 2
+      doc.setFillColor(G.green[0], G.green[1], G.green[2])
+      doc.circle(cx, cy, 3, 'F')
+      doc.setFontSize(8); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold')
+      doc.text(`${stageNum}`, cx, cy + 1.1, { align: 'center' })
+      labelX = CX + 9
+    }
 
-    ctx.setY(stageY + 12)
+    doc.setFontSize(13); doc.setTextColor(G.green[0], G.green[1], G.green[2]); doc.setFont('helvetica', 'bold')
+    doc.text(label, labelX, cardY + 5.8)
 
-    // Activities block
-    txt('Activities:', 10, G.dark, true, 2)
-    txt(stage.activities, 10, G.body, false, 4)
-    gap(3)
+    if (timing) {
+      doc.setFontSize(8); doc.setFont('helvetica', 'bold')
+      const tw = doc.getTextWidth(timing)
+      const bw = tw + 5; const bh = 5
+      const bx = W - M - bw; const byi = cardY + 1.5
+      doc.setFillColor(G.accent[0], G.accent[1], G.accent[2])
+      doc.roundedRect(bx, byi, bw, bh, 1.5, 1.5, 'F')
+      doc.setTextColor(G.white[0], G.white[1], G.white[2])
+      doc.text(timing, bx + 2.5, byi + 3.5)
+    }
 
-    // "Why This Works" block — green left border + light bg
-    const whyLines: string[] = d.splitTextToSize(stage.whyItWorks, CW - 18)
-    const whyH = whyLines.length * (10 * 0.42) + 10
-    ctx.chk(whyH + 2)
-    const wy = ctx.getY()
+    y = cardY + PAD + HDR_H
+    drawFn()
+    y += PAD + CARD_GAP
+  }
 
-    d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
-    d.rect(M, wy - 1, CW, whyH, 'F')
-    d.setFillColor(G.green[0], G.green[1], G.green[2])
-    d.rect(M, wy - 1, 3, whyH, 'F')
+  // ── Teacher name (prominent — 16pt #444) ──────────────────────────────────────
+  doc.setFontSize(16); doc.setTextColor(68, 68, 68); doc.setFont('helvetica', 'bold')
+  doc.text(`Prepared by ${displayName}`, M, y)
+  y += 9
 
-    d.setFontSize(9)
-    d.setTextColor(G.green[0], G.green[1], G.green[2])
-    d.setFont('helvetica', 'bold')
-    d.text('WHY THIS WORKS', M + 6, wy + 4)
+  // ── Metadata pills: Level / Duration / Focus ──────────────────────────────────
+  const metaPills = [
+    demo.overview.level ? `Level: ${demo.overview.level}` : '',
+    demo.overview.duration ? `Duration: ${demo.overview.duration}` : '',
+    demo.overview.methodology ? `Focus: ${demo.overview.methodology}` : '',
+  ].filter(Boolean)
 
-    d.setFontSize(9)
-    d.setTextColor(G.body[0], G.body[1], G.body[2])
-    d.setFont('helvetica', 'italic')
-    d.text(whyLines, M + 6, wy + 9)
+  if (metaPills.length > 0) {
+    let px = M
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'normal')
+    for (const pill of metaPills) {
+      const tw = doc.getTextWidth(pill)
+      const pw = tw + 5; const ph = 4.8; const pyl = y - 3.5
+      doc.setFillColor(G.accentBg[0], G.accentBg[1], G.accentBg[2])
+      doc.setDrawColor(G.accentBd[0], G.accentBd[1], G.accentBd[2]); doc.setLineWidth(0.25)
+      doc.roundedRect(px, pyl, pw, ph, 1.2, 1.2, 'FD')
+      doc.setTextColor(G.green[0], G.green[1], G.green[2])
+      doc.text(pill, px + 2.5, y)
+      px += pw + 2.5
+    }
+    y += 6
+  }
 
-    ctx.setY(wy + whyH + 5)
-    gap(3)
+  // Separator
+  y += 2
+  doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+  doc.line(M, y, W - M, y)
+  y += 6
+
+  // ── Materials Needed box (#F0FFF4 bg, #C8E6C9 border) — conditional ───────────
+  const materials = (demo.overview as any).materials as string[] | undefined
+  if (materials?.length) {
+    doc.setFontSize(10)
+    const matLineBlocks: string[][] = materials.map(m => doc.splitTextToSize(`• ${m}`, CW - 8))
+    const matContentH = matLineBlocks.reduce((s, ls) => s + ls.length * (10 * 0.42) + 3, 0)
+    const matBoxH = matContentH + 10
+    if (y + matBoxH > SAFE_BOTTOM) newPage()
+    const my = y
+    doc.setFillColor(G.accentBg[0], G.accentBg[1], G.accentBg[2])
+    doc.setDrawColor(G.accentBd[0], G.accentBd[1], G.accentBd[2]); doc.setLineWidth(0.3)
+    doc.roundedRect(M, my, CW, matBoxH, 1.6, 1.6, 'FD')
+    doc.setFontSize(9); doc.setTextColor(G.green[0], G.green[1], G.green[2]); doc.setFont('helvetica', 'bold')
+    doc.text('MATERIALS NEEDED', M + 4, my + 5)
+    y = my + 9
+    doc.setFontSize(10); doc.setTextColor(G.body[0], G.body[1], G.body[2]); doc.setFont('helvetica', 'normal')
+    matLineBlocks.forEach(ls => { doc.text(ls, M + 4, y); y += ls.length * (10 * 0.42) + 3 })
+    y = my + matBoxH + 5
+  }
+
+  // ── Learning Objectives ───────────────────────────────────────────────────────
+  card('LEARNING OBJECTIVES', undefined,
+    () => {
+      let h = 0
+      demo.overview.objectives?.forEach(o => { h += mBlt(o) })
+      return h
+    },
+    () => { demo.overview.objectives?.forEach(o => dBlt(o)) }
+  )
+
+  // ── Lesson Stages ─────────────────────────────────────────────────────────────
+  demo.stages?.forEach((stage, i) => {
+    // Stage card with numbered circle in header
+    card(stage.name, stage.duration,
+      () => {
+        let h = mText('Activities:', 10) + mGap(1)
+        h += mText(stage.activities, 10, 3)
+        return h
+      },
+      () => {
+        dText('Activities:', 10, G.dark, true)
+        dGap(1)
+        dText(stage.activities, 10, G.body, false, 3)
+      },
+      i + 1,
+    )
+
+    // 'Why This Works' box: #F7F6F2 bg, #E8E4DE border, 6px radius, green label
+    if (stage.whyItWorks) {
+      doc.setFontSize(10)
+      const whyLines: string[] = doc.splitTextToSize(stage.whyItWorks.trim(), CW - 8)
+      const whyH = whyLines.length * (10 * 0.42) + 12
+      if (y + whyH > SAFE_BOTTOM) newPage()
+      const wy = y
+      doc.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+      doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+      doc.roundedRect(M, wy, CW, whyH, 1.6, 1.6, 'FD')
+      doc.setFontSize(9); doc.setTextColor(G.green[0], G.green[1], G.green[2]); doc.setFont('helvetica', 'bold')
+      doc.text('\u{1F4A1} Why this works', M + 4, wy + 4.5)
+      doc.setFontSize(10); doc.setTextColor(102, 102, 102); doc.setFont('helvetica', 'normal')
+      doc.text(whyLines, M + 4, wy + 9)
+      y = wy + whyH + CARD_GAP
+    }
   })
 
-  // ── Anticipated Problems ────────────────────────────────────────────────────
-  // (demo.interviewTips doubles as anticipated-problem guidance)
+  // ── Anticipated Problems: terra callout, Problem | Solution two-column ─────────
   if (demo.interviewTips?.length) {
-    ctx.chk(14)
-    sHdr('INTERVIEW TIPS & ANTICIPATED PROBLEMS', G.terra)
-    demo.interviewTips.forEach(t => blt(t))
-    gap(5)
+    // Parse each tip into problem / solution pair
+    const tipRows = demo.interviewTips.map(t => {
+      const pipe = t.indexOf(' | ')
+      if (pipe > -1) return { problem: t.slice(0, pipe).trim(), solution: t.slice(pipe + 3).trim() }
+      const colon = t.indexOf(': ')
+      if (colon > -1 && colon < 40) return { problem: t.slice(0, colon).trim(), solution: t.slice(colon + 2).trim() }
+      return { problem: t, solution: '' }
+    })
+
+    const hasSolutions = tipRows.some(r => r.solution)
+    const COL_GAP = 6
+    const COL_W = (CW2 - COL_GAP) / 2
+    const COL2_X = CX + COL_W + COL_GAP
+
+    // Measure total box height
+    doc.setFontSize(10)
+    let boxH = 12 + (hasSolutions ? 7 : 0)  // header + optional col headers
+    tipRows.forEach(row => {
+      const pL: string[] = doc.splitTextToSize(row.problem, COL_W)
+      const sL: string[] = row.solution ? doc.splitTextToSize(row.solution, COL_W) : []
+      boxH += Math.max(pL.length, sL.length || 1) * (10 * 0.42) + 4
+    })
+    boxH += 4  // bottom padding
+
+    if (y + boxH > SAFE_BOTTOM) newPage()
+    const by = y
+
+    // Box: #FFF5F2 bg, 1.5mm terra left bar, border
+    doc.setFillColor(G.terraBg[0], G.terraBg[1], G.terraBg[2])
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+    doc.roundedRect(M, by, CW, boxH, 1.6, 1.6, 'FD')
+    doc.setFillColor(G.terra[0], G.terra[1], G.terra[2])
+    doc.rect(M, by + 2, 1.5, boxH - 4, 'F')
+
+    // Header
+    doc.setFontSize(9); doc.setTextColor(G.terra[0], G.terra[1], G.terra[2]); doc.setFont('helvetica', 'bold')
+    doc.text('⚠️ ANTICIPATED PROBLEMS', CX, by + 5.5)
+    y = by + 11
+
+    // Column headers (if split data available)
+    if (hasSolutions) {
+      doc.setFontSize(8); doc.setTextColor(G.muted[0], G.muted[1], G.muted[2]); doc.setFont('helvetica', 'bold')
+      doc.text('PROBLEM', CX, y)
+      doc.text('SOLUTION', COL2_X, y)
+      y += 3
+      doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.2)
+      doc.line(CX, y + 1, M + CW - 2, y + 1)
+      y += 4
+    }
+
+    // Rows
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal')
+    tipRows.forEach(row => {
+      const pL: string[] = doc.splitTextToSize(row.problem, COL_W)
+      const sL: string[] = row.solution ? doc.splitTextToSize(row.solution, COL_W) : []
+      const rowH = Math.max(pL.length, sL.length || 1) * (10 * 0.42) + 4
+      doc.setTextColor(G.body[0], G.body[1], G.body[2])
+      doc.text(pL, CX, y)
+      if (sL.length) doc.text(sL, COL2_X, y)
+      y += rowH
+    })
+
+    y = by + boxH + CARD_GAP
   }
 
-  // ── Methodology Notes ───────────────────────────────────────────────────────
+  // ── Methodology Notes ──────────────────────────────────────────────────────────
   if (demo.methodologyNotes) {
-    sHdr('METHODOLOGY NOTES')
-    txt(demo.methodologyNotes, 10, G.body)
-    gap(4)
+    card('METHODOLOGY NOTES', undefined,
+      () => mText(demo.methodologyNotes, 10),
+      () => dText(demo.methodologyNotes, 10, G.body)
+    )
   }
 
-  drawPageFooters(d, `Demo Lesson · ${demo.overview.level}`)
-  d.save(`tyoutorpro-demo-lesson-${Date.now()}.pdf`)
+  drawPageFooters(doc, `Demo Lesson · ${demo.overview.level}`)
+  doc.save(`tyoutorpro-demo-lesson-${Date.now()}.pdf`)
 }
