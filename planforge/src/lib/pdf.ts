@@ -75,150 +75,373 @@ function makeCtx(doc: any, startY: number) {
   }
 }
 
-// ── Lesson Plan PDF ───────────────────────────────────────────────────────────
+// ── Lesson Plan PDF (redesigned) ─────────────────────────────────────────────
 
 export async function generateLessonPDF(
   lesson: LessonContent,
-  meta: { level: string; topic: string; date: string },
+  meta: { level: string; topic: string; date: string; nationality?: string; classSize?: string; duration?: string },
   teacherName = 'Teacher',
 ): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const { M, W, CW, FOOTER_Y } = PAGE
 
   const firstName = teacherName.split(' ')[0] || 'Teacher'
-  const pills = [meta.level, meta.topic].filter(Boolean)
+  const pills = [meta.level, meta.nationality, meta.classSize, meta.duration].filter(Boolean) as string[]
   const startY = drawPageHeader(doc, lesson.title, pills, meta.date, firstName)
-  const ctx = makeCtx(doc, startY)
-  const { txt, gap, sHdr, dash, blt, doc: d } = ctx
 
-  // ── Lesson Overview ─────────────────────────────────────────────────────────
-  sHdr('LESSON OVERVIEW')
-  txt(`Duration: ${lesson.overview.timing}`, 10, G.dark, true)
-  gap(2)
-  txt('Objectives:', 10, G.dark, true)
-  lesson.overview.objectives.forEach(o => blt(o))
-  gap(1)
-  txt('Materials:', 10, G.dark, true)
-  lesson.overview.materials.forEach(m => blt(m))
-  gap(5)
+  // ── Layout constants ─────────────────────────────────────────────────────────
+  const PAD = 4        // card inner padding mm
+  const HDR_H = 7      // card header row height mm
+  const BAR_W = 1.2    // left accent bar mm
+  const CARD_GAP = 4   // gap between cards mm
+  const CX = M + BAR_W + 4           // content x inside card
+  const CW2 = CW - BAR_W - 8         // content width inside card
+  const SAFE_BOTTOM = FOOTER_Y - 4
 
-  // ── Warmer ──────────────────────────────────────────────────────────────────
-  sHdr(`WARMER  ·  ${lesson.warmer.duration}`)
-  txt(lesson.warmer.instructions, 10, G.body)
-  if (lesson.warmer.teacherNotes) {
-    gap(2)
-    txt('Teacher note:', 9, G.accent, true, 3)
-    txt(lesson.warmer.teacherNotes, 9, G.muted, false, 3)
+  let y = startY
+  let si = 0  // section index for alternating bg
+
+  // ── Measure helpers (no drawing — use doc only for splitTextToSize metrics) ──
+  const mText = (s: string, fs: number, indent = 0): number => {
+    if (!s?.trim()) return 0
+    doc.setFontSize(fs)
+    const lines: string[] = doc.splitTextToSize(s.trim(), CW2 - indent)
+    return lines.length * (fs * 0.42) + 1
   }
-  gap(5)
-
-  // ── Lead-in ─────────────────────────────────────────────────────────────────
-  sHdr(`LEAD-IN  ·  ${lesson.leadIn.duration}`)
-  txt(lesson.leadIn.instructions, 10, G.body)
-  if (lesson.leadIn.context) {
-    gap(2)
-    txt(lesson.leadIn.context, 9, G.muted, false, 3)
+  const mGap = (mm = 4) => mm
+  const mBlt = (s: string) => mText(`• ${s}`, 10, 5) + 1
+  const mCallout = (s: string): number => {
+    doc.setFontSize(10)
+    const lines: string[] = doc.splitTextToSize(s.trim(), CW2 - 8)
+    return lines.length * (10 * 0.42) + 12  // box header + text + bottom gap
   }
-  gap(5)
 
-  // ── Main Activity ───────────────────────────────────────────────────────────
-  sHdr(`MAIN ACTIVITY  ·  ${lesson.mainActivity.duration}`)
-  txt(lesson.mainActivity.instructions, 10, G.body)
-  if (lesson.mainActivity.variations) {
-    gap(2)
-    txt('Variations:', 9, G.accent, true, 3)
-    txt(lesson.mainActivity.variations, 9, G.muted, false, 3)
+  // ── Draw helpers ─────────────────────────────────────────────────────────────
+  const dText = (s: string, fs: number, c: [number,number,number], bold = false, indent = 0) => {
+    const str = s?.trim()
+    if (!str) return
+    doc.setFontSize(fs)
+    doc.setTextColor(c[0], c[1], c[2])
+    doc.setFont('helvetica', bold ? 'bold' : 'normal')
+    const lines: string[] = doc.splitTextToSize(str, CW2 - indent)
+    doc.text(lines, CX + indent, y)
+    y += lines.length * (fs * 0.42) + 1
   }
-  if (lesson.mainActivity.teacherNotes) {
-    gap(2)
-    txt('Teacher note:', 9, G.accent, true, 3)
-    txt(lesson.mainActivity.teacherNotes, 9, G.muted, false, 3)
+  const dGap = (mm = 4) => { y += mm }
+  const dBlt = (s: string) => { dText(`• ${s}`, 10, G.body, false, 5); y += 1 }
+
+  const dL1 = (s: string) => {
+    doc.setFontSize(10)
+    const lines: string[] = doc.splitTextToSize(s.trim(), CW2 - 8)
+    const bh = lines.length * (10 * 0.42) + 9
+    const by = y
+    doc.setFillColor(G.terraBg[0], G.terraBg[1], G.terraBg[2])
+    doc.rect(CX, by, CW2, bh, 'F')
+    doc.setFillColor(G.terra[0], G.terra[1], G.terra[2])
+    doc.rect(CX, by, 1.5, bh, 'F')
+    doc.setFontSize(9); doc.setTextColor(G.terra[0], G.terra[1], G.terra[2]); doc.setFont('helvetica', 'bold')
+    doc.text('L1 Tip', CX + 3, by + 4.5)
+    doc.setFontSize(10); doc.setTextColor(102, 102, 102); doc.setFont('helvetica', 'italic')
+    doc.text(lines, CX + 3, by + 8)
+    y = by + bh + 3
   }
-  gap(5)
 
-  // ── Language Focus ──────────────────────────────────────────────────────────
-  sHdr('LANGUAGE FOCUS')
-  txt(lesson.languageFocus.grammar_or_vocab, 11, G.dark, true)
-  gap(2)
-  txt(lesson.languageFocus.explanation, 10, G.body)
-  gap(2)
-  txt('Examples:', 10, G.dark, true)
-  lesson.languageFocus.examples.forEach(e => blt(e))
-  if (lesson.languageFocus.commonErrors?.length) {
-    gap(1)
-    txt('Common errors to watch for:', 10, G.dark, true)
-    lesson.languageFocus.commonErrors.forEach(e => blt(e))
+  const dScript = (s: string) => {
+    doc.setFontSize(10)
+    const lines: string[] = doc.splitTextToSize(s.trim(), CW2 - 8)
+    const bh = lines.length * (10 * 0.42) + 9
+    const by = y
+    doc.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+    doc.rect(CX, by, CW2, bh, 'F')
+    doc.setFillColor(G.bbb[0], G.bbb[1], G.bbb[2])
+    doc.rect(CX, by, 1.5, bh, 'F')
+    doc.setFontSize(9); doc.setTextColor(G.muted[0], G.muted[1], G.muted[2]); doc.setFont('helvetica', 'bold')
+    doc.text('Teacher says:', CX + 3, by + 4.5)
+    doc.setFontSize(10); doc.setTextColor(85, 85, 85); doc.setFont('helvetica', 'italic')
+    doc.text(lines, CX + 3, by + 8)
+    y = by + bh + 3
   }
-  gap(5)
 
-  // ── L1-Aware Notes (terra cotta) ────────────────────────────────────────────
-  sHdr(`L1-AWARE NOTES  ·  ${lesson.l1Notes.nationality}`, G.terra)
-  txt('Common challenges:', 10, G.dark, true)
-  lesson.l1Notes.specificChallenges.forEach(c => blt(c))
-  gap(2)
-  txt('Teaching tips:', 10, G.dark, true)
-  lesson.l1Notes.tips.forEach(t => blt(t))
-  gap(5)
+  // ── Two-pass section card ─────────────────────────────────────────────────────
+  // measureFn: returns content height (no drawing)
+  // drawFn: renders content, advances y
+  const card = (
+    label: string,
+    timing: string | undefined,
+    measureFn: () => number,
+    drawFn: () => void,
+  ) => {
+    const contentH = measureFn()
+    const cardH = PAD + HDR_H + contentH + PAD
+    const maxFit = SAFE_BOTTOM - (PAGE.M + 4)
 
-  // ── Cultural Note (if flagged) ──────────────────────────────────────────────
+    // If card fits on a full page but not on this page, start fresh
+    if (cardH <= maxFit && y + cardH > SAFE_BOTTOM) {
+      doc.addPage(); y = PAGE.M + 4
+    }
+
+    const cardY = y
+    const bg: [number, number, number] = si % 2 === 0 ? [250, 250, 246] : [255, 255, 255]
+    si++
+
+    // Background + border
+    doc.setFillColor(bg[0], bg[1], bg[2])
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2])
+    doc.setLineWidth(0.3)
+    doc.roundedRect(M, cardY, CW, cardH, 1.6, 1.6, 'FD')
+
+    // Left accent bar (inset 2 mm from top/bottom to clear rounded corners)
+    doc.setFillColor(G.green[0], G.green[1], G.green[2])
+    doc.rect(M, cardY + 2, BAR_W, cardH - 4, 'F')
+
+    // Section label
+    doc.setFontSize(13); doc.setTextColor(G.green[0], G.green[1], G.green[2]); doc.setFont('helvetica', 'bold')
+    doc.text(label, CX, cardY + 5.8)
+
+    // Timing badge
+    if (timing) {
+      doc.setFontSize(8); doc.setFont('helvetica', 'bold')
+      const tw = doc.getTextWidth(timing)
+      const bw = tw + 5; const bh = 5
+      const bx = W - M - bw; const byi = cardY + 1.5
+      doc.setFillColor(G.accent[0], G.accent[1], G.accent[2])
+      doc.roundedRect(bx, byi, bw, bh, 1.5, 1.5, 'F')
+      doc.setTextColor(G.white[0], G.white[1], G.white[2])
+      doc.text(timing, bx + 2.5, byi + 3.5)
+    }
+
+    // Render content
+    y = cardY + PAD + HDR_H
+    drawFn()
+    y += PAD + CARD_GAP
+  }
+
+  // ── Lesson Overview ───────────────────────────────────────────────────────────
+  card('LESSON OVERVIEW', lesson.overview.timing,
+    () => {
+      let h = 0
+      if (lesson.overview.objectives?.length) {
+        h += mText('Objectives:', 10) + mGap(1)
+        lesson.overview.objectives.forEach(o => { h += mBlt(o) })
+      }
+      if (lesson.overview.materials?.length) {
+        h += mGap(2) + mText('Materials:', 10) + mGap(1)
+        lesson.overview.materials.forEach(m => { h += mBlt(m) })
+      }
+      return h
+    },
+    () => {
+      if (lesson.overview.objectives?.length) {
+        dText('Objectives:', 10, G.dark, true); dGap(1)
+        lesson.overview.objectives.forEach(o => dBlt(o))
+      }
+      if (lesson.overview.materials?.length) {
+        dGap(2); dText('Materials:', 10, G.dark, true); dGap(1)
+        lesson.overview.materials.forEach(m => dBlt(m))
+      }
+    }
+  )
+
+  // ── Warmer ────────────────────────────────────────────────────────────────────
+  card('WARMER', lesson.warmer.duration,
+    () => {
+      let h = mText(lesson.warmer.instructions, 10)
+      if (lesson.warmer.teacherNotes) h += mGap(2) + mCallout(lesson.warmer.teacherNotes)
+      return h
+    },
+    () => {
+      dText(lesson.warmer.instructions, 10, G.body)
+      if (lesson.warmer.teacherNotes) { dGap(2); dScript(lesson.warmer.teacherNotes) }
+    }
+  )
+
+  // ── Lead-in ───────────────────────────────────────────────────────────────────
+  card('LEAD-IN', lesson.leadIn.duration,
+    () => {
+      let h = mText(lesson.leadIn.instructions, 10)
+      if (lesson.leadIn.context) h += mGap(2) + mText(lesson.leadIn.context, 9, 3)
+      return h
+    },
+    () => {
+      dText(lesson.leadIn.instructions, 10, G.body)
+      if (lesson.leadIn.context) { dGap(2); dText(lesson.leadIn.context, 9, G.muted, false, 3) }
+    }
+  )
+
+  // ── Main Activity ─────────────────────────────────────────────────────────────
+  card('MAIN ACTIVITY', lesson.mainActivity.duration,
+    () => {
+      let h = mText(lesson.mainActivity.instructions, 10)
+      if (lesson.mainActivity.variations) h += mGap(2) + mCallout(lesson.mainActivity.variations)
+      if (lesson.mainActivity.teacherNotes) h += mGap(2) + mCallout(lesson.mainActivity.teacherNotes)
+      return h
+    },
+    () => {
+      dText(lesson.mainActivity.instructions, 10, G.body)
+      if (lesson.mainActivity.variations) { dGap(2); dScript(`Variations: ${lesson.mainActivity.variations}`) }
+      if (lesson.mainActivity.teacherNotes) { dGap(2); dScript(lesson.mainActivity.teacherNotes) }
+    }
+  )
+
+  // ── Language Focus ────────────────────────────────────────────────────────────
+  card('LANGUAGE FOCUS', undefined,
+    () => {
+      let h = mText(lesson.languageFocus.grammar_or_vocab, 11) + mGap(2)
+      h += mText(lesson.languageFocus.explanation, 10)
+      if (lesson.languageFocus.examples?.length) {
+        h += mGap(2) + mText('Examples:', 10) + mGap(1)
+        lesson.languageFocus.examples.forEach(e => { h += mBlt(e) })
+      }
+      if (lesson.languageFocus.commonErrors?.length) {
+        h += mGap(1) + mText('Common errors:', 10) + mGap(1)
+        lesson.languageFocus.commonErrors.forEach(e => { h += mBlt(e) })
+      }
+      return h
+    },
+    () => {
+      dText(lesson.languageFocus.grammar_or_vocab, 11, G.dark, true); dGap(2)
+      dText(lesson.languageFocus.explanation, 10, G.body)
+      if (lesson.languageFocus.examples?.length) {
+        dGap(2); dText('Examples:', 10, G.dark, true); dGap(1)
+        lesson.languageFocus.examples.forEach(e => dBlt(e))
+      }
+      if (lesson.languageFocus.commonErrors?.length) {
+        dGap(1); dText('Common errors:', 10, G.dark, true); dGap(1)
+        lesson.languageFocus.commonErrors.forEach(e => dBlt(e))
+      }
+    }
+  )
+
+  // ── L1-Aware Notes ────────────────────────────────────────────────────────────
+  card(`L1 NOTES  ·  ${lesson.l1Notes.nationality}`, undefined,
+    () => {
+      let h = 0
+      if (lesson.l1Notes.specificChallenges?.length) {
+        h += mText('Challenges:', 10) + mGap(1)
+        lesson.l1Notes.specificChallenges.forEach(c => { h += mCallout(c) })
+      }
+      if (lesson.l1Notes.tips?.length) {
+        h += mGap(2) + mText('Teaching tips:', 10) + mGap(1)
+        lesson.l1Notes.tips.forEach(t => { h += mBlt(t) })
+      }
+      return h
+    },
+    () => {
+      if (lesson.l1Notes.specificChallenges?.length) {
+        dText('Challenges:', 10, G.dark, true); dGap(1)
+        lesson.l1Notes.specificChallenges.forEach(c => dL1(c))
+      }
+      if (lesson.l1Notes.tips?.length) {
+        dGap(2); dText('Teaching tips:', 10, G.dark, true); dGap(1)
+        lesson.l1Notes.tips.forEach(t => dBlt(t))
+      }
+    }
+  )
+
+  // ── Cultural Note ─────────────────────────────────────────────────────────────
   if (lesson.culturalNote?.hasCulturalConsideration && lesson.culturalNote.note) {
-    sHdr('CULTURAL NOTE', G.accent)
-    txt(lesson.culturalNote.note, 10, G.body)
-    gap(5)
+    card('CULTURAL NOTE', undefined,
+      () => mText(lesson.culturalNote.note, 10),
+      () => dText(lesson.culturalNote.note, 10, G.body)
+    )
   }
 
-  // ── Practice Exercises ──────────────────────────────────────────────────────
-  sHdr('PRACTICE EXERCISES')
+  // ── Practice Exercises ────────────────────────────────────────────────────────
   const answerKeys: Array<{ num: number; type: string; key: string }> = []
 
-  lesson.exercises.forEach((ex, i) => {
-    ctx.chk(14)
-    txt(`Exercise ${i + 1}: ${ex.type}`, 11, G.dark, true)
-    gap(1)
-    txt(ex.instructions, 10, G.muted, false, 3)
-    gap(2)
-    txt(ex.content, 10, G.body, false, 3)
-    if (ex.answerKey) {
-      answerKeys.push({ num: i + 1, type: ex.type, key: ex.answerKey })
+  card('PRACTICE EXERCISES', undefined,
+    () => {
+      let h = 0
+      lesson.exercises.forEach((ex, i) => {
+        h += mGap(2) + mText(`${i + 1}.  ${ex.type}`, 11) + mGap(1)
+        h += mText(ex.instructions, 9, 3) + mGap(2)
+        h += mText(ex.content, 10, 3) + mGap(4)
+      })
+      return h
+    },
+    () => {
+      lesson.exercises.forEach((ex, i) => {
+        dGap(2)
+        // Numbered circle
+        const cx = CX + 3; const cy = y + 2.5
+        doc.setFillColor(G.green[0], G.green[1], G.green[2])
+        doc.circle(cx, cy, 2.8, 'F')
+        doc.setFontSize(8); doc.setTextColor(G.white[0], G.white[1], G.white[2]); doc.setFont('helvetica', 'bold')
+        doc.text(`${i + 1}`, cx, cy + 1, { align: 'center' })
+        // Exercise type label
+        dText(ex.type, 11, G.dark, true, 9)
+        dGap(1)
+        dText(ex.instructions, 9, G.muted, false, 3)
+        dGap(2)
+        dText(ex.content, 10, G.body, false, 3)
+        if (ex.answerKey) answerKeys.push({ num: i + 1, type: ex.type, key: ex.answerKey })
+        dGap(4)
+      })
     }
-    gap(4)
-  })
+  )
 
-  // ── Speaking Task ───────────────────────────────────────────────────────────
-  sHdr(`SPEAKING TASK  ·  ${lesson.speakingTask.duration}`)
-  txt(lesson.speakingTask.instructions, 10, G.body)
-  gap(2)
-  lesson.speakingTask.prompts.forEach(p => blt(p))
-  gap(5)
+  // ── Speaking Task ─────────────────────────────────────────────────────────────
+  card('SPEAKING TASK', lesson.speakingTask.duration,
+    () => {
+      let h = mText(lesson.speakingTask.instructions, 10) + mGap(2)
+      lesson.speakingTask.prompts?.forEach(p => { h += mBlt(p) })
+      return h
+    },
+    () => {
+      dText(lesson.speakingTask.instructions, 10, G.body); dGap(2)
+      lesson.speakingTask.prompts?.forEach(p => dBlt(p))
+    }
+  )
 
-  // ── Exit Ticket ─────────────────────────────────────────────────────────────
-  sHdr('EXIT TICKET')
-  txt(lesson.exitTicket.instructions, 10, G.body)
-  gap(2)
-  lesson.exitTicket.questions.forEach(q => blt(q))
-  gap(5)
+  // ── Exit Ticket ───────────────────────────────────────────────────────────────
+  card('EXIT TICKET', undefined,
+    () => {
+      let h = mText(lesson.exitTicket.instructions, 10) + mGap(2)
+      lesson.exitTicket.questions?.forEach(q => { h += mBlt(q) })
+      return h
+    },
+    () => {
+      dText(lesson.exitTicket.instructions, 10, G.body); dGap(2)
+      lesson.exitTicket.questions?.forEach(q => dBlt(q))
+    }
+  )
 
-  // ── Homework (optional) ─────────────────────────────────────────────────────
+  // ── Homework ──────────────────────────────────────────────────────────────────
   if (lesson.homework?.instructions) {
-    sHdr('HOMEWORK  ·  Optional')
-    txt(lesson.homework.instructions, 10, G.body)
-    gap(5)
+    card('HOMEWORK', 'Optional',
+      () => mText(lesson.homework.instructions, 10),
+      () => dText(lesson.homework.instructions, 10, G.body)
+    )
   }
 
-  // ── Answer Key ──────────────────────────────────────────────────────────────
+  // ── Answer Key ────────────────────────────────────────────────────────────────
   if (answerKeys.length > 0) {
-    gap(2)
-    dash()
-    sHdr('ANSWER KEY')
+    y += 2
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2])
+    doc.setLineDashPattern([2, 2], 0)
+    doc.line(M, y, W - M, y)
+    doc.setLineDashPattern([], 0)
+    y += 6
+
+    doc.setFontSize(12); doc.setTextColor(G.muted[0], G.muted[1], G.muted[2]); doc.setFont('helvetica', 'bold')
+    doc.text('ANSWER KEY', M, y)
+    y += 7
+
     answerKeys.forEach(ak => {
-      txt(`Exercise ${ak.num}  (${ak.type})`, 10, G.dark, true)
-      txt(ak.key, 9, G.muted, false, 5)
-      gap(3)
+      if (y > SAFE_BOTTOM - 20) { doc.addPage(); y = PAGE.M + 4 }
+      doc.setFontSize(10); doc.setTextColor(G.dark[0], G.dark[1], G.dark[2]); doc.setFont('helvetica', 'bold')
+      doc.text(`Exercise ${ak.num}  (${ak.type})`, M, y)
+      y += 5
+      doc.setFontSize(10); doc.setTextColor(102, 102, 102); doc.setFont('helvetica', 'normal')
+      const akLines: string[] = doc.splitTextToSize(ak.key, CW - 5)
+      doc.text(akLines, M + 5, y)
+      y += akLines.length * (10 * 0.42) + 5
     })
   }
 
-  drawPageFooters(d, `${meta.level} · ${meta.topic}`)
-  d.save(`tyoutorpro-lesson-${Date.now()}.pdf`)
+  drawPageFooters(doc, `${meta.level} · ${meta.topic}`)
+  doc.save(`tyoutorpro-lesson-${Date.now()}.pdf`)
 }
 
 // ── Worksheet PDF ─────────────────────────────────────────────────────────────

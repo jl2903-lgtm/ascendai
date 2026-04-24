@@ -85,7 +85,14 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
   const handleDownload = async () => {
     setDownloading(true)
     try {
-      await generateLessonPDF(lesson, { level: formData.level, topic: formData.topic, date: formatDate(new Date().toISOString()) }, teacherName)
+      await generateLessonPDF(lesson, {
+        level: formData.level,
+        topic: formData.topic,
+        date: formatDate(new Date().toISOString()),
+        nationality: formData.nationality || undefined,
+        classSize: formData.classSize || undefined,
+        duration: formData.length ? `${formData.length} min` : undefined,
+      }, teacherName)
       toast.success('PDF downloaded!')
     } catch {
       toast.error('PDF generation failed. Please try again.')
