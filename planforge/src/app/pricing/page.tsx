@@ -3,10 +3,101 @@ import { BookOpen, CheckCircle, X } from 'lucide-react'
 import type { Metadata } from 'next'
 import { PricingUpgradeButton } from '@/components/pricing/PricingUpgradeButton'
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
+
 export const metadata: Metadata = {
-  title: 'Pricing — Tyoutor Pro',
-  description: 'Start free with 5 lessons. Upgrade to Pro for unlimited AI-powered lesson plans, worksheets, and all 6 teaching tools.',
+  title: 'Pricing — Tyoutor Pro | Free & Pro Plans for ESL Teachers',
+  description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools for $19/month. Cancel anytime.',
+  alternates: { canonical: `${SITE_URL}/pricing` },
+  openGraph: {
+    title: 'Pricing — Tyoutor Pro | Free & Pro Plans for ESL Teachers',
+    description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools for $19/month. Cancel anytime.',
+    type: 'website',
+    url: `${SITE_URL}/pricing`,
+    siteName: 'Tyoutor Pro',
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tyoutor Pro Pricing' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pricing — Tyoutor Pro',
+    description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools.',
+    images: ['/og-default.jpg'],
+  },
 }
+
+const PRODUCT_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Tyoutor Pro',
+  description: 'AI-powered lesson planning for ESL & TEFL teachers. L1-aware lesson generator, worksheet builder, error coach, demo lesson builder, and class profiles.',
+  brand: { '@type': 'Brand', name: 'Tyoutor Pro' },
+  offers: [
+    {
+      '@type': 'Offer',
+      name: 'Free',
+      price: '0',
+      priceCurrency: 'USD',
+      url: `${SITE_URL}/auth/signup`,
+      availability: 'https://schema.org/InStock',
+      description: '5 lesson plans, 5 worksheets, basic tools, class profiles',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Pro',
+      price: '12',
+      priceCurrency: 'USD',
+      url: `${SITE_URL}/auth/signup`,
+      availability: 'https://schema.org/InStock',
+      description: 'Unlimited lessons, unlimited worksheets, all 6 tools, PDF export, priority generation',
+    },
+  ],
+}
+
+const PRICING_FAQS = [
+  {
+    q: 'How much does Tyoutor Pro cost?',
+    a: 'Tyoutor Pro has two plans. The Free plan is $0 forever and includes 5 lesson plans, 5 worksheets, and unlimited Class Profiles. The Pro plan is $12/month and unlocks unlimited lessons and worksheets, all 6 tools, PDF export, saved library, and priority generation.',
+  },
+  {
+    q: 'Is there a free trial?',
+    a: 'You don’t need a trial — the Free plan is permanent. You can use the core lesson generator, worksheet builder, and Class Profiles forever without paying. Upgrade to Pro only when you hit the free quota or want PDF export.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Yes. Cancel from your settings page in one click. You keep Pro access until the end of your billing period and your saved lessons remain in your account.',
+  },
+  {
+    q: 'Do you offer discounts for schools or annual billing?',
+    a: 'Yes — annual billing saves about two months versus monthly, and we offer school and language-academy site licenses. Email support@tyoutorpro.io with your team size for a quote.',
+  },
+  {
+    q: 'How does Tyoutor Pro pricing compare to manual lesson planning?',
+    a: 'Manual planning costs roughly 18 hours a month for an active ESL teacher. At even $10/hour of your time, that’s $180 a month in opportunity cost — versus $12 for unlimited Pro access. Most teachers reclaim their Sundays in the first week.',
+  },
+  {
+    q: 'What payment methods do you accept?',
+    a: 'All major credit and debit cards via Stripe. Billing is secure, GDPR-compliant, and you can manage or cancel your subscription from your settings at any time.',
+  },
+]
+
+const PRICING_FAQ_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: PRICING_FAQS.map(({ q, a }) => ({
+    '@type': 'Question',
+    name: q,
+    acceptedAnswer: { '@type': 'Answer', text: a },
+  })),
+}
+
+const COMPARISON_ROWS: { label: string; manual: string; tyoutor: string }[] = [
+  { label: 'Time to plan one lesson',         manual: '45–90 minutes',                tyoutor: '60 seconds' },
+  { label: 'L1-aware error prediction',       manual: 'Manual research per class',    tyoutor: 'Automatic' },
+  { label: 'Worksheet creation',              manual: 'Photoshop or Word, 30+ min',   tyoutor: 'Generated with answer key' },
+  { label: 'Demo lesson with methodology',    manual: 'A weekend of prep',            tyoutor: '60 seconds, hiring-panel ready' },
+  { label: 'Cost per month',                  manual: '~18 hours of your time',       tyoutor: '$12 (or $0 on Free)' },
+  { label: 'Reusable across your classes',    manual: 'Rewrite from scratch',         tyoutor: 'Class Profiles auto-fill everything' },
+]
 
 const FREE_FEATURES = [
   { text: '5 lessons free', included: true },
@@ -35,6 +126,8 @@ const PRO_FEATURES = [
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-[#F7F6F2] text-[#2D2D2D]">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PRODUCT_JSON_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(PRICING_FAQ_JSON_LD) }} />
       {/* Nav */}
       <nav className="border-b border-[#E8E4DE]/50 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -51,7 +144,7 @@ export default function PricingPage() {
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-20">
+      <main className="max-w-5xl mx-auto px-6 py-20">
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
@@ -63,71 +156,68 @@ export default function PricingPage() {
         </div>
 
         {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto items-start">
 
-          {/* Free column — h-10 spacer matches the badge row height in the Pro column */}
-          <div className="flex flex-col">
-            <div className="h-10" />
-            <div className="flex-1 bg-white border border-[#E8E4DE] rounded-2xl p-8 flex flex-col">
-              <div className="mb-8">
-                <div className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider mb-3">Free</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-5xl font-extrabold">$0</span>
-                </div>
-                <p className="text-[#6B6860] text-sm">Forever free · No credit card</p>
+          {/* Free card */}
+          <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 flex flex-col">
+            {/* invisible spacer so price aligns with Pro card */}
+            <div className="h-8 mb-4" />
+            <div className="mb-8">
+              <div className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider mb-3">Free</div>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-5xl font-extrabold">$0</span>
               </div>
-
-              <ul className="space-y-3 mb-8 flex-1">
-                {FREE_FEATURES.map(f => (
-                  <li key={f.text} className={`flex items-center gap-3 text-sm ${f.included ? 'text-[#4A473E]' : 'text-[#8C8880]'}`}>
-                    {f.included ? (
-                      <CheckCircle className="w-4 h-4 text-teal-500 flex-shrink-0" />
-                    ) : (
-                      <X className="w-4 h-4 text-[#C4C0BA] flex-shrink-0" />
-                    )}
-                    <span className={f.included ? '' : 'line-through'}>{f.text}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link href="/auth/signup" className="block w-full text-center border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-teal-700 font-semibold px-6 py-3.5 rounded-xl transition-colors">
-                Get Started Free
-              </Link>
+              <p className="text-[#6B6860] text-sm">Forever free · No credit card</p>
             </div>
+
+            <ul className="space-y-3 mb-8 flex-1">
+              {FREE_FEATURES.map(f => (
+                <li key={f.text} className={`flex items-center gap-3 text-sm ${f.included ? 'text-[#4A473E]' : 'text-[#8C8880]'}`}>
+                  {f.included ? (
+                    <CheckCircle className="w-4 h-4 text-teal-500 flex-shrink-0" />
+                  ) : (
+                    <X className="w-4 h-4 text-[#C4C0BA] flex-shrink-0" />
+                  )}
+                  <span className={f.included ? '' : 'line-through'}>{f.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link href="/auth/signup" className="block w-full text-center border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-teal-700 font-semibold px-6 py-3.5 rounded-xl transition-colors">
+              Get Started Free
+            </Link>
           </div>
 
-          {/* Pro column — badge sits above card in normal flow, no absolute positioning */}
-          <div className="flex flex-col">
-            <div className="h-10 flex items-center justify-center">
-              <span className="bg-teal-600 text-white text-xs font-bold px-5 py-1.5 rounded-full tracking-wide">
-                MOST POPULAR
+          {/* Pro card — badge sits inside the card at the top */}
+          <div className="bg-gradient-to-b from-teal-900/40 via-[#1E293B] to-[#1E293B] border border-teal-600/60 rounded-2xl p-8 shadow-xl shadow-teal-200/60 flex flex-col">
+            <div className="flex justify-center mb-4">
+              <span className="bg-teal-500 text-white text-xs font-bold px-5 py-1.5 rounded-full tracking-widest uppercase">
+                Most Popular
               </span>
             </div>
-            <div className="flex-1 bg-gradient-to-b from-teal-900/40 via-[#1E293B] to-white border border-teal-600/60 rounded-2xl p-8 shadow-xl shadow-teal-200/60 flex flex-col">
-              <div className="mb-8">
-                <div className="text-sm font-semibold text-teal-400 uppercase tracking-wider mb-3">Pro</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-5xl font-extrabold text-teal-400">$12</span>
-                  <span className="text-[#6B6860] text-lg">/month</span>
-                </div>
-                <p className="text-[#6B6860] text-sm">Cancel anytime · No hidden fees</p>
+            <div className="mb-8">
+              <div className="text-sm font-semibold text-teal-400 uppercase tracking-wider mb-3">Pro</div>
+              <div className="flex items-baseline gap-1 mb-1">
+                <span className="text-5xl font-extrabold text-white">$12</span>
+                <span className="text-teal-300/70 text-lg">/month</span>
               </div>
-
-              <ul className="space-y-3 mb-8 flex-1">
-                {PRO_FEATURES.map(f => (
-                  <li key={f.text} className="flex items-center gap-3 text-sm text-[#4A473E]">
-                    <CheckCircle className="w-4 h-4 text-teal-400 flex-shrink-0" />
-                    {f.text}
-                  </li>
-                ))}
-              </ul>
-
-              <PricingUpgradeButton
-                className="block w-full text-center bg-teal-600 hover:bg-teal-500 disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
-              >
-                Upgrade to Pro
-              </PricingUpgradeButton>
+              <p className="text-teal-300/60 text-sm">Cancel anytime · No hidden fees</p>
             </div>
+
+            <ul className="space-y-3 mb-8 flex-1">
+              {PRO_FEATURES.map(f => (
+                <li key={f.text} className="flex items-center gap-3 text-sm text-white/90">
+                  <CheckCircle className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                  {f.text}
+                </li>
+              ))}
+            </ul>
+
+            <PricingUpgradeButton
+              className="block w-full text-center bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
+            >
+              Upgrade to Pro
+            </PricingUpgradeButton>
           </div>
 
         </div>
@@ -156,24 +246,44 @@ export default function PricingPage() {
           </div>
         </div>
 
+        {/* Tyoutor Pro vs manual lesson planning */}
+        <section className="mt-20" aria-labelledby="comparison-heading">
+          <h2 id="comparison-heading" className="text-2xl font-bold text-center mb-3">Tyoutor Pro vs manual lesson planning</h2>
+          <p className="text-sm text-[#6B6860] text-center mb-10 max-w-xl mx-auto">The honest cost comparison every ESL teacher should run before another Sunday-night planning session.</p>
+          <div className="bg-white border border-[#E8E4DE] rounded-2xl overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-[#F8F7F2]">
+                <tr>
+                  <th className="text-left px-5 py-4 font-bold text-[#4A473E]">What it takes</th>
+                  <th className="text-left px-5 py-4 font-bold text-[#8C8880]">Manual planning</th>
+                  <th className="text-left px-5 py-4 font-bold text-teal-700">Tyoutor Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map(row => (
+                  <tr key={row.label} className="border-t border-[#F0EEE9]">
+                    <td className="px-5 py-4 font-semibold text-[#2D2D2D]">{row.label}</td>
+                    <td className="px-5 py-4 text-[#6B6860]">{row.manual}</td>
+                    <td className="px-5 py-4 text-[#2D6A4F] font-semibold">{row.tyoutor}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         {/* FAQ */}
-        <div className="mt-20 max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+        <section className="mt-20 max-w-2xl mx-auto" aria-labelledby="pricing-faq-heading">
+          <h2 id="pricing-faq-heading" className="text-2xl font-bold text-center mb-10">Pricing FAQ</h2>
           <div className="space-y-4">
-            {[
-              { q: 'Can I cancel my Pro subscription at any time?', a: 'Yes, absolutely. Cancel anytime from your settings page. You keep Pro access until the end of your billing period.' },
-              { q: 'What happens to my saved lessons if I cancel?', a: "Your saved lessons remain in your account. You just won't be able to save new ones or export PDFs on the free plan." },
-              { q: 'Is the free plan genuinely free?', a: 'Yes. No credit card required. You get 5 lessons and 5 worksheets free, no expiry.' },
-              { q: 'How is the AI lesson content different from templates?', a: 'Every lesson is generated fresh by Claude AI based on your specific inputs — student level, nationality, topic, age group, and class size. No two lessons are the same.' },
-              { q: 'Does the L1-aware feature work for my students?', a: "We support 25 first languages. The AI provides specific linguistic challenges and teaching tips based on your students' mother tongue." },
-            ].map(faq => (
+            {PRICING_FAQS.map(faq => (
               <div key={faq.q} className="bg-white border border-[#E8E4DE] rounded-2xl p-5">
                 <h3 className="font-semibold text-[#2D2D2D] mb-2 text-sm">{faq.q}</h3>
                 <p className="text-sm text-[#6B6860] leading-relaxed">{faq.a}</p>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Bottom CTA */}
         <div className="text-center mt-20">
@@ -183,7 +293,7 @@ export default function PricingPage() {
             Start Free Today
           </Link>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

@@ -1,13 +1,103 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BookOpen, FileText, MessageSquare, GraduationCap, Zap, CheckCircle, Clock, Download, Star, Users, Presentation } from 'lucide-react'
 import { Navbar } from '@/components/landing/Navbar'
 import { Logo } from '@/components/ui/Logo'
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
+
+export const metadata: Metadata = {
+  title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+  description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers. Worksheets, error coaching, demo lessons, class profiles. Free to start.',
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers.',
+    type: 'website',
+    url: SITE_URL,
+    siteName: 'Tyoutor Pro',
+    images: [{ url: '/og-default.jpg', width: 1200, height: 630, alt: 'Tyoutor Pro' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tyoutor Pro — AI Lesson Planning for ESL & TEFL Teachers',
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Built exclusively for ESL and TEFL teachers.',
+    images: ['/og-default.jpg'],
+  },
+}
+
+const HOMEPAGE_FAQS = [
+  {
+    q: 'What is Tyoutor Pro?',
+    a: 'Tyoutor Pro is an AI lesson planning platform built exclusively for ESL and TEFL teachers. It generates complete lesson plans, worksheets, demo lessons, and error-correction reports tailored to your specific class — all in under 60 seconds.',
+  },
+  {
+    q: 'How does the L1-aware feature work?',
+    a: 'You set up a class profile once: level, age group, nationality, weak areas. Tyoutor Pro then uses your students’ mother tongue (L1) to predict the exact grammar and pronunciation errors they’re likely to make, and automatically scaffolds every lesson and worksheet around those interference patterns.',
+  },
+  {
+    q: 'Is Tyoutor Pro free?',
+    a: 'Yes — the free tier includes 5 lesson plans, 5 worksheets, basic Error Coach access, and unlimited Class Profiles, with no credit card required. Pro is $19/month and unlocks unlimited generation across all 6 tools, PDF export, saved library, and priority generation.',
+  },
+  {
+    q: 'What types of lessons can I generate?',
+    a: 'All of them. The toolkit includes the Lesson Generator (full plans with warmers, activities, language focus), Worksheet Builder (gap fills, matching, multiple choice, reading comprehension, with answer keys), Error Correction Coach (analyses student writing), Demo Lesson Builder, Class Profiles, and Shared Resources.',
+  },
+  {
+    q: 'Can I use Tyoutor Pro for CELTA or DELTA?',
+    a: 'Yes. The Demo Lesson Builder is designed for exactly that — interview demos, observed lessons, CELTA TPs, and DELTA assessments. Every demo plan includes methodology notes (a "Why this works" sidebar) so you can explain your pedagogical decisions to assessors and hiring panels with confidence.',
+  },
+  {
+    q: 'Which countries do your teachers come from?',
+    a: 'Tyoutor Pro is used by 2,400+ ESL and TEFL teachers across 50+ countries — from private tutors in Spain and Korea to in-school teachers in Vietnam, Saudi Arabia, Brazil, Japan, and beyond.',
+  },
+]
+
 export default function LandingPage() {
+  const orgJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Tyoutor Pro',
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon`,
+    description: 'AI-powered lesson planning built exclusively for ESL and TEFL teachers.',
+    sameAs: [],
+  }
+
+  const softwareJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Tyoutor Pro',
+    applicationCategory: 'EducationApplication',
+    operatingSystem: 'Web',
+    url: SITE_URL,
+    description: 'Generate complete, L1-aware lesson plans in 60 seconds. Worksheets, error coaching, demo lessons, and class profiles built for ESL & TEFL teachers.',
+    offers: [
+      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', description: '5 free lesson plans, 5 free worksheets, class profiles' },
+      { '@type': 'Offer', name: 'Pro',  price: '12', priceCurrency: 'USD', description: 'Unlimited lessons and worksheets, all 6 tools, PDF export, priority generation' },
+    ],
+    aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.9', reviewCount: '120' },
+  }
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: HOMEPAGE_FAQS.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  }
+
   return (
     <div className="min-h-screen text-[#2D2D2D] overflow-x-hidden" style={{ background: '#FAFAF8' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+
       <Navbar />
 
+      <main>
       {/* ── Hero ── */}
       <section className="relative isolate pt-28 pb-20 px-6 overflow-hidden">
         <div aria-hidden style={{ position:'absolute',width:600,height:400,top:-80,right:-120,borderRadius:'50%',filter:'blur(80px)',background:'radial-gradient(ellipse,#FFE5D9,#FECDA6)',opacity:0.18,pointerEvents:'none',animation:'blobFloat 8s ease-in-out 0s infinite alternate' }} />
@@ -21,15 +111,15 @@ export default function LandingPage() {
           </div>
 
           <h1 className="font-extrabold tracking-tight mb-6" style={{ fontSize:'clamp(2.2rem,6vw,4.75rem)', letterSpacing:'-2px', lineHeight:1.08 }}>
-            <span style={{ color:'#2D2D2D' }}>Your students are unique.</span>
+            <span style={{ color:'#2D2D2D' }}>AI Lesson Planning</span>
             <br />
             <span style={{ color:'#2D6A4F', textDecoration:'underline', textDecorationColor:'rgba(45,106,79,0.25)', textDecorationThickness:'3px', textUnderlineOffset:'7px' }}>
-              Their lessons should be too.
+              for ESL &amp; TEFL Teachers
             </span>
           </h1>
 
           <p className="max-w-xl mx-auto mb-10 font-medium" style={{ fontSize:18, color:'#6B6860', lineHeight:1.65 }}>
-            Set up your class once. Tyoutor Pro remembers their level, nationality, weak areas, and goals — then tailors every lesson automatically.
+            The L1-aware ESL lesson plan generator built for working teachers. Set up your class once — level, nationality, weak areas, goals — and Tyoutor Pro tailors every lesson, worksheet, and demo automatically.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -153,16 +243,16 @@ export default function LandingPage() {
         <div className="relative max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>The Toolkit</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Everything a TEFL Teacher Needs</h2>
-            <p className="text-lg font-medium" style={{ color:'#6B6860' }}>Seven powerful tools. All tailored to your class.</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Every ESL & TEFL lesson planning tool, in one place</h2>
+            <p className="text-lg font-medium" style={{ color:'#6B6860' }}>From the AI lesson planner to the ESL worksheet generator and error correction tool — all tailored to your class.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Users,        title: 'Class Profiles',          desc: 'Set up your class once — level, nationality, weak areas, focus skills. Every tool auto-fills from your profile.', tag: 'New',          iconBg:'#EDF6F0', iconColor:'#2D6A4F' },
-              { icon: BookOpen,     title: 'Lesson Generator',        desc: 'Complete lesson plans with warmers, activities, language focus, and L1-aware tips — in 60 seconds.',              tag: 'Most Popular', iconBg:'#EDF6F0', iconColor:'#2D6A4F' },
+              { icon: BookOpen,     title: 'AI Lesson Generator',     desc: 'A free ESL lesson plan generator — complete plans with warmers, activities, language focus, and L1-aware tips in 60 seconds.', tag: 'Most Popular', iconBg:'#EDF6F0', iconColor:'#2D6A4F' },
               { icon: FileText,     title: 'Worksheet Builder',       desc: 'Gap fills, matching, multiple choice, reading comprehension — custom worksheets at any level, with answer keys.',  tag: null,           iconBg:'#EBF5FB', iconColor:'#1A6FA8' },
               { icon: MessageSquare,title: 'Error Correction Coach',  desc: 'Upload a photo of handwritten work or paste text. Get errors highlighted, categorised, and explained.',           tag: null,           iconBg:'#F5EEF8', iconColor:'#7D3C98' },
-              { icon: Star,         title: 'Demo Lesson Builder',     desc: 'Interview-ready demo lessons with a "Why this works" sidebar. Impress any hiring panel.',                         tag: null,           iconBg:'#FFFBEB', iconColor:'#B7791F' },
+              { icon: Star,         title: 'Demo Lesson Builder',     desc: 'A demo lesson for your TEFL interview — methodology-sound, interview-ready, with a "Why this works" sidebar.', tag: null,           iconBg:'#FFFBEB', iconColor:'#B7791F' },
               { icon: GraduationCap,title: 'Shared Resources',        desc: 'Browse and share community lesson materials from teachers around the world.',                                     tag: null,           iconBg:'#EBF8FF', iconColor:'#2B6CB0' },
             ].map((feature, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 card-lift relative" style={{ border:'1px solid #E8E4DE' }}>
@@ -187,7 +277,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>Social Proof</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Teachers Love Tyoutor Pro</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>What teachers are saying</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
@@ -227,13 +317,14 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Free */}
-            <div className="bg-white rounded-2xl p-8 card-lift" style={{ border:'1px solid #E8E4DE' }}>
+            <div className="bg-white rounded-2xl p-8 card-lift flex flex-col" style={{ border:'1px solid #E8E4DE' }}>
+              <div className="h-7 mb-4 flex-shrink-0" />
               <div className="mb-6">
                 <h3 className="text-xl font-extrabold mb-1" style={{ color:'#2D2D2D' }}>Free</h3>
                 <div className="text-4xl font-extrabold" style={{ color:'#2D2D2D' }}>$0</div>
                 <div className="text-sm mt-1 font-medium" style={{ color:'#8C8880' }}>Forever free</div>
               </div>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-1">
                 {['5 lessons free', '5 worksheets free', 'Basic lesson generator', 'Error Coach (3 uses)', 'Demo Lesson (1 use)', 'Class Profiles (unlimited)'].map(f => (
                   <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color:'#4A473E' }}>
                     <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color:'#2D6A4F' }} />
@@ -252,9 +343,11 @@ export default function LandingPage() {
               </Link>
             </div>
             {/* Pro — dark forest card */}
-            <div className="rounded-2xl p-8 relative card-lift overflow-hidden" style={{ background:'#1B4332', border:'1.5px solid #2D6A4F' }}>
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-extrabold px-4 py-1 rounded-full" style={{ background:'#2D6A4F' }}>
-                MOST POPULAR
+            <div className="rounded-2xl p-8 card-lift flex flex-col" style={{ background:'#1B4332', border:'1.5px solid #2D6A4F' }}>
+              <div className="flex justify-center mb-4 flex-shrink-0">
+                <span className="text-white text-xs font-extrabold px-4 py-1.5 rounded-full" style={{ background:'#2D6A4F' }}>
+                  MOST POPULAR
+                </span>
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-extrabold mb-1 text-white">Pro</h3>
@@ -263,7 +356,7 @@ export default function LandingPage() {
                 </div>
                 <div className="text-sm mt-1 font-medium" style={{ color:'rgba(255,255,255,0.45)' }}>Cancel anytime</div>
               </div>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 flex-1">
                 {['Unlimited lessons', 'Unlimited worksheets', 'All 6 tools — unlimited', 'PDF export on everything', 'Save & organise your library', 'Class Profiles — AI auto-fill', 'Priority generation'].map(f => (
                   <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color:'rgba(255,255,255,0.85)' }}>
                     <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color:'#52B788' }} />
@@ -279,8 +372,26 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
+      <section id="faq" className="py-24 px-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>FAQ</div>
+            <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Frequently asked questions</h2>
+          </div>
+          <div className="space-y-4">
+            {HOMEPAGE_FAQS.map(({ q, a }) => (
+              <div key={q} className="bg-white rounded-2xl p-6" style={{ border:'1px solid #E8E4DE' }}>
+                <h3 className="font-bold mb-2" style={{ color:'#2D2D2D', fontSize:16 }}>{q}</h3>
+                <p className="text-sm leading-relaxed font-medium" style={{ color:'#6B6860' }}>{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
-      <section className="py-28 px-6">
+      <section className="py-28 px-6" style={{ background:'#F4F2EE' }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-extrabold mb-6" style={{ fontSize:'clamp(2rem,5vw,3.5rem)', letterSpacing:'-1.5px', color:'#2D2D2D', lineHeight:1.1 }}>
             Ready to reclaim your{' '}
@@ -293,16 +404,18 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+      </main>
 
       {/* ── Footer ── */}
       <footer className="py-12 px-6" style={{ borderTop:'1px solid #E8E4DE', background:'white' }}>
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <Logo size="sm" href="/" />
-          <div className="flex gap-8 text-sm font-semibold" style={{ color:'#6B6860' }}>
+          <nav aria-label="Footer" className="flex gap-8 text-sm font-semibold" style={{ color:'#6B6860' }}>
             <Link href="/pricing" className="transition-colors hover:text-[#2D2D2D]">Pricing</Link>
+            <Link href="/blog" className="transition-colors hover:text-[#2D2D2D]">Blog</Link>
             <Link href="/auth/login" className="transition-colors hover:text-[#2D2D2D]">Log in</Link>
             <Link href="/auth/signup" className="transition-colors hover:text-[#2D2D2D]">Sign up</Link>
-          </div>
+          </nav>
           <p className="text-sm font-medium" style={{ color:'#8C8880' }}>© {new Date().getFullYear()} Tyoutor Pro. Built for teachers.</p>
         </div>
       </footer>

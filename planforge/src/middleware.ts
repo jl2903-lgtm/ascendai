@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-n
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // www -> apex redirects are handled by Vercel domain settings, not middleware.
   const response = NextResponse.next({
     request: { headers: request.headers },
   })
