@@ -444,7 +444,7 @@ export async function generateLessonPDF(
   doc.save(`tyoutorpro-lesson-${Date.now()}.pdf`)
 }
 
-// ── Worksheet PDF ─────────────────────────────────────────────────────────────
+// ── Worksheet PDF (redesigned) ────────────────────────────────────────────────
 
 export async function generateWorksheetPDF(
   worksheet: WorksheetContent,
@@ -453,156 +453,298 @@ export async function generateWorksheetPDF(
 ): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-
+  const { M, W, CW, H, FOOTER_Y } = PAGE
+  const SAFE_BOTTOM = FOOTER_Y - 4
   const firstName = teacherName.split(' ')[0] || 'Teacher'
-  const pills = [worksheet.level, worksheet.topic].filter(Boolean)
-  const startY = drawPageHeader(doc, `Worksheet: ${worksheet.topic}`, pills, date, firstName)
-  const { M, W, CW } = PAGE
+  const sfColor: [number, number, number] = [170, 170, 170]
 
-  // ── Student name / date fields ──────────────────────────────────────────────
-  let y = startY
-  doc.setFontSize(9)
-  doc.setTextColor(G.muted[0], G.muted[1], G.muted[2])
-  doc.setFont('helvetica', 'normal')
-  doc.text('Name:', M, y)
-  doc.setDrawColor(G.border[0], G.border[1], G.border[2])
-  doc.setLineWidth(0.4)
-  doc.line(M + 12, y, M + 90, y)
-  doc.text('Date:', M + 100, y)
-  doc.line(M + 112, y, M + 165, y)
-  y += 10
+  // ── Custom worksheet header ───────────────────────────────────────────────────
+  // Returns y where body content starts.
+  const drawWorksheetHeader = (): number => {
+    // Brand bar (same as drawPageHeader)
+    doc.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+    doc.rect(0, 0, W, 20, 'F')
+    doc.setFillColor(G.green[0], G.green[1], G.green[2])
+    doc.roundedRect(M, 5.5, 8, 8, 1.3, 1.3, 'F')
+    doc.setFontSize(7.5); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold')
+    doc.text('T', M + 4, 11.8, { align: 'center' })
+    const BX = M + 11; const BY = 12
+    doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(G.dark[0], G.dark[1], G.dark[2])
+    doc.text('Tyoutor', BX, BY)
+    const tyw = doc.getTextWidth('Tyoutor')
+    doc.setTextColor(G.terra[0], G.terra[1], G.terra[2])
+    doc.text(' Pro', BX + tyw, BY)
+    doc.setFontSize(8.5); doc.setTextColor(G.muted[0], G.muted[1], G.muted[2]); doc.setFont('helvetica', 'normal')
+    doc.text(`Prepared by ${firstName}`, W - M, BY, { align: 'right' })
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+    doc.line(0, 20, W, 20)
 
-  const ctx = makeCtx(doc, y)
-  ctx.setY(y)
-  const { txt, gap, sHdr, doc: d } = ctx
+    // ── Title + student fields side-by-side ────────────────────────────────────
+    const CONTENT_Y = 27
+    const TITLE_MAX_W = CW * 0.52          // ~94 mm, leaves room for fields
+    const SF_X = M + TITLE_MAX_W + 6       // student fields start x
 
-  // Collect answer keys for final page
+    // Title: 22pt bold #1A1A1A
+    doc.setFontSize(22); doc.setTextColor(G.dark[0], G.dark[1], G.dark[2]); doc.setFont('helvetica', 'bold')
+    const titleLines: string[] = doc.splitTextToSize(worksheet.topic, TITLE_MAX_W)
+    doc.text(titleLines, M, CONTENT_Y)
+    const titleEndY = CONTENT_Y + titleLines.length * (22 * 0.42)
+
+    // Student fields right-aligned block (top-right of page)
+    doc.setFontSize(11); doc.setTextColor(sfColor[0], sfColor[1], sfColor[2]); doc.setFont('helvetica', 'normal')
+    doc.text('Name:', SF_X, CONTENT_Y)
+    const nameLW = doc.getTextWidth('Name:')
+    doc.setDrawColor(sfColor[0], sfColor[1], sfColor[2]); doc.setLineWidth(0.3)
+    doc.line(SF_X + nameLW + 2, CONTENT_Y + 0.5, W - M, CONTENT_Y + 0.5)
+    const sf2Y = CONTENT_Y + 7
+    doc.text('Date:', SF_X, sf2Y)
+    const dateLW = doc.getTextWidth('Date:')
+    doc.line(SF_X + dateLW + 2, sf2Y + 0.5, W - M, sf2Y + 0.5)
+    const sfEndY = sf2Y + 5
+
+    let ty = Math.max(titleEndY, sfEndY) + 3
+
+    // Accent underline: #52B788, ~0.8mm thick, 50% page width
+    doc.setDrawColor(G.accent[0], G.accent[1], G.accent[2]); doc.setLineWidth(0.8)
+    doc.line(M, ty, M + CW * 0.5, ty)
+    doc.setLineWidth(0.3); ty += 5
+
+    // Level + topic pills
+    const pills = [worksheet.level, worksheet.topic].filter(Boolean)
+    if (pills.length > 0) {
+      let px = M
+      doc.setFontSize(8.5); doc.setFont('helvetica', 'normal')
+      for (const pill of pills) {
+        if (!pill) continue
+        const tw = doc.getTextWidth(pill)
+        const pw = tw + 5; const ph = 4.8; const py = ty - 3.5
+        doc.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+        doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.25)
+        doc.roundedRect(px, py, pw, ph, 1.2, 1.2, 'FD')
+        doc.setTextColor(102, 102, 102)
+        doc.text(pill, px + 2.5, ty)
+        px += pw + 2.5
+      }
+      ty += 4
+    }
+
+    // Date line
+    if (date) {
+      ty += 2
+      doc.setFontSize(8.5); doc.setTextColor(G.bbb[0], G.bbb[1], G.bbb[2]); doc.setFont('helvetica', 'normal')
+      doc.text(date, M, ty); ty += 4
+    }
+
+    // Separator before body
+    ty += 2
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+    doc.line(M, ty, W - M, ty)
+    return ty + 7
+  }
+
+  let y = drawWorksheetHeader()
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   type AKEntry = { num: number; type: string; isMatching: boolean; compact?: string; items: string[]; keys: string[] }
   const answerKeys: AKEntry[] = []
 
-  worksheet.exercises.forEach((ex, i) => {
-    // ── Exercise header ──────────────────────────────────────────────────────
-    sHdr(`${i + 1}.  ${ex.type}`)
-    txt(ex.instructions, 10, G.muted)
-    gap(3)
+  const addPage = () => { doc.addPage(); y = PAGE.M + 6 }
+  const chk = (needed: number) => { if (y + needed > SAFE_BOTTOM) addPage() }
 
-    // ── Reading passage ──────────────────────────────────────────────────────
-    if (ex.passage) {
-      const passLines: string[] = d.splitTextToSize(ex.passage, CW - 8)
-      const boxH = passLines.length * (10 * 0.42) + 8
-      ctx.chk(boxH + 4)
-      const py = ctx.getY()
-      d.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
-      d.setDrawColor(G.border[0], G.border[1], G.border[2])
-      d.setLineWidth(0.3)
-      d.rect(M, py - 2, CW, boxH, 'FD')
-      d.setFontSize(10)
-      d.setTextColor(G.body[0], G.body[1], G.body[2])
-      d.setFont('helvetica', 'italic')
-      d.text(passLines, M + 4, py + 3)
-      ctx.setY(py + boxH + 4)
+  // Renders a gap-fill item inline with green underlines replacing ___
+  const drawGapFillItem = (text: string, num: number) => {
+    const BLANK_W = 22
+    const parts = text.split(/_{2,}/)
+    chk(8)
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(G.body[0], G.body[1], G.body[2])
+    const numStr = `${num}.  `
+    doc.text(numStr, M, y)
+    let lx = M + doc.getTextWidth(numStr)
+    const maxX = M + CW
+
+    parts.forEach((part, pi) => {
+      // Render each word of the text segment
+      part.split(' ').forEach(tok => {
+        if (!tok) return
+        const tw = doc.getTextWidth(tok)
+        if (lx + tw > maxX) { y += 10 * 0.42 + 1.5; lx = M + 8; chk(8) }
+        doc.setTextColor(G.body[0], G.body[1], G.body[2])
+        doc.text(tok, lx, y)
+        lx += tw + doc.getTextWidth(' ')
+      })
+      // Green underline for each blank slot
+      if (pi < parts.length - 1) {
+        if (lx + BLANK_W > maxX) { y += 10 * 0.42 + 1.5; lx = M + 8 }
+        doc.setDrawColor(G.green[0], G.green[1], G.green[2]); doc.setLineWidth(0.5)
+        doc.line(lx, y + 1.5, lx + BLANK_W, y + 1.5)
+        doc.setLineWidth(0.3)
+        lx += BLANK_W + 2
+      }
+    })
+    y += 10 * 0.42 + 6
+  }
+
+  // ── Exercise sections ─────────────────────────────────────────────────────────
+  worksheet.exercises.forEach((ex, i) => {
+    // Section divider between exercises (not before first)
+    if (i > 0) {
+      y += 4
+      doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+      doc.line(M, y, W - M, y)
+      y += 5
     }
 
-    // ── Matching exercise ────────────────────────────────────────────────────
+    // ── Numbered square badge + exercise type ──────────────────────────────────
+    const BADGE_S = 5
+    chk(BADGE_S + 14)
+    const badgeY = y
+    doc.setFillColor(G.green[0], G.green[1], G.green[2])
+    doc.roundedRect(M, badgeY, BADGE_S, BADGE_S, 1.1, 1.1, 'F')
+    doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold')
+    doc.text(`${i + 1}`, M + BADGE_S / 2, badgeY + BADGE_S / 2 + 1.3, { align: 'center' })
+
+    // Exercise type label (14pt bold #1A1A1A)
+    doc.setFontSize(14); doc.setTextColor(G.dark[0], G.dark[1], G.dark[2]); doc.setFont('helvetica', 'bold')
+    doc.text(ex.type, M + BADGE_S + 3, badgeY + BADGE_S / 2 + 1.5)
+    y = badgeY + BADGE_S + 4
+
+    // Instruction line (10pt italic #999)
+    if (ex.instructions) {
+      doc.setFontSize(10); doc.setTextColor(G.muted[0], G.muted[1], G.muted[2]); doc.setFont('helvetica', 'italic')
+      const instrLines: string[] = doc.splitTextToSize(ex.instructions, CW)
+      doc.text(instrLines, M, y)
+      y += instrLines.length * (10 * 0.42) + 4
+    }
+
+    // ── Reading passage box ────────────────────────────────────────────────────
+    if (ex.passage) {
+      const passLines: string[] = doc.splitTextToSize(ex.passage, CW - 8)
+      const boxH = passLines.length * (10 * 0.42) + 8
+      chk(boxH + 4)
+      const py = y
+      doc.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+      doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+      doc.rect(M, py - 2, CW, boxH, 'FD')
+      doc.setFontSize(10); doc.setTextColor(G.body[0], G.body[1], G.body[2]); doc.setFont('helvetica', 'italic')
+      doc.text(passLines, M + 4, py + 3)
+      y = py + boxH + 4
+    }
+
+    // ── Matching: two-column with column headers + dotted divider ──────────────
     if (ex.matchingPairs && ex.matchingPairs.length > 0 && ex.shuffledRight) {
       const midX = M + CW / 2
       const colW = CW / 2 - 6
-      const startRow = ctx.getY()
+
+      // Column headers
+      doc.setFontSize(9); doc.setTextColor(G.muted[0], G.muted[1], G.muted[2]); doc.setFont('helvetica', 'bold')
+      doc.text('Column A', M, y)
+      doc.text('Column B', W - M, y, { align: 'right' })
+      y += 5
+      const startRow = y
 
       ex.matchingPairs.forEach((pair, j) => {
         const leftTxt = `${j + 1}.  ${pair.word}`
         const rightEntry = ex.shuffledRight![j]
         const rightTxt = `${rightEntry.letter}.  ${rightEntry.definition}`
-        d.setFontSize(10)
-        d.setFont('helvetica', 'normal')
-        d.setTextColor(G.body[0], G.body[1], G.body[2])
-        const lLines: string[] = d.splitTextToSize(leftTxt, colW)
-        const rLines: string[] = d.splitTextToSize(rightTxt, colW)
-        const rowH = Math.max(lLines.length, rLines.length) * (10 * 0.42) + 3
-        ctx.chk(rowH)
-        const ry = ctx.getY()
-        d.text(lLines, M + 2, ry)
-        d.text(rLines, midX + 2, ry)
-        ctx.setY(ry + rowH)
+        doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(G.body[0], G.body[1], G.body[2])
+        const lLines: string[] = doc.splitTextToSize(leftTxt, colW)
+        const rLines: string[] = doc.splitTextToSize(rightTxt, colW)
+        const rowH = Math.max(lLines.length, rLines.length) * (10 * 0.42) + 4
+        chk(rowH)
+        const ry = y
+        doc.text(lLines, M, ry)
+        doc.text(rLines, W - M, ry, { align: 'right' })
+        y = ry + rowH
       })
 
-      // Vertical divider between columns
-      d.setDrawColor(G.border[0], G.border[1], G.border[2])
-      d.setLineWidth(0.3)
-      d.line(midX, startRow - 1, midX, ctx.getY())
+      // Dotted vertical divider
+      doc.setDrawColor(G.border[0], G.border[1], G.border[2])
+      doc.setLineDashPattern([1, 2], 0); doc.setLineWidth(0.3)
+      doc.line(midX, startRow - 1, midX, y)
+      doc.setLineDashPattern([], 0)
 
       if (ex.compactAnswerKey) {
         answerKeys.push({ num: i + 1, type: ex.type, isMatching: true, compact: ex.compactAnswerKey, items: [], keys: [] })
       }
     } else {
-      // ── Regular items ──────────────────────────────────────────────────────
+      // ── Regular / gap-fill items ───────────────────────────────────────────
       ex.items.forEach((item, j) => {
-        const clean = item.replace(/^\d+[\.\)]\s*/, '')
-        txt(`${j + 1}.  ${clean}`, 10, G.body, false, 5)
-        gap(4)
+        const clean = item.replace(/^\d+[.)]\s*/, '').trim()
+        if (clean.includes('___')) {
+          drawGapFillItem(clean, j + 1)
+        } else {
+          chk(8)
+          doc.setFontSize(10); doc.setTextColor(G.body[0], G.body[1], G.body[2]); doc.setFont('helvetica', 'normal')
+          const label = `${j + 1}.  ${clean}`
+          const lines: string[] = doc.splitTextToSize(label, CW - 5)
+          doc.text(lines, M, y)
+          y += lines.length * (10 * 0.42) + 6
+        }
       })
 
       if (ex.answerKey && ex.answerKey.length > 0) {
         answerKeys.push({ num: i + 1, type: ex.type, isMatching: false, items: ex.items, keys: ex.answerKey })
       }
     }
-
-    gap(6)
   })
 
-  // ── Answer Key page ─────────────────────────────────────────────────────────
+  // ── Answer Key: new page, #FAFAF6 background, two-column compact grid ─────────
   const hasAnswers = answerKeys.length > 0 && answerKeys.some(a => a.compact || a.keys.length > 0)
   if (hasAnswers) {
-    d.addPage()
-    let ay = PAGE.M + 6
+    const startAKPage = () => {
+      doc.addPage()
+      doc.setFillColor(G.lightBg[0], G.lightBg[1], G.lightBg[2])
+      doc.rect(0, 0, W, H, 'F')
+      return PAGE.M + 6
+    }
 
-    // "ANSWER KEY" title
-    d.setFillColor(G.green[0], G.green[1], G.green[2])
-    d.rect(M, ay, 3, 9, 'F')
-    d.setFontSize(14)
-    d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
-    d.setFont('helvetica', 'bold')
-    d.text('ANSWER KEY', M + 6, ay + 6.5)
+    let ay = startAKPage()
+
+    // Header: 'ANSWER KEY' 14pt bold #999
+    doc.setFontSize(14); doc.setTextColor(G.muted[0], G.muted[1], G.muted[2]); doc.setFont('helvetica', 'bold')
+    doc.text('ANSWER KEY', M, ay + 7)
     ay += 14
 
-    d.setDrawColor(G.border[0], G.border[1], G.border[2])
-    d.setLineWidth(0.3)
-    d.line(M, ay, W - M, ay)
+    doc.setDrawColor(G.border[0], G.border[1], G.border[2]); doc.setLineWidth(0.3)
+    doc.line(M, ay, W - M, ay)
     ay += 6
 
-    answerKeys.forEach(ak => {
-      if (ay > PAGE.FOOTER_Y - 30) { d.addPage(); ay = PAGE.M + 6 }
+    const AK_COL_GAP = 8
+    const AK_COL_W = (CW - AK_COL_GAP) / 2
+    const AK_COL2_X = M + AK_COL_W + AK_COL_GAP
 
-      d.setFontSize(11)
-      d.setTextColor(G.dark[0], G.dark[1], G.dark[2])
-      d.setFont('helvetica', 'bold')
-      d.text(`${ak.num}.  ${ak.type}`, M, ay)
+    answerKeys.forEach(ak => {
+      if (ay > PAGE.FOOTER_Y - 30) { ay = startAKPage() }
+
+      // Exercise label
+      doc.setFontSize(11); doc.setTextColor(G.dark[0], G.dark[1], G.dark[2]); doc.setFont('helvetica', 'bold')
+      doc.text(`${ak.num}.  ${ak.type}`, M, ay)
       ay += 6
 
       if (ak.isMatching && ak.compact) {
-        d.setFontSize(10)
-        d.setTextColor(G.body[0], G.body[1], G.body[2])
-        d.setFont('helvetica', 'normal')
-        const lines: string[] = d.splitTextToSize(ak.compact, CW - 5)
-        d.text(lines, M + 5, ay)
+        doc.setFontSize(10); doc.setTextColor(G.body[0], G.body[1], G.body[2]); doc.setFont('helvetica', 'normal')
+        const lines: string[] = doc.splitTextToSize(ak.compact, CW - 5)
+        doc.text(lines, M + 5, ay)
         ay += lines.length * 5 + 4
-      } else {
-        ak.keys.forEach((ans, j) => {
-          const clean = ans.replace(/^\d+[\.\)]\s*/, '')
-          d.setFontSize(10)
-          d.setTextColor(G.body[0], G.body[1], G.body[2])
-          d.setFont('helvetica', 'normal')
-          d.text(`${j + 1}.  ${clean}`, M + 5, ay)
-          ay += 5
-        })
+      } else if (ak.keys.length > 0) {
+        // Two-column compact grid
+        const half = Math.ceil(ak.keys.length / 2)
+        for (let r = 0; r < half; r++) {
+          const leftAns = (ak.keys[r] ?? '').replace(/^\d+[.)]\s*/, '')
+          const rightAns = (ak.keys[r + half] ?? '').replace(/^\d+[.)]\s*/, '')
+          doc.setFontSize(10); doc.setTextColor(G.body[0], G.body[1], G.body[2]); doc.setFont('helvetica', 'normal')
+          if (leftAns) doc.text(`${r + 1}.  ${leftAns}`, M + 5, ay)
+          if (rightAns) doc.text(`${r + half + 1}.  ${rightAns}`, AK_COL2_X, ay)
+          ay += 5.5
+        }
         ay += 2
       }
-      ay += 4
+      ay += 5
     })
   }
 
-  drawPageFooters(d, `${worksheet.level} · ${worksheet.topic}`)
-  d.save(`tyoutorpro-worksheet-${Date.now()}.pdf`)
+  drawPageFooters(doc, `${worksheet.level} · ${worksheet.topic}`)
+  doc.save(`tyoutorpro-worksheet-${Date.now()}.pdf`)
 }
 
 // ── Demo Lesson PDF ───────────────────────────────────────────────────────────
