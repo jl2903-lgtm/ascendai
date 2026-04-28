@@ -1,4 +1,5 @@
 import type { LessonContent, WorksheetContent, DemoLesson } from '@/types'
+import type { Activity } from './activities/schema'
 import { G, PAGE, drawPageHeader, drawPageFooters } from './pdf-styles'
 
 // ── Document context ──────────────────────────────────────────────────────────
@@ -81,6 +82,10 @@ export async function generateLessonPDF(
   lesson: LessonContent,
   meta: { level: string; topic: string; date: string },
   teacherName = 'Teacher',
+  // Optional. When provided, an extra "Activity Sequence (Teach Mode)" section
+  // is appended with the activity-based view of the lesson. When null/undefined
+  // the PDF renders exactly as it did before this change (legacy fallback).
+  activities?: Activity[] | null,
 ): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
@@ -217,8 +222,135 @@ export async function generateLessonPDF(
     })
   }
 
+  // ── Activity Sequence (Teach Mode) ──────────────────────────────────────────
+  // Optional. Mirrors the activities rendered by the in-app Teach Mode runner.
+  // Tutor-only fields are surfaced under a "Teacher's Notes" label since the
+  // PDF is the take-home / printable artifact.
+  if (activities && activities.length > 0) {
+    gap(2)
+    dash()
+    sHdr('ACTIVITY SEQUENCE  ·  TEACH MODE', G.accent)
+
+    activities.forEach((a, i) => {
+      ctx.chk(14)
+      txt(`Activity ${i + 1}: ${activityHeaderLabel(a)}`, 11, G.dark, true)
+      gap(1)
+      renderActivityToPdf(ctx, a)
+      gap(4)
+    })
+  }
+
   drawPageFooters(d, `${meta.level} · ${meta.topic}`)
   d.save(`tyoutorpro-lesson-${Date.now()}.pdf`)
+}
+
+// ── Activity → PDF helpers ────────────────────────────────────────────────────
+
+function activityHeaderLabel(a: Activity): string {
+  switch (a.type) {
+    case 'reading_passage': return `Reading — ${a.title}`
+    case 'multiple_choice': return 'Multiple choice'
+    case 'gap_fill': return 'Gap fill'
+    case 'discussion_questions': return `Discussion — ${a.title}`
+    case 'writing_task': return 'Writing task'
+    case 'vocab_presentation': return 'Vocabulary'
+    case 'grammar_explanation': return `Grammar — ${a.rule_title}`
+    case 'image_prompt': return 'Image prompt'
+  }
+}
+
+function renderActivityToPdf(ctx: ReturnType<typeof makeCtx>, a: Activity): void {
+  const { txt, gap, blt } = ctx
+  switch (a.type) {
+    case 'reading_passage':
+      txt(a.body, 10, G.body, false, 3)
+      a.extra_paragraphs?.forEach(p => { gap(1); txt(p, 10, G.body, false, 3) })
+      if (a.tutor_notes) {
+        gap(2)
+        txt("Teacher's notes:", 9, G.accent, true, 3)
+        txt(a.tutor_notes, 9, G.muted, false, 5)
+      }
+      break
+    case 'multiple_choice':
+      txt(a.question, 10, G.body, false, 3)
+      a.options.forEach((o, i) => txt(`${String.fromCharCode(97 + i)}) ${o}`, 10, G.body, false, 6))
+      gap(1)
+      txt("Teacher's notes:", 9, G.accent, true, 3)
+      txt(`Correct answer: ${String.fromCharCode(97 + a.correct_index)}) ${a.options[a.correct_index]}`, 9, G.muted, false, 5)
+      if (a.tutor_explanation) txt(a.tutor_explanation, 9, G.muted, false, 5)
+      break
+    case 'gap_fill': {
+      // Render the template with bracketed blanks for the printable version.
+      const display = a.sentence_template.replace(/\{\{(\d+)\}\}/g, '_______')
+      txt(display, 10, G.body, false, 3)
+      if (a.word_bank.length) {
+        gap(1)
+        txt(`Word bank: ${a.word_bank.join(' · ')}`, 9, G.muted, false, 5)
+      }
+      gap(1)
+      txt("Teacher's notes:", 9, G.accent, true, 3)
+      txt(`Answers: ${a.answers.join(' · ')}`, 9, G.muted, false, 5)
+      if (a.tutor_explanation) txt(a.tutor_explanation, 9, G.muted, false, 5)
+      break
+    }
+    case 'discussion_questions':
+      if (a.intro) { txt(a.intro, 10, G.body, false, 3); gap(1) }
+      a.questions.forEach((q, i) => txt(`${i + 1}. ${q}`, 10, G.body, false, 5))
+      if (a.tutor_followups.length) {
+        gap(1)
+        txt("Teacher's notes — follow-ups:", 9, G.accent, true, 3)
+        a.tutor_followups.forEach(f => blt(f, 7))
+      }
+      break
+    case 'writing_task':
+      txt(a.prompt, 10, G.body, false, 3)
+      if (a.min_words) { gap(1); txt(`Minimum words: ${a.min_words}`, 9, G.muted, false, 5) }
+      if (a.tutor_notes || a.model_answer) {
+        gap(1)
+        txt("Teacher's notes:", 9, G.accent, true, 3)
+        if (a.tutor_notes) txt(a.tutor_notes, 9, G.muted, false, 5)
+        if (a.model_answer) {
+          gap(1)
+          txt('Model answer:', 9, G.dark, true, 5)
+          txt(a.model_answer, 9, G.muted, false, 5)
+        }
+      }
+      break
+    case 'vocab_presentation':
+      a.items.forEach(it => {
+        const head = `${it.word}${it.pos ? ` (${it.pos})` : ''}${it.pronunciation ? ` ${it.pronunciation}` : ''}`
+        txt(head, 10, G.dark, true, 3)
+        txt(it.definition, 10, G.body, false, 5)
+        if (it.example) txt(`Example: ${it.example}`, 9, G.muted, false, 5)
+        gap(1)
+      })
+      break
+    case 'grammar_explanation':
+      txt(a.rule, 10, G.body, false, 3)
+      if (a.examples.length) {
+        gap(1)
+        txt('Examples:', 10, G.dark, true, 3)
+        a.examples.forEach(e => blt(e, 7))
+      }
+      if (a.common_errors.length) {
+        gap(1)
+        txt("Teacher's notes — common errors:", 9, G.accent, true, 3)
+        a.common_errors.forEach(e => {
+          txt(`✗ ${e.wrong}`, 9, G.muted, false, 5)
+          if (e.right) txt(`✓ ${e.right}`, 9, G.muted, false, 5)
+        })
+      }
+      break
+    case 'image_prompt':
+      txt(a.prompt, 10, G.body, false, 3)
+      if (a.image_url) txt(`Image: ${a.image_url}`, 9, G.muted, false, 5)
+      if (a.tutor_followups.length) {
+        gap(1)
+        txt("Teacher's notes — follow-ups:", 9, G.accent, true, 3)
+        a.tutor_followups.forEach(f => blt(f, 7))
+      }
+      break
+  }
 }
 
 // ── Worksheet PDF ─────────────────────────────────────────────────────────────

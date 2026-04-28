@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Lesson, Worksheet, PracticeSession } from '@/types'
 import { formatDate } from '@/lib/utils'
-import { BookOpen, FileText, Search, Trash2, Download, Eye, SlidersHorizontal, BookMarked, Upload, X, Globe, Zap, Link2, QrCode } from 'lucide-react'
+import { BookOpen, FileText, Search, Trash2, Download, Eye, SlidersHorizontal, BookMarked, Upload, X, Globe, Zap, Link2, QrCode, Play, RefreshCw } from 'lucide-react'
+import Link from 'next/link'
+import { ActivitiesSchema } from '@/lib/activities/schema'
 import { generateLessonPDF, generateWorksheetPDF } from '@/lib/pdf'
 import { QRCodeSVG } from 'qrcode.react'
 import toast from 'react-hot-toast'
@@ -32,6 +34,7 @@ export default function SavedPage() {
   const [filter, setFilter] = useState<FilterType>('all')
   const [levelFilter, setLevelFilter] = useState('all')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [regenerating, setRegenerating] = useState<string | null>(null)
   const [viewedWorksheet, setViewedWorksheet] = useState<Worksheet | null>(null)
   const [qrSession, setQrSession] = useState<PracticeSession | null>(null)
   const [upload, setUpload] = useState<UploadModal>({
@@ -89,9 +92,39 @@ export default function SavedPage() {
 
   const handleDownloadLesson = async (lesson: Lesson) => {
     try {
-      await generateLessonPDF(lesson.lesson_content, { level: lesson.student_level, topic: lesson.topic, date: formatDate(lesson.created_at) }, teacherName)
+      // Validate at the boundary — corrupt JSONB shouldn't break the PDF; we
+      // just fall back to the legacy plan-only export.
+      const parsed = ActivitiesSchema.safeParse(lesson.activities)
+      await generateLessonPDF(
+        lesson.lesson_content,
+        { level: lesson.student_level, topic: lesson.topic, date: formatDate(lesson.created_at) },
+        teacherName,
+        parsed.success ? parsed.data : undefined,
+      )
     } catch {
       toast.error('PDF generation failed.')
+    }
+  }
+
+  const handleRegenerateActivities = async (lessonId: string) => {
+    setRegenerating(lessonId)
+    try {
+      const res = await fetch('/api/regenerate-activities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to regenerate activities.')
+        return
+      }
+      toast.success('Activities ready — Teach Mode unlocked.')
+      setLessons(prev => prev.map(l => l.id === lessonId ? { ...l, activities: data.activities } : l))
+    } catch {
+      toast.error('Something went wrong.')
+    } finally {
+      setRegenerating(null)
     }
   }
 
@@ -266,7 +299,25 @@ export default function SavedPage() {
                 <h3 className="font-semibold text-[#2D2D2D] text-sm leading-snug mb-1 line-clamp-2">{lesson.title}</h3>
                 <p className="text-xs text-[#6B6860] mb-3 truncate">{lesson.topic} · {lesson.lesson_length}min</p>
                 <p className="text-xs text-[#8C8880]">{formatDate(lesson.created_at)}</p>
-                <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex flex-wrap gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {Array.isArray(lesson.activities) && lesson.activities.length > 0 ? (
+                    <Link
+                      href={`/lessons/${lesson.id}/teach`}
+                      className="flex items-center gap-1.5 text-xs bg-[#2D6A4F] hover:bg-[#256048] text-white font-semibold px-3 py-1.5 rounded-lg transition-all"
+                    >
+                      <Play className="w-3 h-3" /> Teach
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => handleRegenerateActivities(lesson.id)}
+                      disabled={regenerating === lesson.id}
+                      title="Convert this lesson into interactive activities for Teach Mode"
+                      className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-teal-500 hover:text-teal-600 text-[#6B6860] px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${regenerating === lesson.id ? 'animate-spin' : ''}`} />
+                      {regenerating === lesson.id ? 'Working…' : 'Regenerate as activities'}
+                    </button>
+                  )}
                   <button onClick={() => handleDownloadLesson(lesson)} className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-teal-500 hover:text-teal-600 text-[#6B6860] px-3 py-1.5 rounded-lg transition-all">
                     <Download className="w-3 h-3" /> PDF
                   </button>

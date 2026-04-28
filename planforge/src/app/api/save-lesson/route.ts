@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 
 import type { LessonContent } from '@/types'
+import { ActivitiesSchema } from '@/lib/activities/schema'
 
 interface SaveLessonBody {
   title: string
@@ -11,6 +12,7 @@ interface SaveLessonBody {
   studentAgeGroup: string
   studentNationality: string
   lessonContent: LessonContent
+  activities?: unknown
 }
 
 export async function POST(req: NextRequest) {
@@ -54,10 +56,23 @@ export async function POST(req: NextRequest) {
       studentAgeGroup,
       studentNationality,
       lessonContent,
+      activities,
     } = body
 
     if (!title || !studentLevel || !topic || !lessonLength || !studentAgeGroup || !studentNationality || !lessonContent) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Validate activities if provided. Reject the save if they don't parse so
+    // we never persist garbage into the JSONB column. Saves without activities
+    // (legacy / failed activity generation) are allowed.
+    let parsedActivities: unknown = null
+    if (activities != null) {
+      const result = ActivitiesSchema.safeParse(activities)
+      if (!result.success) {
+        return NextResponse.json({ error: 'Invalid activities payload' }, { status: 400 })
+      }
+      parsedActivities = result.data
     }
 
     const { data: savedLesson, error: insertError } = await supabase
@@ -71,6 +86,7 @@ export async function POST(req: NextRequest) {
         student_age_group: studentAgeGroup,
         student_nationality: studentNationality,
         lesson_content: lessonContent,
+        activities: parsedActivities,
       })
       .select('id')
       .single()

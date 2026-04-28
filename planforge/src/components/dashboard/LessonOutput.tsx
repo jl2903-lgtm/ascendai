@@ -1,21 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { LessonContent, LessonFormData } from '@/types'
+import type { Activity } from '@/lib/activities/schema'
 import { generateLessonPDF } from '@/lib/pdf'
 import { formatDate } from '@/lib/utils'
+import { stashDraftLesson } from '@/lib/teach-draft'
 import toast from 'react-hot-toast'
 import {
   Clock, Target, Package, Flame, Compass, Zap, Globe,
   AlertCircle, BookOpen, Mic, LogOut, Home, Download,
   Copy, Save, RefreshCw, TrendingUp, TrendingDown,
-  Timer, Scissors, MessageSquare, PenLine, Share2, X, Check
+  Timer, Scissors, MessageSquare, PenLine, Share2, X, Check, Play
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { QRCodeSVG } from 'qrcode.react'
 
 interface Props {
   lesson: LessonContent
+  activities?: Activity[] | null
   formData: LessonFormData
   onAdjust: (type: string) => void
   adjusting: boolean
@@ -35,8 +39,9 @@ const sections = [
   { key: 'homework', label: 'Homework', icon: Home },
 ]
 
-export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
+export function LessonOutput({ lesson, activities, formData, onAdjust, adjusting }: Props) {
   const supabase = createClient()
+  const router = useRouter()
   const [teacherName, setTeacherName] = useState('Teacher')
   const [saving, setSaving] = useState(false)
 
@@ -69,6 +74,7 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
           studentAgeGroup: formData.ageGroup,
           studentNationality: formData.nationality,
           lessonContent: lesson,
+          activities: activities ?? null,
         }),
       })
       if (res.status === 403) { toast.error('Saving lessons requires a Pro subscription.'); return }
@@ -85,7 +91,7 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
   const handleDownload = async () => {
     setDownloading(true)
     try {
-      await generateLessonPDF(lesson, { level: formData.level, topic: formData.topic, date: formatDate(new Date().toISOString()) }, teacherName)
+      await generateLessonPDF(lesson, { level: formData.level, topic: formData.topic, date: formatDate(new Date().toISOString()) }, teacherName, activities ?? undefined)
       toast.success('PDF downloaded!')
     } catch {
       toast.error('PDF generation failed. Please try again.')
@@ -98,6 +104,20 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
     const text = buildPlainText(lesson)
     navigator.clipboard.writeText(text)
     toast.success('Copied to clipboard!')
+  }
+
+  const handleTeach = () => {
+    if (!activities || activities.length === 0) {
+      toast.error('Teach Mode is preparing — try regenerating this lesson.')
+      return
+    }
+    stashDraftLesson({
+      title: lesson.title,
+      activities,
+      level: formData.level,
+      topic: formData.topic,
+    })
+    router.push('/lessons/draft/teach')
   }
 
   const handleShare = async () => {
@@ -403,6 +423,16 @@ export function LessonOutput({ lesson, formData, onAdjust, adjusting }: Props) {
 
       {/* Action buttons */}
       <div className="bg-white rounded-2xl p-4 flex flex-wrap gap-3" style={{ border: '1px solid #E8E4DE' }}>
+        {activities && activities.length > 0 && (
+          <button
+            onClick={handleTeach}
+            className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all bg-[#2D6A4F] hover:bg-[#256048] text-white"
+            title="Run this lesson as an interactive activity flow while screen-sharing"
+          >
+            <Play className="w-4 h-4" />
+            Teach this lesson
+          </button>
+        )}
         <button
           onClick={handleSave}
           disabled={saving || saved}

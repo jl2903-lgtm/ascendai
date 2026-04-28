@@ -3,6 +3,7 @@ import { createRouteClient } from '@/lib/supabase/route-handler'
 
 import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { generateActivities } from '@/lib/activities/generate'
 import type { LessonFormData, LessonContent, ClassContext } from '@/types'
 
 
@@ -148,16 +149,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const response = await getOpenAIClient().chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: 6000,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: buildPrompt(body, body.classContext) },
-      ],
-    })
+    // Run the legacy plan generator and the new activities generator in parallel.
+    // If the activities call fails we still return the lesson — the dashboard
+    // can offer a "Regenerate as activities" action later.
+    const [planRes, activitiesRes] = await Promise.allSettled([
+      getOpenAIClient().chat.completions.create({
+        model: 'gpt-4o',
+        max_tokens: 6000,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: buildPrompt(body, body.classContext) },
+        ],
+      }),
+      generateActivities(body, body.classContext ?? null),
+    ])
 
-    const rawText = response.choices[0].message.content ?? ''
+    if (planRes.status !== 'fulfilled') {
+      console.error('[generate-lesson] plan generation failed', planRes.reason)
+      return NextResponse.json({ error: 'Failed to generate lesson' }, { status: 500 })
+    }
+
+    const rawText = planRes.value.choices[0].message.content ?? ''
     let lessonContent: LessonContent
     try {
       lessonContent = JSON.parse(rawText)
@@ -165,6 +177,11 @@ export async function POST(req: NextRequest) {
       const jsonMatch = rawText.match(/\{[\s\S]*\}/)
       if (!jsonMatch) return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 })
       lessonContent = JSON.parse(jsonMatch[0])
+    }
+
+    const activities = activitiesRes.status === 'fulfilled' ? activitiesRes.value : null
+    if (activitiesRes.status === 'rejected') {
+      console.error('[generate-lesson] activities generation failed', activitiesRes.reason)
     }
 
     // Track stats for all users (upsert into user_stats)
@@ -178,7 +195,7 @@ export async function POST(req: NextRequest) {
       ...(weekExpired ? { last_weekly_reset: now.toISOString(), worksheets_this_week: 0 } : {}),
     }, { onConflict: 'user_id' })
 
-    return NextResponse.json(lessonContent)
+    return NextResponse.json({ lesson: lessonContent, activities })
   } catch (error) {
     console.error('[generate-lesson]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

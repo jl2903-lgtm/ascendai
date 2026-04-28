@@ -71,7 +71,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#F7F6F2] p-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#2D2D2D]">PlanForge Admin</h1>
+          <h1 className="text-2xl font-bold text-[#2D2D2D]">Tyoutor Pro Admin</h1>
           <p className="text-[#6B6860] text-sm mt-1">Overview dashboard</p>
         </div>
 

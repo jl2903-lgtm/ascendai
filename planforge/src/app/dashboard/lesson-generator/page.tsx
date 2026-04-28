@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { LessonContent, LessonFormData, ClassProfile, ClassContext } from '@/types'
+import type { Activity } from '@/lib/activities/schema'
 import { STUDENT_LEVELS, LESSON_LENGTHS, AGE_GROUPS, NATIONALITIES, CLASS_SIZES, SPECIAL_FOCUS_OPTIONS } from '@/lib/utils'
 import { ThinkingLoader } from '@/components/ui/ThinkingLoader'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
@@ -44,6 +45,7 @@ export default function LessonGeneratorPage() {
   const [classContext, setClassContext] = useState<ClassContext | null>(null)
   const [loading, setLoading] = useState(false)
   const [lesson, setLesson] = useState<LessonContent | null>(null)
+  const [activities, setActivities] = useState<Activity[] | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [adjusting, setAdjusting] = useState(false)
@@ -118,7 +120,13 @@ export default function LessonGeneratorPage() {
       if (res.status === 402) { setShowUpgrade(true); return }
       if (res.status === 429) { toast.error('Too many requests. Please wait a moment.'); return }
       if (!res.ok) { toast.error(data.error || 'Failed to generate lesson. Please try again.'); return }
-      setLesson(data)
+      // New endpoint contract: { lesson, activities }. Older clients that may
+      // already have a cached response without these wrappers fall back to
+      // treating the payload itself as the lesson.
+      const lessonContent: LessonContent = data?.lesson ?? data
+      const acts: Activity[] | null = data?.activities ?? null
+      setLesson(lessonContent)
+      setActivities(acts)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       if (fromOnboarding && !overrides) {
         setShowCelebration(true)
@@ -333,6 +341,7 @@ export default function LessonGeneratorPage() {
           ) : lesson ? (
             <LessonOutput
               lesson={lesson}
+              activities={activities}
               formData={form}
               onAdjust={handleAdjust}
               adjusting={adjusting}

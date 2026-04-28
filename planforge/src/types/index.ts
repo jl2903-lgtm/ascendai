@@ -167,6 +167,8 @@ export interface Lesson {
   student_age_group: string
   student_nationality: string
   lesson_content: LessonContent
+  // Populated for lessons generated after Teach Mode launch. Null on legacy rows.
+  activities: unknown[] | null
   created_at: string
 }
 
