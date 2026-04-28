@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, ChevronRight, X, ListOrdered } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, ListOrdered, Play } from 'lucide-react'
 import type { Activity } from '@/lib/activities/schema'
 import { ActivityRenderer, activityLabel, activityTypeName } from './ActivityRenderer'
 import { TutorPanel } from './TutorPanel'
@@ -11,12 +11,19 @@ interface Props {
   title: string
   activities: Activity[]
   exitHref: string
+  // When true, the runner starts in rehearsal mode: tutor panel open, all
+  // hidden tutor content revealed via the rehearsalReveal flag, and an amber
+  // banner makes it impossible to confuse with live teach mode.
+  rehearsal?: boolean
+  // Where to switch when the user clicks "Switch to live teach mode" — should
+  // preserve ?step but drop ?mode=rehearsal.
+  liveHref?: string
 }
 
 // Top-level fullscreen runner. Owns navigation state (current step, panel
 // open/close, jump menu, keyboard shortcuts). Each child activity owns its
 // own input state and is reset on step change via the renderer's `key` prop.
-export function TeachRunner({ title, activities, exitHref }: Props) {
+export function TeachRunner({ title, activities, exitHref, rehearsal = false, liveHref }: Props) {
   const router = useRouter()
   const search = useSearchParams()
 
@@ -28,16 +35,26 @@ export function TeachRunner({ title, activities, exitHref }: Props) {
   }, [search, total])
 
   const [step, setStep] = useState(initialStep)
-  const [panelOpen, setPanelOpen] = useState(false)
+  // Rehearsal mode opens the panel by default; live mode keeps it closed.
+  const [panelOpen, setPanelOpen] = useState(rehearsal)
   const [jumpOpen, setJumpOpen] = useState(false)
   const [flashTick, setFlashTick] = useState(0)
 
-  // Sync step → URL query so refresh preserves progress.
+  // Sync step → URL query so refresh preserves progress. Preserve other params
+  // (like mode=rehearsal) by mutating the URL in place.
   useEffect(() => {
     const url = new URL(window.location.href)
     url.searchParams.set('step', String(step + 1))
     window.history.replaceState({}, '', url.toString())
   }, [step])
+
+  // Switching from rehearsal → live preserves the current step.
+  const switchToLive = useCallback(() => {
+    if (!liveHref) return
+    const url = new URL(liveHref, window.location.origin)
+    url.searchParams.set('step', String(step + 1))
+    router.push(url.pathname + url.search)
+  }, [liveHref, step, router])
 
   const goNext = useCallback(() => {
     if (step >= total - 1) {
@@ -88,6 +105,22 @@ export function TeachRunner({ title, activities, exitHref }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAFAF7] text-slate-900">
+      {rehearsal && (
+        <div className="bg-amber-100 border-b border-amber-300 px-6 py-2 flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-sm font-semibold text-amber-900">
+            REHEARSAL MODE — all tutor content visible. Do not screen-share.
+          </div>
+          {liveHref && (
+            <button
+              type="button"
+              onClick={switchToLive}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg"
+            >
+              <Play className="w-4 h-4" /> Switch to live teach mode
+            </button>
+          )}
+        </div>
+      )}
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-white">
         <div className="flex-1 min-w-0">
@@ -121,7 +154,7 @@ export function TeachRunner({ title, activities, exitHref }: Props) {
           <div className="text-[10px] font-semibold uppercase tracking-wider text-teal-700 mb-4">
             {activityTypeName(activity.type)}
           </div>
-          <ActivityRenderer activity={activity} flashAnswer={flashTick} />
+          <ActivityRenderer activity={activity} flashAnswer={flashTick} rehearsal={rehearsal} />
         </div>
       </main>
 

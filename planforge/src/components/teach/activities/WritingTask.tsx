@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { WritingTask as TWT } from '@/lib/activities/schema'
 import { TutorReveal } from '../TutorReveal'
 
-export function WritingTask({ activity }: { activity: TWT }) {
+export function WritingTask({ activity, rehearsal }: { activity: TWT; rehearsal?: boolean }) {
   const [text, setText] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const wordCount = text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length
@@ -39,13 +39,23 @@ export function WritingTask({ activity }: { activity: TWT }) {
       </div>
       <div className="flex flex-wrap items-start gap-3 pt-2">
         {activity.model_answer && (
-          <TutorReveal label="Show model answer" hideLabel="Hide model answer">
+          <TutorReveal label="Show model answer" hideLabel="Hide model answer" defaultOpen={rehearsal}>
             <div className="whitespace-pre-wrap leading-relaxed">{activity.model_answer}</div>
           </TutorReveal>
         )}
         {activity.tutor_notes && (
-          <TutorReveal label="Show tutor notes" hideLabel="Hide tutor notes" variant="tip">
+          <TutorReveal label="Show tutor notes" hideLabel="Hide tutor notes" variant="tip" defaultOpen={rehearsal}>
             {activity.tutor_notes}
+          </TutorReveal>
+        )}
+        {activity.success_criteria && activity.success_criteria.length > 0 && (
+          <TutorReveal label="Show success criteria" hideLabel="Hide success criteria" variant="note" defaultOpen={rehearsal}>
+            <div className="space-y-1.5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Success criteria</div>
+              <ul className="list-disc pl-5 space-y-1">
+                {activity.success_criteria.map((c, i) => <li key={i}>{c}</li>)}
+              </ul>
+            </div>
           </TutorReveal>
         )}
       </div>

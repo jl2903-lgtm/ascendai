@@ -3,7 +3,7 @@
 import type { GrammarExplanation as TGE } from '@/lib/activities/schema'
 import { TutorReveal } from '../TutorReveal'
 
-export function GrammarExplanation({ activity }: { activity: TGE }) {
+export function GrammarExplanation({ activity, rehearsal }: { activity: TGE; rehearsal?: boolean }) {
   return (
     <div className="space-y-5">
       <header>
@@ -21,18 +21,30 @@ export function GrammarExplanation({ activity }: { activity: TGE }) {
           </ul>
         </div>
       )}
-      {activity.common_errors.length > 0 && (
-        <TutorReveal label="Show common errors" hideLabel="Hide common errors" variant="tip">
-          <ul className="space-y-2">
-            {activity.common_errors.map((e, i) => (
-              <li key={i}>
-                <div className="text-rose-700"><span className="font-semibold">✗</span> {e.wrong}</div>
-                {e.right && <div className="text-emerald-700 mt-0.5"><span className="font-semibold">✓</span> {e.right}</div>}
-              </li>
-            ))}
-          </ul>
-        </TutorReveal>
-      )}
+      <div className="flex flex-wrap items-start gap-3">
+        {activity.common_errors.length > 0 && (
+          <TutorReveal label="Show common errors" hideLabel="Hide common errors" variant="tip" defaultOpen={rehearsal}>
+            <ul className="space-y-2">
+              {activity.common_errors.map((e, i) => (
+                <li key={i}>
+                  <div className="text-rose-700"><span className="font-semibold">✗</span> {e.wrong}</div>
+                  {e.right && <div className="text-emerald-700 mt-0.5"><span className="font-semibold">✓</span> {e.right}</div>}
+                </li>
+              ))}
+            </ul>
+          </TutorReveal>
+        )}
+        {activity.practice_prompts && activity.practice_prompts.length > 0 && (
+          <TutorReveal label="Show practice prompts" hideLabel="Hide practice prompts" variant="note" defaultOpen={rehearsal}>
+            <div className="space-y-1.5">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quick verbal drills</div>
+              <ul className="list-disc pl-5 space-y-1">
+                {activity.practice_prompts.map((p, i) => <li key={i}>{p}</li>)}
+              </ul>
+            </div>
+          </TutorReveal>
+        )}
+      </div>
     </div>
   )
 }

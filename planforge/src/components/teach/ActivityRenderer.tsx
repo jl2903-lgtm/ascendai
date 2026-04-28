@@ -13,17 +13,20 @@ import { ImagePrompt } from './activities/ImagePrompt'
 // Switches on activity.type to render the right component. We re-key on
 // activity.id so each activity gets its own fresh state when navigating —
 // answers, selections, and reveals don't bleed between activities.
-export function ActivityRenderer({ activity, flashAnswer }: { activity: Activity; flashAnswer?: number }) {
-  const key = activity.id
+//
+// rehearsal: when true, all `<TutorReveal>` blocks open by default and
+// "Show correct answer" / "Show answers" toggles in MCQ/GapFill auto-reveal.
+export function ActivityRenderer({ activity, flashAnswer, rehearsal }: { activity: Activity; flashAnswer?: number; rehearsal?: boolean }) {
+  const key = activity.id + (rehearsal ? ':rehearsal' : '')
   switch (activity.type) {
-    case 'reading_passage':    return <ReadingPassage key={key} activity={activity} />
-    case 'multiple_choice':    return <MultipleChoice key={key} activity={activity} flashAnswer={flashAnswer} />
-    case 'gap_fill':           return <GapFill key={key} activity={activity} flashAnswer={flashAnswer} />
+    case 'reading_passage':    return <ReadingPassage key={key} activity={activity} rehearsal={rehearsal} />
+    case 'multiple_choice':    return <MultipleChoice key={key} activity={activity} flashAnswer={flashAnswer} rehearsal={rehearsal} />
+    case 'gap_fill':           return <GapFill key={key} activity={activity} flashAnswer={flashAnswer} rehearsal={rehearsal} />
     case 'discussion_questions': return <DiscussionQuestions key={key} activity={activity} />
-    case 'writing_task':       return <WritingTask key={key} activity={activity} />
+    case 'writing_task':       return <WritingTask key={key} activity={activity} rehearsal={rehearsal} />
     case 'vocab_presentation': return <VocabPresentation key={key} activity={activity} />
-    case 'grammar_explanation': return <GrammarExplanation key={key} activity={activity} />
-    case 'image_prompt':       return <ImagePrompt key={key} activity={activity} />
+    case 'grammar_explanation': return <GrammarExplanation key={key} activity={activity} rehearsal={rehearsal} />
+    case 'image_prompt':       return <ImagePrompt key={key} activity={activity} rehearsal={rehearsal} />
   }
 }
 

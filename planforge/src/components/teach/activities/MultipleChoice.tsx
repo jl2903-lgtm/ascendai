@@ -5,9 +5,9 @@ import { Check } from 'lucide-react'
 import type { MultipleChoice as TMC } from '@/lib/activities/schema'
 import { TutorReveal } from '../TutorReveal'
 
-export function MultipleChoice({ activity, flashAnswer }: { activity: TMC; flashAnswer?: number }) {
+export function MultipleChoice({ activity, flashAnswer, rehearsal }: { activity: TMC; flashAnswer?: number; rehearsal?: boolean }) {
   const [selected, setSelected] = useState<number | null>(null)
-  const [showCorrect, setShowCorrect] = useState(false)
+  const [showCorrect, setShowCorrect] = useState(!!rehearsal)
   const correct = activity.correct_index
   const reveal = showCorrect || (flashAnswer != null && flashAnswer > 0)
 
@@ -51,7 +51,7 @@ export function MultipleChoice({ activity, flashAnswer }: { activity: TMC; flash
           {showCorrect ? 'Hide correct answer' : 'Show correct answer'}
         </button>
         {activity.tutor_explanation && (
-          <TutorReveal label="Show explanation" hideLabel="Hide explanation" variant="tip">
+          <TutorReveal label="Show explanation" hideLabel="Hide explanation" variant="tip" defaultOpen={rehearsal}>
             {activity.tutor_explanation}
           </TutorReveal>
         )}

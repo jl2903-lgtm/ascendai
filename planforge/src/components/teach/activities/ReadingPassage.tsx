@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import type { ReadingPassage as TReading } from '@/lib/activities/schema'
+import { TutorReveal } from '../TutorReveal'
 
-export function ReadingPassage({ activity }: { activity: TReading }) {
-  const [showExtra, setShowExtra] = useState(false)
+export function ReadingPassage({ activity, rehearsal }: { activity: TReading; rehearsal?: boolean }) {
+  const [showExtra, setShowExtra] = useState(!!rehearsal)
   const extras = activity.extra_paragraphs ?? []
+  const hooks = activity.comprehension_hooks ?? []
 
   return (
     <article className="space-y-5">
@@ -30,6 +32,16 @@ export function ReadingPassage({ activity }: { activity: TReading }) {
             {showExtra ? 'Hide extra paragraphs' : `Show ${extras.length} more paragraph${extras.length === 1 ? '' : 's'}`}
           </button>
         </div>
+      )}
+      {hooks.length > 0 && (
+        <TutorReveal label="Show check-in questions" hideLabel="Hide check-in questions" variant="tip" defaultOpen={rehearsal}>
+          <div className="space-y-1.5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-amber-700">Mid-read check-ins</div>
+            <ul className="space-y-1.5 list-disc pl-5">
+              {hooks.map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          </div>
+        </TutorReveal>
       )}
     </article>
   )

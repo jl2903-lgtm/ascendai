@@ -11,13 +11,15 @@ export function TutorReveal({
   hideLabel,
   children,
   variant = 'answer',
+  defaultOpen = false,
 }: {
   label?: string
   hideLabel?: string
   children: ReactNode
   variant?: 'answer' | 'tip' | 'note'
+  defaultOpen?: boolean
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
 
   const tone =
     variant === 'tip'

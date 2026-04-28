@@ -25,11 +25,11 @@ function splitTemplate(tpl: string): Segment[] {
   return out
 }
 
-export function GapFill({ activity, flashAnswer }: { activity: TGap; flashAnswer?: number }) {
+export function GapFill({ activity, flashAnswer, rehearsal }: { activity: TGap; flashAnswer?: number; rehearsal?: boolean }) {
   const segments = useMemo(() => splitTemplate(activity.sentence_template), [activity.sentence_template])
   const blankCount = segments.filter(s => s.kind === 'blank').length
   const [filled, setFilled] = useState<Record<number, string>>({})
-  const [showAnswers, setShowAnswers] = useState(false)
+  const [showAnswers, setShowAnswers] = useState(!!rehearsal)
   const reveal = showAnswers || (flashAnswer != null && flashAnswer > 0)
 
   const setBlank = (i: number, v: string) => setFilled(p => ({ ...p, [i]: v }))
@@ -77,7 +77,7 @@ export function GapFill({ activity, flashAnswer }: { activity: TGap; flashAnswer
           {showAnswers ? 'Hide answers' : `Show ${blankCount} answer${blankCount === 1 ? '' : 's'}`}
         </button>
         {activity.tutor_explanation && (
-          <TutorReveal label="Show explanation" hideLabel="Hide explanation" variant="tip">
+          <TutorReveal label="Show explanation" hideLabel="Hide explanation" variant="tip" defaultOpen={rehearsal}>
             {activity.tutor_explanation}
           </TutorReveal>
         )}

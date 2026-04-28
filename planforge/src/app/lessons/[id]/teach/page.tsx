@@ -7,7 +7,16 @@ import { TeachRunner } from '@/components/teach/TeachRunner'
 
 // Server component — loads the saved lesson, validates activities, falls back
 // to a best-effort conversion from the legacy plan if activities is null.
-export default async function TeachLessonPage({ params }: { params: { id: string } }) {
+//
+// Honors ?mode=rehearsal — opens the runner with the tutor panel expanded,
+// the amber rehearsal banner, and all hidden tutor content revealed.
+export default async function TeachLessonPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams: { mode?: string; step?: string }
+}) {
   const supabase = createRouteClient()
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) redirect('/auth/login')
@@ -36,12 +45,24 @@ export default async function TeachLessonPage({ params }: { params: { id: string
   }
 
   if (!activities || activities.length === 0) {
-    redirect('/dashboard/saved')
+    redirect(`/lessons/${params.id}`)
   }
+
+  const rehearsal = searchParams?.mode === 'rehearsal'
+  // Exit goes back to the lesson view (per re-entry bug fix), not the dashboard.
+  const exitHref = `/lessons/${params.id}`
+  // Live href drops mode=rehearsal, preserves step (TeachRunner adds it).
+  const liveHref = `/lessons/${params.id}/teach`
 
   return (
     <TeachShell>
-      <TeachRunner title={lesson.title} activities={activities} exitHref="/dashboard/saved" />
+      <TeachRunner
+        title={lesson.title}
+        activities={activities}
+        exitHref={exitHref}
+        rehearsal={rehearsal}
+        liveHref={rehearsal ? liveHref : undefined}
+      />
     </TeachShell>
   )
 }

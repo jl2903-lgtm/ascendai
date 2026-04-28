@@ -51,9 +51,20 @@ function PanelContent({ activity }: { activity: Activity }) {
   switch (activity.type) {
     case 'reading_passage':
       return (
-        <Section title="Tutor notes">
-          {activity.tutor_notes ? <p className="text-sm text-slate-700 leading-relaxed">{activity.tutor_notes}</p> : <Empty />}
-        </Section>
+        <>
+          <Section title="Tutor notes">
+            {activity.tutor_notes ? <p className="text-sm text-slate-700 leading-relaxed">{activity.tutor_notes}</p> : <Empty />}
+          </Section>
+          {activity.comprehension_hooks && activity.comprehension_hooks.length > 0 && (
+            <Section title="Mid-read check-ins">
+              <ul className="space-y-2">
+                {activity.comprehension_hooks.map((h, i) => (
+                  <li key={i} className="text-sm text-slate-700 leading-relaxed border-l-2 border-amber-400 pl-3">{h}</li>
+                ))}
+              </ul>
+            </Section>
+          )}
+        </>
       )
     case 'multiple_choice':
       return (
@@ -97,6 +108,13 @@ function PanelContent({ activity }: { activity: Activity }) {
           <Section title="Tutor notes">
             {activity.tutor_notes ? <p className="text-sm text-slate-700 leading-relaxed">{activity.tutor_notes}</p> : <Empty />}
           </Section>
+          {activity.success_criteria && activity.success_criteria.length > 0 && (
+            <Section title="Success criteria">
+              <ul className="space-y-1.5 list-disc pl-5">
+                {activity.success_criteria.map((c, i) => <li key={i} className="text-sm text-slate-700">{c}</li>)}
+              </ul>
+            </Section>
+          )}
           {activity.model_answer && (
             <Section title="Model answer">
               <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{activity.model_answer}</p>
@@ -112,30 +130,50 @@ function PanelContent({ activity }: { activity: Activity }) {
       )
     case 'grammar_explanation':
       return (
-        <Section title="Common errors">
-          {activity.common_errors.length ? (
-            <ul className="space-y-2">
-              {activity.common_errors.map((e, i) => (
-                <li key={i} className="text-sm border-l-2 border-rose-400 pl-3">
-                  <div className="text-rose-700"><span className="font-medium">✗</span> {e.wrong}</div>
-                  {e.right && <div className="text-emerald-700 mt-0.5"><span className="font-medium">✓</span> {e.right}</div>}
-                </li>
-              ))}
-            </ul>
-          ) : <Empty />}
-        </Section>
+        <>
+          <Section title="Common errors">
+            {activity.common_errors.length ? (
+              <ul className="space-y-2">
+                {activity.common_errors.map((e, i) => (
+                  <li key={i} className="text-sm border-l-2 border-rose-400 pl-3">
+                    <div className="text-rose-700"><span className="font-medium">✗</span> {e.wrong}</div>
+                    {e.right && <div className="text-emerald-700 mt-0.5"><span className="font-medium">✓</span> {e.right}</div>}
+                  </li>
+                ))}
+              </ul>
+            ) : <Empty />}
+          </Section>
+          {activity.practice_prompts && activity.practice_prompts.length > 0 && (
+            <Section title="Quick verbal drills">
+              <ul className="space-y-1.5 list-disc pl-5">
+                {activity.practice_prompts.map((p, i) => <li key={i} className="text-sm text-slate-700">{p}</li>)}
+              </ul>
+            </Section>
+          )}
+        </>
       )
     case 'image_prompt':
       return (
-        <Section title="Suggested follow-ups">
-          {activity.tutor_followups.length ? (
-            <ul className="space-y-2">
-              {activity.tutor_followups.map((f, i) => (
-                <li key={i} className="text-sm text-slate-700 leading-relaxed border-l-2 border-amber-400 pl-3">{f}</li>
-              ))}
-            </ul>
-          ) : <Empty />}
-        </Section>
+        <>
+          <Section title="Suggested follow-ups">
+            {activity.tutor_followups.length ? (
+              <ul className="space-y-2">
+                {activity.tutor_followups.map((f, i) => (
+                  <li key={i} className="text-sm text-slate-700 leading-relaxed border-l-2 border-amber-400 pl-3">{f}</li>
+                ))}
+              </ul>
+            ) : <Empty />}
+          </Section>
+          {activity.vocabulary_to_elicit && activity.vocabulary_to_elicit.length > 0 && (
+            <Section title="Vocabulary to elicit">
+              <div className="flex flex-wrap gap-1.5">
+                {activity.vocabulary_to_elicit.map((v, i) => (
+                  <span key={i} className="rounded-full bg-amber-50 border border-amber-300 text-amber-900 px-2.5 py-0.5 text-xs">{v}</span>
+                ))}
+              </div>
+            </Section>
+          )}
+        </>
       )
   }
 }

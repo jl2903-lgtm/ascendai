@@ -28,6 +28,12 @@ export function VocabPresentation({ activity }: { activity: TVP }) {
         {item.example && (
           <p className="mt-4 text-base text-slate-600 italic border-l-4 border-teal-500 pl-4">&ldquo;{item.example}&rdquo;</p>
         )}
+        {item.collocation && (
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-700">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Collocation</span>
+            <span className="font-medium">{item.collocation}</span>
+          </div>
+        )}
       </div>
       <div className="flex items-center justify-center gap-3">
         <button

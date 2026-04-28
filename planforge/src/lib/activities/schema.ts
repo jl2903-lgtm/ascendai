@@ -14,6 +14,9 @@ export const ReadingPassageSchema = z.object({
   body: z.string(),
   extra_paragraphs: z.array(z.string()).default([]),
   tutor_notes: z.string().default(''),
+  // v2: questions the teacher can ask mid-read to check comprehension.
+  // Optional so v1 lessons keep validating.
+  comprehension_hooks: z.array(z.string()).optional(),
 })
 
 export const MultipleChoiceSchema = z.object({
@@ -51,6 +54,8 @@ export const WritingTaskSchema = z.object({
   min_words: z.number().int().nonnegative().default(50),
   model_answer: z.string().default(''),
   tutor_notes: z.string().default(''),
+  // v2: specific things the teacher should look for in the student's response.
+  success_criteria: z.array(z.string()).optional(),
 })
 
 export const VocabPresentationSchema = z.object({
@@ -62,6 +67,8 @@ export const VocabPresentationSchema = z.object({
     pronunciation: z.string().default(''),
     definition: z.string(),
     example: z.string().default(''),
+    // v2: a common phrase / collocation for the word.
+    collocation: z.string().optional(),
   })).min(1),
 })
 
@@ -75,6 +82,8 @@ export const GrammarExplanationSchema = z.object({
     wrong: z.string(),
     right: z.string(),
   })).default([]),
+  // v2: quick verbal prompts the teacher can use to drill the structure.
+  practice_prompts: z.array(z.string()).optional(),
 })
 
 export const ImagePromptSchema = z.object({
@@ -83,6 +92,8 @@ export const ImagePromptSchema = z.object({
   image_url: z.string(),
   prompt: z.string(),
   tutor_followups: z.array(z.string()).default([]),
+  // v2: words the teacher should try to draw out of the student.
+  vocabulary_to_elicit: z.array(z.string()).optional(),
 })
 
 export const ActivitySchema = z.discriminatedUnion('type', [

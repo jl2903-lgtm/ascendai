@@ -33,6 +33,7 @@ export default function SavedPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
   const [levelFilter, setLevelFilter] = useState('all')
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest')
   const [deleting, setDeleting] = useState<string | null>(null)
   const [regenerating, setRegenerating] = useState<string | null>(null)
   const [viewedWorksheet, setViewedWorksheet] = useState<Worksheet | null>(null)
@@ -188,11 +189,17 @@ export default function SavedPage() {
   }
 
   const levels = ['all', ...Array.from(new Set(lessons.map(l => l.student_level)))]
-  const filteredLessons = lessons.filter(l => {
-    const matchSearch = l.title.toLowerCase().includes(search.toLowerCase()) || l.topic.toLowerCase().includes(search.toLowerCase())
-    const matchLevel = levelFilter === 'all' || l.student_level === levelFilter
-    return matchSearch && matchLevel
-  })
+  const filteredLessons = lessons
+    .filter(l => {
+      const matchSearch = l.title.toLowerCase().includes(search.toLowerCase()) || l.topic.toLowerCase().includes(search.toLowerCase())
+      const matchLevel = levelFilter === 'all' || l.student_level === levelFilter
+      return matchSearch && matchLevel
+    })
+    .sort((a, b) => {
+      if (sortBy === 'title') return a.title.localeCompare(b.title)
+      const cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      return sortBy === 'oldest' ? cmp : -cmp
+    })
   const filteredWorksheets = worksheets.filter(w => w.title.toLowerCase().includes(search.toLowerCase()))
   const filteredPractice = practiceSessions.filter(p => p.lesson_title.toLowerCase().includes(search.toLowerCase()) || p.lesson_topic.toLowerCase().includes(search.toLowerCase()))
   const showLessons = filter === 'all' || filter === 'lesson'
@@ -267,6 +274,18 @@ export default function SavedPage() {
             </select>
           </div>
         )}
+        {(filter === 'all' || filter === 'lesson') && (
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as typeof sortBy)}
+            aria-label="Sort lessons"
+            className="bg-white border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="title">Title A–Z</option>
+          </select>
+        )}
       </div>
 
       {total === 0 && (
@@ -290,43 +309,58 @@ export default function SavedPage() {
         <div>
           <h2 className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider mb-4">Lessons <span className="text-[#8C8880] font-normal normal-case">({filteredLessons.length})</span></h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredLessons.map(lesson => (
-              <div key={lesson.id} className="bg-white border border-[#E8E4DE] hover:border-teal-600/50 rounded-2xl p-5 transition-all group">
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0"><BookOpen className="w-4 h-4 text-teal-500" /></div>
-                  <span className="text-xs font-semibold text-teal-600 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full">{lesson.student_level}</span>
-                </div>
-                <h3 className="font-semibold text-[#2D2D2D] text-sm leading-snug mb-1 line-clamp-2">{lesson.title}</h3>
-                <p className="text-xs text-[#6B6860] mb-3 truncate">{lesson.topic} · {lesson.lesson_length}min</p>
-                <p className="text-xs text-[#8C8880]">{formatDate(lesson.created_at)}</p>
-                <div className="flex flex-wrap gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {Array.isArray(lesson.activities) && lesson.activities.length > 0 ? (
+            {filteredLessons.map(lesson => {
+              const activityCount = Array.isArray(lesson.activities) ? lesson.activities.length : 0
+              const hasActivities = activityCount > 0
+              return (
+                <div key={lesson.id} className="bg-white border border-[#E8E4DE] hover:border-teal-600/50 rounded-2xl p-5 transition-all flex flex-col">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0"><BookOpen className="w-4 h-4 text-teal-500" /></div>
+                    <span className="text-xs font-semibold text-teal-600 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full">{lesson.student_level}</span>
+                  </div>
+                  <Link href={`/lessons/${lesson.id}`} className="block group/title">
+                    <h3 className="font-semibold text-[#2D2D2D] text-sm leading-snug mb-1 line-clamp-2 group-hover/title:text-teal-700">{lesson.title}</h3>
+                  </Link>
+                  <p className="text-xs text-[#6B6860] mb-1 truncate">{lesson.topic} · {lesson.lesson_length}min</p>
+                  <p className="text-xs text-[#8C8880] mb-3">
+                    {formatDate(lesson.created_at)}
+                    {hasActivities ? <> · <span className="text-teal-700">{activityCount} activities</span></> : <> · <span className="text-amber-600">no activities yet</span></>}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-auto pt-2">
+                    {hasActivities ? (
+                      <Link
+                        href={`/lessons/${lesson.id}/teach`}
+                        className="flex items-center gap-1.5 text-xs bg-[#2D6A4F] hover:bg-[#256048] text-white font-semibold px-3 py-1.5 rounded-lg transition-all"
+                      >
+                        <Play className="w-3 h-3" /> Teach
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={() => handleRegenerateActivities(lesson.id)}
+                        disabled={regenerating === lesson.id}
+                        title="Convert this lesson into interactive activities for Teach Mode"
+                        className="flex items-center gap-1.5 text-xs bg-[#2D6A4F] hover:bg-[#256048] text-white font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${regenerating === lesson.id ? 'animate-spin' : ''}`} />
+                        {regenerating === lesson.id ? 'Working…' : 'Regenerate as activities'}
+                      </button>
+                    )}
                     <Link
-                      href={`/lessons/${lesson.id}/teach`}
-                      className="flex items-center gap-1.5 text-xs bg-[#2D6A4F] hover:bg-[#256048] text-white font-semibold px-3 py-1.5 rounded-lg transition-all"
+                      href={`/lessons/${lesson.id}`}
+                      className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-teal-500 hover:text-teal-600 text-[#6B6860] px-3 py-1.5 rounded-lg transition-all"
                     >
-                      <Play className="w-3 h-3" /> Teach
+                      <Eye className="w-3 h-3" /> View
                     </Link>
-                  ) : (
-                    <button
-                      onClick={() => handleRegenerateActivities(lesson.id)}
-                      disabled={regenerating === lesson.id}
-                      title="Convert this lesson into interactive activities for Teach Mode"
-                      className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-teal-500 hover:text-teal-600 text-[#6B6860] px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
-                    >
-                      <RefreshCw className={`w-3 h-3 ${regenerating === lesson.id ? 'animate-spin' : ''}`} />
-                      {regenerating === lesson.id ? 'Working…' : 'Regenerate as activities'}
+                    <button onClick={() => handleDownloadLesson(lesson)} className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-teal-500 hover:text-teal-600 text-[#6B6860] px-3 py-1.5 rounded-lg transition-all">
+                      <Download className="w-3 h-3" /> PDF
                     </button>
-                  )}
-                  <button onClick={() => handleDownloadLesson(lesson)} className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-teal-500 hover:text-teal-600 text-[#6B6860] px-3 py-1.5 rounded-lg transition-all">
-                    <Download className="w-3 h-3" /> PDF
-                  </button>
-                  <button onClick={() => deleteLesson(lesson.id)} disabled={deleting === lesson.id} className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-red-400 hover:text-red-500 text-[#8C8880] px-3 py-1.5 rounded-lg transition-all ml-auto">
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                    <button onClick={() => deleteLesson(lesson.id)} disabled={deleting === lesson.id} aria-label="Delete lesson" className="flex items-center gap-1.5 text-xs border border-[#E8E4DE] hover:border-red-400 hover:text-red-500 text-[#8C8880] px-3 py-1.5 rounded-lg transition-all ml-auto">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
