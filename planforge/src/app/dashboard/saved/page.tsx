@@ -35,7 +35,6 @@ export default function SavedPage() {
   const [levelFilter, setLevelFilter] = useState('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest')
   const [deleting, setDeleting] = useState<string | null>(null)
-  const [regenerating, setRegenerating] = useState<string | null>(null)
   const [viewedWorksheet, setViewedWorksheet] = useState<Worksheet | null>(null)
   const [qrSession, setQrSession] = useState<PracticeSession | null>(null)
   const [upload, setUpload] = useState<UploadModal>({
@@ -107,27 +106,9 @@ export default function SavedPage() {
     }
   }
 
-  const handleRegenerateActivities = async (lessonId: string) => {
-    setRegenerating(lessonId)
-    try {
-      const res = await fetch('/api/regenerate-activities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lessonId }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        toast.error(data.error || 'Failed to regenerate activities.')
-        return
-      }
-      toast.success('Activities ready — Teach Mode unlocked.')
-      setLessons(prev => prev.map(l => l.id === lessonId ? { ...l, activities: data.activities } : l))
-    } catch {
-      toast.error('Something went wrong.')
-    } finally {
-      setRegenerating(null)
-    }
-  }
+  // v3 removed the manual "Regenerate as activities" dashboard button — the
+  // teach-mode page now handles the not_started → generating → ready flow
+  // itself, so a single "Teach" CTA covers every state.
 
   const handleDownloadWorksheet = async (ws: Worksheet) => {
     try {
@@ -311,7 +292,9 @@ export default function SavedPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredLessons.map(lesson => {
               const activityCount = Array.isArray(lesson.activities) ? lesson.activities.length : 0
-              const hasActivities = activityCount > 0
+              const status = (lesson as { activities_status?: string }).activities_status ?? 'not_started'
+              const isReady = status === 'ready'
+              const isGenerating = status === 'generating'
               return (
                 <div key={lesson.id} className="bg-white border border-[#E8E4DE] hover:border-teal-600/50 rounded-2xl p-5 transition-all flex flex-col">
                   <div className="flex items-start justify-between gap-2 mb-3">
@@ -324,26 +307,27 @@ export default function SavedPage() {
                   <p className="text-xs text-[#6B6860] mb-1 truncate">{lesson.topic} · {lesson.lesson_length}min</p>
                   <p className="text-xs text-[#8C8880] mb-3">
                     {formatDate(lesson.created_at)}
-                    {hasActivities ? <> · <span className="text-teal-700">{activityCount} activities</span></> : <> · <span className="text-amber-600">no activities yet</span></>}
+                    {isReady ? <> · <span className="text-teal-700">{activityCount} activities</span></>
+                      : isGenerating ? <> · <span className="text-amber-600">building activities…</span></>
+                      : status === 'failed' ? <> · <span className="text-rose-600">activity build failed</span></>
+                      : <> · <span className="text-slate-500">plan ready</span></>}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-auto pt-2">
-                    {hasActivities ? (
+                    {isGenerating ? (
+                      <button
+                        disabled
+                        className="flex items-center gap-1.5 text-xs bg-[#2D6A4F]/70 text-white font-semibold px-3 py-1.5 rounded-lg cursor-not-allowed"
+                        title="Activity generation is in progress"
+                      >
+                        <RefreshCw className="w-3 h-3 animate-spin" /> Building…
+                      </button>
+                    ) : (
                       <Link
                         href={`/lessons/${lesson.id}/teach`}
                         className="flex items-center gap-1.5 text-xs bg-[#2D6A4F] hover:bg-[#256048] text-white font-semibold px-3 py-1.5 rounded-lg transition-all"
                       >
                         <Play className="w-3 h-3" /> Teach
                       </Link>
-                    ) : (
-                      <button
-                        onClick={() => handleRegenerateActivities(lesson.id)}
-                        disabled={regenerating === lesson.id}
-                        title="Convert this lesson into interactive activities for Teach Mode"
-                        className="flex items-center gap-1.5 text-xs bg-[#2D6A4F] hover:bg-[#256048] text-white font-semibold px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
-                      >
-                        <RefreshCw className={`w-3 h-3 ${regenerating === lesson.id ? 'animate-spin' : ''}`} />
-                        {regenerating === lesson.id ? 'Working…' : 'Regenerate as activities'}
-                      </button>
                     )}
                     <Link
                       href={`/lessons/${lesson.id}`}

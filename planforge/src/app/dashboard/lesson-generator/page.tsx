@@ -120,13 +120,17 @@ export default function LessonGeneratorPage() {
       if (res.status === 402) { setShowUpgrade(true); return }
       if (res.status === 429) { toast.error('Too many requests. Please wait a moment.'); return }
       if (!res.ok) { toast.error(data.error || 'Failed to generate lesson. Please try again.'); return }
-      // New endpoint contract: { lesson, activities }. Older clients that may
-      // already have a cached response without these wrappers fall back to
-      // treating the payload itself as the lesson.
+      // v3: server auto-saves and returns { id, lesson }. Redirect to the
+      // lesson view page; activity generation is deferred to "Teach this
+      // lesson". Older payloads without `id` fall back to in-page rendering.
+      if (data?.id) {
+        if (fromOnboarding) sessionStorage.setItem('tyoutorpro:show-celebration', '1')
+        window.location.href = `/lessons/${data.id}`
+        return
+      }
       const lessonContent: LessonContent = data?.lesson ?? data
-      const acts: Activity[] | null = data?.activities ?? null
       setLesson(lessonContent)
-      setActivities(acts)
+      setActivities(null)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       if (fromOnboarding && !overrides) {
         setShowCelebration(true)

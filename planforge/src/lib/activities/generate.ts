@@ -234,7 +234,11 @@ function lengthTargets(minutes: number): LengthTargets {
   }
 }
 
-function buildPrompt(data: LessonFormData, classContext?: ClassContext | null): string {
+// Optional pre-existing lesson plan content to anchor the activities to.
+// When provided, we tell the model it's converting an existing plan rather
+// than designing from scratch — keeps tone, vocabulary, and progression
+// consistent with what the teacher already saw on the lesson view page.
+function buildPrompt(data: LessonFormData, classContext?: ClassContext | null, plan?: LessonContent | null): string {
   const targets = lengthTargets(data.length)
   const arc = `LESSON ARC FOR ${data.length} MINUTES:
 You MUST produce ${targets.activityCount} activities total, including exactly ${targets.readingPassageCount} reading_passage activit${targets.readingPassageCount === 1 ? 'y' : 'ies'}.
@@ -292,6 +296,16 @@ Speak directly to the teacher in second person ("you"). Coach them. Reference th
 ${classContext.weakAreas.length ? `- Known weak areas: ${classContext.weakAreas.join(', ')}\n` : ''}${classContext.focusSkills.length ? `- Priority skills: ${classContext.focusSkills.join(', ')}\n` : ''}${classContext.additionalNotes ? `- Additional context: ${classContext.additionalNotes}\n` : ''}Tailor activities, examples, and tutor notes accordingly.`
     : ''
 
+  const planContext = plan
+    ? `\nEXISTING LESSON PLAN — convert this into Teach Mode activities. Stay faithful to the topic, level, language focus, and target vocabulary; don't invent a different lesson:
+
+Title: ${plan.title}
+Objectives:
+${(plan.overview?.objectives ?? []).map(o => `- ${o}`).join('\n')}
+Language focus: ${plan.languageFocus?.grammar_or_vocab ?? '—'}
+${plan.languageFocus?.explanation ? `Explanation: ${plan.languageFocus.explanation}\n` : ''}${plan.languageFocus?.examples?.length ? `Examples: ${plan.languageFocus.examples.join(' | ')}\n` : ''}${plan.warmer?.instructions ? `Warmer: ${plan.warmer.instructions}\n` : ''}${plan.mainActivity?.instructions ? `Main activity: ${plan.mainActivity.instructions}\n` : ''}${plan.speakingTask?.instructions ? `Speaking task: ${plan.speakingTask.instructions}\n` : ''}`
+    : ''
+
   return `Design an interactive lesson as an array of activities for the Teach Mode runner.
 
 PARAMETERS
@@ -302,7 +316,7 @@ PARAMETERS
 - Student Nationality / L1: ${data.nationality}
 - Class Size: ${data.classSize}
 - Special Focus: ${data.specialFocus.length > 0 ? data.specialFocus.join(', ') : 'None'}
-${ctx}
+${ctx}${planContext}
 
 ${arc}
 
@@ -326,6 +340,7 @@ const MODEL = 'gpt-4o'
 export async function generateActivities(
   data: LessonFormData,
   classContext?: ClassContext | null,
+  plan?: LessonContent | null,
 ): Promise<Activity[]> {
   const client = getOpenAIClient()
   const completion = await client.chat.completions.create({
@@ -335,7 +350,7 @@ export async function generateActivities(
     max_tokens: 16000,
     messages: [
       { role: 'system', content: SYSTEM },
-      { role: 'user', content: buildPrompt(data, classContext) },
+      { role: 'user', content: buildPrompt(data, classContext, plan) },
     ],
     tools: [
       {

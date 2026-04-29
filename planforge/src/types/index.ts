@@ -157,6 +157,8 @@ export interface LessonContent {
   }
 }
 
+export type ActivitiesStatus = 'not_started' | 'generating' | 'ready' | 'failed'
+
 export interface Lesson {
   id: string
   user_id: string
@@ -169,6 +171,11 @@ export interface Lesson {
   lesson_content: LessonContent
   // Populated for lessons generated after Teach Mode launch. Null on legacy rows.
   activities: unknown[] | null
+  // v3: tracks the on-demand activity generation lifecycle. Defaults to
+  // 'not_started' for new lessons; backfilled to 'ready' for old rows that
+  // already had activities populated.
+  activities_status: ActivitiesStatus
+  activities_error: string | null
   created_at: string
 }
 

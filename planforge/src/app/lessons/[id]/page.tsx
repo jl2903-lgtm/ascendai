@@ -1,17 +1,25 @@
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Play, ClipboardList } from 'lucide-react'
+import { ArrowLeft, Play, ClipboardList, Loader2 } from 'lucide-react'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import { ActivitiesSchema, type Activity } from '@/lib/activities/schema'
-import { activitiesFromLegacyPlan } from '@/lib/activities/generate'
 import { LessonPreview } from '@/components/teach/LessonPreview'
+import { PlanPreview } from '@/components/teach/PlanPreview'
 import { LessonViewActions } from './LessonViewActions'
+import type { LessonContent } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
-// Server-rendered lesson view. Loads the lesson by id, validates activities,
-// falls back to the legacy plan when activities is null, and renders the
-// preview + the primary "Teach this lesson" CTA at the top.
+// Server-rendered lesson view. Reflects the current activities_status:
+//  - ready       → "Teach this lesson" + "Rehearse"; preview = activities
+//  - generating  → spinner button "Building activities…" (disabled)
+//  - not_started → "Teach this lesson" (CTA still works — it triggers Stage 2
+//                  generation on the teach route)
+//  - failed      → "Teach this lesson" (re-enters the generation screen which
+//                  shows the error + Try again)
+//
+// The scrollable preview shows activities when ready (richer), otherwise
+// renders the saved lesson_content via PlanPreview so the page is never empty.
 export default async function LessonViewPage({ params }: { params: { id: string } }) {
   const supabase = createRouteClient()
   const { data: { session } } = await supabase.auth.getSession()
@@ -19,24 +27,20 @@ export default async function LessonViewPage({ params }: { params: { id: string 
 
   const { data: lesson } = await supabase
     .from('lessons')
-    .select('id, user_id, title, student_level, topic, lesson_length, student_age_group, student_nationality, lesson_content, activities, created_at')
+    .select('id, user_id, title, student_level, topic, lesson_length, student_age_group, student_nationality, lesson_content, activities, activities_status, created_at')
     .eq('id', params.id)
     .single()
 
   if (!lesson || lesson.user_id !== session.user.id) notFound()
 
   let activities: Activity[] | null = null
-  let activitiesAreFresh = false
-  if (lesson.activities) {
+  if (lesson.activities_status === 'ready' && lesson.activities) {
     const parsed = ActivitiesSchema.safeParse(lesson.activities)
-    if (parsed.success) {
-      activities = parsed.data
-      activitiesAreFresh = true
-    }
+    if (parsed.success) activities = parsed.data
   }
-  if (!activities && lesson.lesson_content) {
-    activities = activitiesFromLegacyPlan(lesson.lesson_content as any)
-  }
+
+  const status = (lesson.activities_status ?? 'not_started') as
+    | 'not_started' | 'generating' | 'ready' | 'failed'
 
   const created = new Date(lesson.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 
@@ -60,21 +64,30 @@ export default async function LessonViewPage({ params }: { params: { id: string 
             <span className="rounded-full bg-white border border-slate-200 px-3 py-1">{lesson.lesson_length} min</span>
             <span className="rounded-full bg-white border border-slate-200 px-3 py-1">{lesson.student_age_group}</span>
             <span className="rounded-full bg-white border border-slate-200 px-3 py-1">{lesson.student_nationality}</span>
-            <span className="rounded-full bg-white border border-slate-200 px-3 py-1">{activities?.length ?? 0} activities</span>
+            {status === 'ready' && activities ? (
+              <span className="rounded-full bg-white border border-slate-200 px-3 py-1">{activities.length} activities</span>
+            ) : null}
             <span className="rounded-full bg-white border border-slate-200 px-3 py-1">Created {created}</span>
           </div>
 
           {/* Primary actions */}
           <div className="mt-6 flex flex-wrap gap-3">
-            {activities && activities.length > 0 ? (
+            {status === 'generating' ? (
+              <button
+                disabled
+                className="inline-flex items-center gap-2 rounded-xl bg-[#2D6A4F]/70 text-white text-sm font-semibold px-5 py-2.5 cursor-not-allowed"
+              >
+                <Loader2 className="w-4 h-4 animate-spin" /> Building activities…
+              </button>
+            ) : (
               <Link
                 href={`/lessons/${lesson.id}/teach`}
                 className="inline-flex items-center gap-2 rounded-xl bg-[#2D6A4F] hover:bg-[#256048] text-white text-sm font-semibold px-5 py-2.5"
               >
                 <Play className="w-4 h-4" /> Teach this lesson
               </Link>
-            ) : null}
-            {activities && activities.length > 0 ? (
+            )}
+            {status === 'ready' ? (
               <Link
                 href={`/lessons/${lesson.id}/teach?mode=rehearsal`}
                 className="inline-flex items-center gap-2 rounded-xl bg-white text-[#2D6A4F] border border-[#2D6A4F] hover:bg-[#2D6A4F]/5 text-sm font-semibold px-5 py-2.5"
@@ -82,22 +95,28 @@ export default async function LessonViewPage({ params }: { params: { id: string 
                 <ClipboardList className="w-4 h-4" /> Rehearse
               </Link>
             ) : null}
-            <LessonViewActions lessonId={lesson.id} hasActivities={activitiesAreFresh} />
+            <LessonViewActions lessonId={lesson.id} hasActivities={status === 'ready'} />
           </div>
+
+          {(status === 'not_started' || status === 'failed') && (
+            <p className="mt-3 text-xs text-slate-500">
+              Interactive activities will be built when you start teaching (about 60–90 seconds).
+            </p>
+          )}
         </div>
 
         {/* Scrollable preview */}
-        {activities && activities.length > 0 ? (
-          <div className="mt-8 lesson-preview-print-root">
+        <div className="mt-8 lesson-preview-print-root">
+          {activities && activities.length > 0 ? (
             <LessonPreview activities={activities} lessonTitle={lesson.title} />
-          </div>
-        ) : (
-          <div className="mt-8 rounded-xl border border-slate-200 bg-white px-6 py-10 text-center">
-            <div className="text-slate-700 font-medium">This lesson doesn&apos;t have activity data yet.</div>
-            <p className="text-sm text-slate-500 mt-2">Click &ldquo;Regenerate as activities&rdquo; on the dashboard to enable Teach Mode.</p>
-            <Link href="/dashboard/saved" className="inline-block mt-4 text-sm text-teal-700 underline">Go to my lessons</Link>
-          </div>
-        )}
+          ) : lesson.lesson_content ? (
+            <PlanPreview lesson={lesson.lesson_content as LessonContent} lessonTitle={lesson.title} />
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-600">
+              No content yet.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
