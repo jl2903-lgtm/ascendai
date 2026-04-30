@@ -348,11 +348,21 @@ ${arc}
 ${depth}
 
 ACTIVITY RULES
+- Every activity in the output array MUST have a "type" field set to EXACTLY one of these eight string values, no variations, no other types allowed:
+    "reading_passage"
+    "multiple_choice"
+    "gap_fill"
+    "discussion_questions"
+    "writing_task"
+    "vocab_presentation"
+    "grammar_explanation"
+    "image_prompt"
+  Do not invent new types. Do not use camelCase or PascalCase or hyphens. Use these exact lowercase snake_case strings only.
 - Every activity has a unique id of the form "act_<short>" (any short random string).
 - gap_fill: write the sentence_template using {{0}}, {{1}}, etc. The answers array aligns with those indices in order.
 - multiple_choice: correct_index is 0-based. Each activity is ONE question. Produce multiple multiple_choice activities in a row to form a comprehension block of 4–6 questions.
 - vocab_presentation has no tutor-only fields — it's presented openly to the student.
-- IMAGES: do NOT generate or guess image URLs — they will not work. For reading_passage, discussion_questions, and image_prompt activities, write a short concrete image_query string (3–6 words, e.g. "movies and tv remote control", "popcorn cinema seats", "person streaming laptop"). A separate post-processor will look up a real image on Unsplash from this query.
+- IMAGES: do NOT generate or guess image URLs — they will not work. For reading_passage, discussion_questions, and image_prompt activities, write a short concrete image_query string (3–6 words, e.g. "movies and tv remote control", "popcorn cinema seats", "person streaming laptop"). A separate post-processor will look up a real image on Unsplash from this query. Do not output an image_url field at all.
 - Keep all student-facing copy at CEFR ${data.level}.
 
 ${tutorTone}
@@ -393,20 +403,36 @@ Call the generate_lesson_activities tool with the resulting array. Do not includ
 
 const MODEL = 'gpt-4o'
 
-export async function generateActivities(
+// Returns raw, unvalidated activities straight from the model. The endpoint
+// is responsible for the post-processing pipeline (normalize types → resolve
+// images → Zod validate → save). Validation here was order-of-operations
+// wrong: the Unsplash post-processor needs to write image_url BEFORE Zod
+// validation, but this function used to validate first and broke image_prompt.
+//
+// retryHint is appended to the user message on a follow-up attempt so the
+// model has explicit feedback ("previous output had invalid types: …") to
+// correct on retry.
+export async function generateActivitiesRaw(
   data: LessonFormData,
   classContext?: ClassContext | null,
   plan?: LessonContent | null,
-): Promise<Activity[]> {
+  retryHint?: string,
+): Promise<unknown[]> {
   const client = getOpenAIClient()
+  const userMessage = retryHint
+    ? `${buildPrompt(data, classContext, plan)}\n\nRETRY NOTE: ${retryHint}`
+    : buildPrompt(data, classContext, plan)
   const completion = await client.chat.completions.create({
     model: MODEL,
+    // Lower temperature than the default (1.0) for tighter adherence to the
+    // structured tool schema and the explicit type-string list in the prompt.
+    temperature: 0.3,
     // v2 lessons can be 20+ activities with 150–250 word reading passages and
     // 3–5 paragraphs of extras — token budget needs headroom.
     max_tokens: 16000,
     messages: [
       { role: 'system', content: SYSTEM },
-      { role: 'user', content: buildPrompt(data, classContext, plan) },
+      { role: 'user', content: userMessage },
     ],
     tools: [
       {
@@ -424,8 +450,21 @@ export async function generateActivities(
   const call = completion.choices[0]?.message?.tool_calls?.[0]
   if (!call || call.type !== 'function') throw new Error('No tool call in response')
   const args = JSON.parse(call.function.arguments || '{}') as { activities?: unknown }
-  if (!args.activities) throw new Error('Tool call missing activities')
-  return parseActivities(args.activities)
+  if (!Array.isArray(args.activities)) throw new Error('Tool call missing activities')
+  return args.activities as unknown[]
+}
+
+// Backwards-compat wrapper for callers that want the validated shape directly
+// (e.g. anywhere we still have legacy code paths). New code should use
+// generateActivitiesRaw and run normalize → resolveImages → parseActivities
+// in sequence so the Unsplash step lands before validation.
+export async function generateActivities(
+  data: LessonFormData,
+  classContext?: ClassContext | null,
+  plan?: LessonContent | null,
+): Promise<Activity[]> {
+  const raw = await generateActivitiesRaw(data, classContext, plan)
+  return parseActivities(raw)
 }
 
 // Build an `activities[]` array from a legacy LessonContent plan. Used as a

@@ -18,9 +18,6 @@ interface Props {
   exitHref: string
 }
 
-// Cycling subtitle messages keep the screen feeling alive while the long
-// activity-generation request is in flight. They're cosmetic — not tied to
-// real progress signals — but they help users not bounce after 30s.
 const PROGRESS_MESSAGES = [
   'Building reading passages…',
   'Designing comprehension questions…',
@@ -33,25 +30,36 @@ const PROGRESS_MESSAGES = [
 
 const POLL_INTERVAL_MS = 2000
 
+const FRIENDLY_ERROR =
+  "We couldn't build the activities. Please try again — if this keeps happening, contact support."
+
+// activities_error in the DB is stored as "[req_xxx] internal message". The UI
+// only ever shows a friendly fixed message + the request id; the internal
+// message stays in Vercel logs for support to grep.
+function parseRequestId(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const m = raw.match(/^\[(req_[a-zA-Z0-9-]+)\]/)
+  return m ? m[1] : null
+}
+
 export function GenerationScreen({ lessonId, initialStatus, initialError, teachHref, exitHref }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState<Status>(initialStatus)
-  const [error, setError] = useState<string | null>(initialError ?? null)
+  const [requestId, setRequestId] = useState<string | null>(parseRequestId(initialError))
   const [messageIndex, setMessageIndex] = useState(0)
   // Refs guard against React StrictMode's double-mount running the trigger
-  // twice and queue-up duplicate generation calls.
+  // twice and queuing duplicate generation calls.
   const triggeredRef = useRef(false)
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Cycle the cosmetic subtitle once a second until we leave the screen.
   useEffect(() => {
     const t = setInterval(() => setMessageIndex(i => (i + 1) % PROGRESS_MESSAGES.length), 4000)
     return () => clearInterval(t)
   }, [])
 
   // On mount: if status is not_started or failed, kick off generation. The
-  // server will set status='generating' atomically so a refresh in the middle
-  // resumes correctly. If already generating, just poll. If ready, navigate.
+  // server marks status='generating' atomically so refresh-during-wait resumes
+  // correctly. If already generating, just poll. If ready, navigate.
   useEffect(() => {
     if (status === 'ready') {
       router.replace(`${teachHref}?step=1`)
@@ -61,33 +69,20 @@ export function GenerationScreen({ lessonId, initialStatus, initialError, teachH
     triggeredRef.current = true
 
     const trigger = async () => {
-      if (status === 'not_started' || status === 'failed') {
-        try {
-          const res = await fetch(`/api/lessons/${lessonId}/generate-activities`, { method: 'POST' })
-          // Whatever the response, drop into polling — the endpoint may have
-          // just returned `ready` synchronously, or `failed` with a message,
-          // or kicked off a real generation. Polling reconciles either way.
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({}))
-            setError(data.error ?? 'Activity generation failed.')
-            setStatus('failed')
-            return
-          }
-          const data = await res.json().catch(() => ({}))
-          if (data?.status === 'ready') {
-            setStatus('ready')
-            return
-          }
-          if (data?.status === 'failed') {
-            setStatus('failed')
-            setError(data.error ?? 'Activity generation failed.')
-            return
-          }
-          setStatus('generating')
-        } catch (err) {
+      if (status !== 'not_started' && status !== 'failed') return
+      try {
+        const res = await fetch(`/api/lessons/${lessonId}/generate-activities`, { method: 'POST' })
+        const data = await res.json().catch(() => ({}))
+        if (data?.requestId) setRequestId(data.requestId)
+        if (!res.ok) {
           setStatus('failed')
-          setError(err instanceof Error ? err.message : 'Network error')
+          return
         }
+        if (data?.status === 'ready') { setStatus('ready'); return }
+        if (data?.status === 'failed') { setStatus('failed'); return }
+        setStatus('generating')
+      } catch {
+        setStatus('failed')
       }
     }
     trigger()
@@ -104,8 +99,9 @@ export function GenerationScreen({ lessonId, initialStatus, initialError, teachH
         if (data.activities_status === 'ready') {
           setStatus('ready')
         } else if (data.activities_status === 'failed') {
+          const rid = parseRequestId(data.activities_error)
+          if (rid) setRequestId(rid)
           setStatus('failed')
-          setError(data.activities_error ?? 'Activity generation failed.')
         }
       } catch {
         // Transient network errors — keep polling.
@@ -122,6 +118,15 @@ export function GenerationScreen({ lessonId, initialStatus, initialError, teachH
     if (status === 'ready') router.replace(`${teachHref}?step=1`)
   }, [status, router, teachHref])
 
+  // "Try again" re-triggers generation in place rather than reloading the page
+  // — keeps any ?mode=rehearsal in the URL and avoids a flash of the lesson
+  // view in between.
+  const handleRetry = () => {
+    setRequestId(null)
+    setStatus('not_started')
+    triggeredRef.current = false
+  }
+
   if (status === 'failed') {
     return (
       <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center px-6">
@@ -130,15 +135,14 @@ export function GenerationScreen({ lessonId, initialStatus, initialError, teachH
             <AlertCircle className="w-6 h-6 text-rose-600" />
           </div>
           <h2 className="text-lg font-semibold text-slate-900">We couldn&apos;t build the activities</h2>
-          <p className="text-sm text-slate-600 mt-2">{error || 'Something went wrong while generating activities for this lesson.'}</p>
+          <p className="text-sm text-slate-600 mt-2 leading-relaxed">{FRIENDLY_ERROR}</p>
+          {requestId && (
+            <p className="mt-3 text-xs text-slate-400 font-mono">Error reference: {requestId}</p>
+          )}
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => {
-                setError(null)
-                setStatus('not_started')
-                triggeredRef.current = false
-              }}
+              onClick={handleRetry}
               className="inline-flex items-center gap-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold px-4 py-2"
             >
               Try again

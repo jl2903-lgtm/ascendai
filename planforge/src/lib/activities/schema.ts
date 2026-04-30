@@ -108,11 +108,12 @@ export const GrammarExplanationSchema = z.object({
 export const ImagePromptSchema = z.object({
   type: z.literal('image_prompt'),
   id: z.string(),
-  // v3.1: image_url was required pre-3.1, but Unsplash failures now flow
-  // through as null and the frontend renders a placeholder. Loosen to
-  // nullable so post-processed rows still validate.
+  // v3.1.1: image_url is fully optional + nullable. The model writes
+  // image_query; the Unsplash post-processor populates image_url, which is
+  // null when the lookup fails or no key is set. The frontend renders a
+  // placeholder card for null/undefined either way.
   image_query: z.string().optional(),
-  image_url: z.string().nullable(),
+  image_url: z.string().nullable().optional(),
   prompt: z.string(),
   tutor_followups: z.array(z.string()).default([]),
   vocabulary_to_elicit: z.array(z.string()).optional(),
@@ -161,4 +162,64 @@ export function parseActivities(raw: unknown): Activity[] {
     return a
   })
   return ActivitiesSchema.parse(withIds)
+}
+
+// ── v3.1.1 type normalization ─────────────────────────────────────────────────
+// Defensive layer between the model's tool-call output and Zod validation.
+// We've seen the model occasionally produce camelCase / whitespace / unknown
+// activity types (Bug B). Drop unknowns rather than fail the whole batch —
+// safer than wrong-typing an activity and the rest of the lesson still works.
+
+const VALID_TYPES = new Set<Activity['type']>([
+  'reading_passage',
+  'multiple_choice',
+  'gap_fill',
+  'discussion_questions',
+  'writing_task',
+  'vocab_presentation',
+  'grammar_explanation',
+  'image_prompt',
+])
+
+// camelCase / PascalCase → snake_case ("MultipleChoice" → "multiple_choice").
+// Idempotent on already-snake-cased input.
+function toSnake(s: string): string {
+  return s
+    .trim()
+    .replace(/[\s\-]+/g, '_')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/_+/g, '_')
+    .toLowerCase()
+}
+
+export interface NormalizeResult {
+  activities: unknown[]
+  droppedTypes: string[] // for server-side logging
+}
+
+// Normalize an arbitrary activities array: coerce `type` to snake_case, drop
+// any items whose type doesn't match the eight valid literals. Returns the
+// kept items and the dropped raw type strings for logging.
+export function normalizeActivityTypes(raw: unknown): NormalizeResult {
+  if (!Array.isArray(raw)) return { activities: [], droppedTypes: [] }
+  const kept: unknown[] = []
+  const dropped: string[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') {
+      dropped.push(String((item as any)?.type ?? '<not-an-object>'))
+      continue
+    }
+    const rawType = (item as any).type
+    if (typeof rawType !== 'string') {
+      dropped.push(String(rawType))
+      continue
+    }
+    const normalized = toSnake(rawType)
+    if (!VALID_TYPES.has(normalized as Activity['type'])) {
+      dropped.push(rawType)
+      continue
+    }
+    kept.push({ ...(item as object), type: normalized })
+  }
+  return { activities: kept, droppedTypes: dropped }
 }
