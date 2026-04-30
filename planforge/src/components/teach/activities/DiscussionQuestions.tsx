@@ -4,6 +4,15 @@ import type { DiscussionQuestions as TDQ } from '@/lib/activities/schema'
 import { ActivityImage } from '../ActivityImage'
 
 export function DiscussionQuestions({ activity }: { activity: TDQ }) {
+  // [IMG-DEBUG] Layer 7: component-level render log (browser console).
+  if (typeof window !== 'undefined') {
+    console.log('[IMG-DEBUG] DiscussionQuestions rendering', {
+      activityId: activity.id,
+      title: activity.title,
+      image_url: activity.image_url ?? null,
+      image_query: activity.image_query ?? null,
+    })
+  }
   return (
     <div className="space-y-5">
       <header>

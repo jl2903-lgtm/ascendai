@@ -6,6 +6,14 @@ import { ActivityImage } from '../ActivityImage'
 
 export function ImagePrompt({ activity, rehearsal }: { activity: TIP; rehearsal?: boolean }) {
   const elicit = activity.vocabulary_to_elicit ?? []
+  // [IMG-DEBUG] Layer 7: component-level render log (browser console).
+  if (typeof window !== 'undefined') {
+    console.log('[IMG-DEBUG] ImagePrompt rendering', {
+      activityId: activity.id,
+      image_url: activity.image_url ?? null,
+      image_query: activity.image_query ?? null,
+    })
+  }
   return (
     <div className="space-y-5">
       <ActivityImage src={activity.image_url} aspect="max-h-[420px]" />

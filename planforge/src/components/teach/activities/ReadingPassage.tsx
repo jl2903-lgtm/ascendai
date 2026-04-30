@@ -9,6 +9,15 @@ export function ReadingPassage({ activity, rehearsal }: { activity: TReading; re
   const [showExtra, setShowExtra] = useState(!!rehearsal)
   const extras = activity.extra_paragraphs ?? []
   const hooks = activity.comprehension_hooks ?? []
+  // [IMG-DEBUG] Layer 7: component-level render log (browser console).
+  if (typeof window !== 'undefined') {
+    console.log('[IMG-DEBUG] ReadingPassage rendering', {
+      activityId: activity.id,
+      title: activity.title,
+      image_url: activity.image_url ?? null,
+      image_query: activity.image_query ?? null,
+    })
+  }
 
   return (
     <article className="space-y-5">

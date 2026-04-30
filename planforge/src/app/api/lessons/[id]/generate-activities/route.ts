@@ -49,6 +49,25 @@ async function runPipeline(opts: {
   const raw = await generateActivitiesRaw(opts.formData, null, opts.plan, opts.retryHint)
   const tGen = Date.now()
 
+  // [IMG-DEBUG] Layer 2: raw model output, per activity. Reports whether
+  // the model produced image_query and whether it produced image_url
+  // (it shouldn't — only image_query is asked for in v3.1+).
+  raw.forEach((a: any, i: number) => {
+    const t = a?.type
+    if (t === 'reading_passage' || t === 'discussion_questions' || t === 'image_prompt') {
+      console.log('[IMG-DEBUG] model output', {
+        lessonId: opts.lessonId,
+        requestId: opts.requestId,
+        activityIndex: i,
+        type: t,
+        hasImageQuery: typeof a?.image_query === 'string' && a.image_query.length > 0,
+        imageQueryValue: typeof a?.image_query === 'string' ? a.image_query : 'MISSING',
+        hasImageUrlField: 'image_url' in (a ?? {}),
+        imageUrlValue: 'image_url' in (a ?? {}) ? a.image_url : 'MISSING',
+      })
+    }
+  })
+
   const { activities: normalized, droppedTypes } = normalizeActivityTypes(raw)
   const withIds = normalized.map((a: any) => {
     if (a && typeof a === 'object' && (!a.id || typeof a.id !== 'string')) {
@@ -59,8 +78,29 @@ async function runPipeline(opts: {
   const tNormalize = Date.now()
 
   // Unsplash lookups already run in parallel inside resolveActivityImages.
-  const withImages = await resolveActivityImages(withIds as Activity[])
+  // Pass debug context so the helper can emit Layer 3/4 logs with lesson tags.
+  const withImages = await resolveActivityImages(withIds as Activity[], {
+    lessonId: opts.lessonId,
+    requestId: opts.requestId,
+  })
   const tImages = Date.now()
+
+  // [IMG-DEBUG] Layer 4 (post-process visibility from caller side): final
+  // image_url assigned to each activity after the Unsplash step, before any
+  // further mutation. Pairs with Layer 5 to detect mid-pipeline drops.
+  withImages.forEach((a: any, i: number) => {
+    const t = a?.type
+    if (t === 'reading_passage' || t === 'discussion_questions' || t === 'image_prompt') {
+      console.log('[IMG-DEBUG] post-unsplash on activity', {
+        lessonId: opts.lessonId,
+        requestId: opts.requestId,
+        activityIndex: i,
+        type: t,
+        image_query: a?.image_query ?? 'MISSING',
+        image_url: a?.image_url ?? null,
+      })
+    }
+  })
 
   // Validate before shuffling — shuffleMcqOptions needs a typed Activity[].
   const validated = ActivitiesSchema.parse(withImages)
@@ -86,6 +126,19 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   // requestId returned to the client and printed in every server log line so
   // a user-reported "Error reference: …" can be greped against Vercel logs.
   const requestId = generateActivityId().replace(/^act_/, 'req_')
+
+  // [IMG-DEBUG] Layer 1: confirm UNSPLASH_ACCESS_KEY is reaching this runtime.
+  // Logged once per generation, lesson-id tagged, key REDACTED to first 4 chars only.
+  {
+    const k = process.env.UNSPLASH_ACCESS_KEY
+    console.log('[IMG-DEBUG] env check', {
+      lessonId: params.id,
+      requestId,
+      keyExists: !!k,
+      keyLength: k ? k.length : 0,
+      first4: k ? k.slice(0, 4) : 'none',
+    })
+  }
 
   try {
     const supabase = createRouteClient()
@@ -173,6 +226,22 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
           })
         }
 
+        // [IMG-DEBUG] Layer 5 (pre-write): the activities array we're about
+        // to persist. Lists every image_url so we can confirm post-process
+        // results are still attached at write time.
+        activities.forEach((a, i) => {
+          if (a.type === 'reading_passage' || a.type === 'discussion_questions' || a.type === 'image_prompt') {
+            console.log('[IMG-DEBUG] pre-DB write', {
+              lessonId: lesson.id,
+              requestId,
+              activityIndex: i,
+              activityId: a.id,
+              type: a.type,
+              image_url: 'image_url' in a ? a.image_url : 'NOT_PRESENT',
+            })
+          }
+        })
+
         const tBeforeSave = Date.now()
         const { error: updateError } = await supabase
           .from('lessons')
@@ -180,6 +249,35 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
           .eq('id', lesson.id)
           .eq('user_id', userId)
         const tAfterSave = Date.now()
+
+        // [IMG-DEBUG] Layer 5 (post-write): confirm the row actually wrote
+        // and re-read image_url values to detect any silent column mismatch.
+        {
+          const { data: verify, error: verifyError } = await supabase
+            .from('lessons')
+            .select('activities')
+            .eq('id', lesson.id)
+            .single()
+          const verifyArr: any[] = Array.isArray(verify?.activities) ? (verify!.activities as any[]) : []
+          verifyArr.forEach((a, i) => {
+            if (a?.type === 'reading_passage' || a?.type === 'discussion_questions' || a?.type === 'image_prompt') {
+              console.log('[IMG-DEBUG] post-DB write verify', {
+                lessonId: lesson.id,
+                requestId,
+                activityIndex: i,
+                activityId: a?.id,
+                type: a?.type,
+                image_url_from_db: a?.image_url ?? 'NULL_OR_MISSING',
+              })
+            }
+          })
+          if (verifyError) {
+            console.error('[IMG-DEBUG] post-DB write verify error', {
+              lessonId: lesson.id, requestId,
+              message: verifyError.message, code: verifyError.code,
+            })
+          }
+        }
 
         if (updateError) throw new Error(`save failed: ${updateError.message}`)
 

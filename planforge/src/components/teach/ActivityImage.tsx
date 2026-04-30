@@ -27,6 +27,19 @@ export function ActivityImage({
   const trimmed = (src ?? '').trim()
   const valid = trimmed.length > 0 && /^https?:\/\//.test(trimmed) && !errored
 
+  // [IMG-DEBUG] Layer 7: emit one render log per ActivityImage mount/update.
+  // This runs in the BROWSER console, not Vercel logs. Tells us whether the
+  // component received a usable URL as a prop.
+  if (typeof window !== 'undefined') {
+    console.log('[IMG-DEBUG] ActivityImage render', {
+      receivedSrc: src ?? null,
+      trimmedLength: trimmed.length,
+      isHttpUrl: /^https?:\/\//.test(trimmed),
+      errored,
+      willRender: valid ? 'img' : (decorative ? 'null (decorative)' : 'placeholder'),
+    })
+  }
+
   if (!valid) {
     if (decorative) return null
     return (
@@ -45,7 +58,20 @@ export function ActivityImage({
       src={trimmed}
       alt={alt}
       className={`w-full object-cover rounded-xl border border-slate-200 ${aspect} ${className}`}
-      onError={() => setErrored(true)}
+      onLoad={() => {
+        // [IMG-DEBUG] Layer 7: <img> successfully loaded the URL.
+        console.log('[IMG-DEBUG] image loaded', { src: trimmed })
+      }}
+      onError={(e) => {
+        // [IMG-DEBUG] Layer 7: <img> failed to load. Could be 404, CORS,
+        // CSP, blocked by an extension, etc.
+        console.error('[IMG-DEBUG] image failed', {
+          src: trimmed,
+          eventType: (e as any)?.type,
+          targetSrc: (e?.currentTarget as HTMLImageElement | null)?.src,
+        })
+        setErrored(true)
+      }}
     />
   )
 }

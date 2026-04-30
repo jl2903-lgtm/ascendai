@@ -36,6 +36,30 @@ export default async function TeachLessonPage({
     redirect('/dashboard/saved')
   }
 
+  // [IMG-DEBUG] Layer 6: DB read at teach-page load. Reports image_url for
+  // every image-bearing activity exactly as it comes back from Postgres.
+  if (Array.isArray(lesson.activities)) {
+    (lesson.activities as any[]).forEach((a, i) => {
+      const t = a?.type
+      if (t === 'reading_passage' || t === 'discussion_questions' || t === 'image_prompt') {
+        console.log('[IMG-DEBUG] DB read on teach page', {
+          lessonId: lesson.id,
+          activityIndex: i,
+          activityId: a?.id,
+          type: t,
+          activities_status: lesson.activities_status,
+          image_url: a?.image_url ?? 'NULL_OR_MISSING',
+        })
+      }
+    })
+  } else {
+    console.log('[IMG-DEBUG] DB read on teach page (no activities array)', {
+      lessonId: lesson.id,
+      activities_status: lesson.activities_status,
+      activitiesType: typeof lesson.activities,
+    })
+  }
+
   const teachHref = `/lessons/${params.id}/teach`
   const exitHref = `/lessons/${params.id}`
 
