@@ -128,15 +128,34 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   const requestId = generateActivityId().replace(/^act_/, 'req_')
 
   // [IMG-DEBUG] Layer 1: confirm UNSPLASH_ACCESS_KEY is reaching this runtime.
-  // Logged once per generation, lesson-id tagged, key REDACTED to first 4 chars only.
+  // BYTE-LEVEL — when the dashboard says one thing and curl-with-this-key
+  // works but the running function gets 401, the env var is contaminated by
+  // an invisible character. JSON.stringify exposes \n / \t / spaces as
+  // visible escapes; charCodes pin down exact byte values at the boundaries.
   {
-    const k = process.env.UNSPLASH_ACCESS_KEY
+    const k = process.env.UNSPLASH_ACCESS_KEY ?? ''
+    const codes = (s: string, n: number) => {
+      const out: number[] = []
+      for (let i = 0; i < Math.min(n, s.length); i++) out.push(s.charCodeAt(i))
+      return out
+    }
     console.log('[IMG-DEBUG] env check', {
       lessonId: params.id,
       requestId,
-      keyExists: !!k,
-      keyLength: k ? k.length : 0,
-      first4: k ? k.slice(0, 4) : 'none',
+      keyExists: !!process.env.UNSPLASH_ACCESS_KEY,
+      keyLength: k.length,
+      first4: k.slice(0, 4),
+      last4: k.slice(-4),
+      // JSON-stringify exposes embedded whitespace / control chars as escapes.
+      // If you see \\n or \\u0020 here, that's your contamination.
+      keyJson: JSON.stringify(k),
+      // Decimal char codes for the first and last 6 characters. Should be
+      // alphanumeric or `_` / `-` for a clean key. Anything < 33 (control
+      // chars / whitespace) or > 126 (non-printable) is contamination.
+      first6Codes: codes(k, 6),
+      last6Codes: codes(k.slice(-6), 6),
+      trimmedLength: k.trim().length,
+      lengthsMatch: k.length === k.trim().length,
     })
   }
 
