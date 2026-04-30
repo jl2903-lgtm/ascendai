@@ -53,8 +53,18 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       .eq('user_id', userId)
 
     if (lockError) {
-      console.error('[generate-activities] failed to mark generating', lockError)
-      return NextResponse.json({ error: 'Failed to start generation' }, { status: 500 })
+      // If the column doesn't exist, this is the first place we'll see it —
+      // log the full Supabase error shape so the cause surfaces in Vercel logs.
+      console.error('[generate-activities] failed to mark generating', {
+        message: lockError.message,
+        code: lockError.code,
+        details: lockError.details,
+        hint: lockError.hint,
+      })
+      const debug = process.env.NODE_ENV === 'development'
+        ? { debug: { code: lockError.code, message: lockError.message, hint: lockError.hint } }
+        : {}
+      return NextResponse.json({ error: 'Failed to start generation', ...debug }, { status: 500 })
     }
 
     const formData: LessonFormData = {

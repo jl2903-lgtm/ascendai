@@ -191,8 +191,19 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (insertError || !saved) {
-      console.error('[generate-lesson] insert failed', insertError)
-      return NextResponse.json({ error: 'Failed to save lesson' }, { status: 500 })
+      // Log full Supabase error shape so the cause is visible in Vercel logs.
+      // Supabase errors carry .message / .code / .details / .hint — useful
+      // for spotting "column ... does not exist" (= unrun migration).
+      console.error('[generate-lesson] insert failed', {
+        message: insertError?.message,
+        code: insertError?.code,
+        details: insertError?.details,
+        hint: insertError?.hint,
+      })
+      const debug = process.env.NODE_ENV === 'development' && insertError
+        ? { debug: { code: insertError.code, message: insertError.message, hint: insertError.hint } }
+        : {}
+      return NextResponse.json({ error: 'Failed to save lesson', ...debug }, { status: 500 })
     }
 
     // Track stats for all users (upsert into user_stats)
@@ -210,7 +221,13 @@ export async function POST(req: NextRequest) {
     // might still be deployed. New clients should use `id` to redirect.
     return NextResponse.json({ id: saved.id, lesson: lessonContent })
   } catch (error) {
+    // Log full error object (not just message) — class name, stack, cause.
+    // Most useful for spotting OpenAI 401s, network failures, JSON-parse
+    // surprises that escaped the inner try.
     console.error('[generate-lesson]', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const debug = process.env.NODE_ENV === 'development' && error instanceof Error
+      ? { debug: { name: error.name, message: error.message } }
+      : {}
+    return NextResponse.json({ error: 'Internal server error', ...debug }, { status: 500 })
   }
 }
