@@ -15,6 +15,17 @@ const TIMEOUT_MS = 5_000
 // the Unsplash lookup for.
 type WithImage = Extract<Activity, { image_url?: string | null }>
 
+// Activity types that carry imagery — driven by schema, not by inspecting
+// the live activity object. The previous version checked `'image_url' in a`
+// which returns false now that the model writes only image_query (the
+// post-processor writes image_url). Result was that every image lookup was
+// skipped silently.
+const TYPES_WITH_IMAGES = new Set<Activity['type']>([
+  'reading_passage',
+  'discussion_questions',
+  'image_prompt',
+])
+
 // Pull the most relevant text out of an activity for the Unsplash query.
 // Falls back through image_query → title → topic-ish text in that order.
 function pickQuery(a: Activity): string | null {
@@ -61,8 +72,10 @@ export async function resolveActivityImages(activities: Activity[]): Promise<Act
     })
   }
 
+  // Run lookups in parallel for every image-bearing activity type. Failures
+  // are independently handled so one bad query doesn't break siblings.
   const enriched = await Promise.all(activities.map(async a => {
-    if (!('image_url' in a)) return a
+    if (!TYPES_WITH_IMAGES.has(a.type)) return a
     const query = pickQuery(a)
     if (!query) return { ...a, image_url: null } as Activity
     const url = await fetchOne(query, accessKey)

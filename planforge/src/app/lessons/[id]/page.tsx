@@ -6,6 +6,7 @@ import { ActivitiesSchema, type Activity } from '@/lib/activities/schema'
 import { LessonPreview } from '@/components/teach/LessonPreview'
 import { PlanPreview } from '@/components/teach/PlanPreview'
 import { LessonViewActions } from './LessonViewActions'
+import { ShareWithStudents } from './ShareWithStudents'
 import type { LessonContent } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -96,6 +97,14 @@ export default async function LessonViewPage({ params }: { params: { id: string 
               </Link>
             ) : null}
             <LessonViewActions lessonId={lesson.id} hasActivities={status === 'ready'} />
+            {lesson.lesson_content ? (
+              <ShareWithStudents
+                lesson={lesson.lesson_content as LessonContent}
+                level={lesson.student_level}
+                topic={lesson.topic}
+                nationality={lesson.student_nationality}
+              />
+            ) : null}
           </div>
 
           {(status === 'not_started' || status === 'failed') && (

@@ -4,6 +4,7 @@ import { createRouteClient } from '@/lib/supabase/route-handler'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { generateActivitiesRaw } from '@/lib/activities/generate'
 import { resolveActivityImages } from '@/lib/activities/unsplash'
+import { shuffleMcqOptions } from '@/lib/activities/shuffle'
 import {
   ActivitiesSchema,
   generateActivityId,
@@ -25,35 +26,60 @@ export const maxDuration = 300 // 5 min cap; honored on Vercel Pro+ tiers.
 
 const FRIENDLY_ERROR = "We couldn't build the activities. Please try again — if this keeps happening, contact support."
 
-// v3.1.1 pipeline: model → normalize types → resolve images → Zod validate.
-// Returns validated activities or throws the original error so the caller can
-// decide whether to retry.
+// v3.2 pipeline (parallelized + MCQ shuffle):
+//   1. generateActivitiesRaw → two model calls in parallel (first half +
+//      second half), concatenate
+//   2. normalizeActivityTypes → snake_case + drop unknowns
+//   3. resolveActivityImages → Unsplash lookups in parallel for every
+//      image-bearing activity
+//   4. shuffleMcqOptions → seeded Fisher-Yates so MCQ correct answers land
+//      at varied positions; deterministic per (lessonId, activityId)
+//   5. ActivitiesSchema.parse → Zod validation
+//
+// Timing logs at every step land in Vercel logs tagged with the requestId
+// so we can quickly tell where slow generations are spending their seconds.
 async function runPipeline(opts: {
+  lessonId: string
   formData: LessonFormData
   plan: LessonContent
   retryHint?: string
-}): Promise<{ activities: Activity[]; droppedTypes: string[] }> {
+  requestId: string
+}): Promise<{ activities: Activity[]; droppedTypes: string[]; timings: Record<string, number> }> {
+  const t0 = Date.now()
   const raw = await generateActivitiesRaw(opts.formData, null, opts.plan, opts.retryHint)
+  const tGen = Date.now()
 
-  // Normalize: trim + snake_case the discriminator field, drop unknowns.
   const { activities: normalized, droppedTypes } = normalizeActivityTypes(raw)
-
-  // Fill in any missing ids defensively (model occasionally omits them).
   const withIds = normalized.map((a: any) => {
     if (a && typeof a === 'object' && (!a.id || typeof a.id !== 'string')) {
       return { ...a, id: generateActivityId() }
     }
     return a
   })
+  const tNormalize = Date.now()
 
-  // Resolve image_query → image_url via Unsplash BEFORE Zod runs. v3.1
-  // shipped these in the wrong order, which is why image_prompt activities
-  // were failing validation with "image_url required, got undefined".
+  // Unsplash lookups already run in parallel inside resolveActivityImages.
   const withImages = await resolveActivityImages(withIds as Activity[])
+  const tImages = Date.now()
 
-  // Validate. Throws ZodError on failure.
-  const activities = ActivitiesSchema.parse(withImages)
-  return { activities, droppedTypes }
+  // Validate before shuffling — shuffleMcqOptions needs a typed Activity[].
+  const validated = ActivitiesSchema.parse(withImages)
+  const tValidate = Date.now()
+
+  const activities = shuffleMcqOptions(validated, opts.lessonId)
+  const tShuffle = Date.now()
+
+  const timings = {
+    generationMs: tGen - t0,
+    normalizeMs: tNormalize - tGen,
+    unsplashMs: tImages - tNormalize,
+    validateMs: tValidate - tImages,
+    shuffleMs: tShuffle - tValidate,
+    pipelineTotalMs: tShuffle - t0,
+  }
+  console.log('[generate-activities] pipeline timings', { requestId: opts.requestId, ...timings })
+
+  return { activities, droppedTypes, timings }
 }
 
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -123,6 +149,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     // First attempt + one automatic retry on validation failure. Two failures
     // in a row → genuine breakage; surface a friendly error and let the user
     // hit "Try again" manually.
+    const tEndpointStart = Date.now()
     let lastError: unknown = null
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
@@ -130,7 +157,13 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
           ? `The previous attempt produced invalid activities. Issues: ${JSON.stringify(lastError.issues.slice(0, 5))}. Strictly use ONLY these eight type values, no others: reading_passage, multiple_choice, gap_fill, discussion_questions, writing_task, vocab_presentation, grammar_explanation, image_prompt. Do not output an image_url field — only image_query.`
           : undefined
 
-        const { activities, droppedTypes } = await runPipeline({ formData, plan, retryHint })
+        const { activities, droppedTypes, timings } = await runPipeline({
+          lessonId: lesson.id,
+          formData,
+          plan,
+          retryHint,
+          requestId,
+        })
 
         if (droppedTypes.length > 0) {
           console.warn('[generate-activities] dropped invalid activity types', {
@@ -140,13 +173,25 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
           })
         }
 
+        const tBeforeSave = Date.now()
         const { error: updateError } = await supabase
           .from('lessons')
           .update({ activities, activities_status: 'ready', activities_error: null })
           .eq('id', lesson.id)
           .eq('user_id', userId)
+        const tAfterSave = Date.now()
 
         if (updateError) throw new Error(`save failed: ${updateError.message}`)
+
+        console.log('[generate-activities] success', {
+          requestId,
+          attempt,
+          activityCount: activities.length,
+          mcqCount: activities.filter(a => a.type === 'multiple_choice').length,
+          dbSaveMs: tAfterSave - tBeforeSave,
+          totalEndpointMs: tAfterSave - tEndpointStart,
+          ...timings,
+        })
 
         return NextResponse.json({ status: 'ready', activities, requestId })
       } catch (err) {

@@ -23,9 +23,11 @@ const teachingGuidanceJsonSchema = {
   type: 'object',
   properties: {
     objective: { type: 'string' },
-    how_to_run: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 6 },
-    watch_for: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 6 },
-    if_struggling: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 6 },
+    // v3.2: trimmed verbosity to keep generation under 60s. 2–3 items per
+    // section is enough to be useful without burning output tokens.
+    how_to_run: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3 },
+    watch_for: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3 },
+    if_struggling: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3 },
     timing_minutes: { type: 'integer', minimum: 1, maximum: 30 },
   },
   required: ['objective', 'how_to_run', 'watch_for', 'if_struggling', 'timing_minutes'],
@@ -91,7 +93,7 @@ const activityJsonSchema = {
               tutor_followups: { type: 'array', items: { type: 'string' } },
               teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'title', 'questions', 'teaching_guidance'],
+            required: ['type', 'id', 'title', 'questions', 'image_query', 'teaching_guidance'],
           },
           {
             type: 'object',
@@ -177,85 +179,163 @@ const SYSTEM = `You are an expert TEFL/EFL curriculum designer. You design inter
 
 // Length-scaled targets. We pass these explicitly to the model rather than
 // asking it to estimate timing — its self-estimates are unreliable.
+//
+// v3.2: targets are split into two halves so we can run two parallel model
+// calls instead of one long sequential call. Each half gets its own
+// activityCount + arcSteps, plus a one-line note describing what the OTHER
+// half will cover so the two halves stay coherent (no duplicate vocab,
+// progression matches).
+interface HalfTargets {
+  activityCount: string // "4–5"
+  arcSteps: string[]
+  role: string // human-readable description of this half's role
+  otherHalfNote: string // "(the second half will cover comprehension, discussion, writing)"
+}
+
 interface LengthTargets {
-  activityCount: string
+  totalActivityCount: string
   readingPassageCount: number
   productionGuidance: string
+  firstHalf: HalfTargets
+  secondHalf: HalfTargets
+  // Combined arc, used to summarise both halves at once when needed.
   arcSteps: string[]
 }
 
 function lengthTargets(minutes: number): LengthTargets {
   if (minutes <= 30) {
+    const firstHalf: HalfTargets = {
+      activityCount: '4–5',
+      role: 'first half — lead-in, vocabulary, reading exposure',
+      otherHalfNote: '(the second half will cover comprehension MCQs, language focus, gap-fill, and ONE production activity)',
+      arcSteps: [
+        'Lead-in (image_prompt OR discussion_questions) — exactly 1',
+        'vocab_presentation — exactly 1, 6–10 items',
+        'reading_passage — exactly 1, full body + 3–5 extra paragraphs',
+      ],
+    }
+    const secondHalf: HalfTargets = {
+      activityCount: '4–5',
+      role: 'second half — comprehension, language focus, production',
+      otherHalfNote: '(the first half already covered the lead-in, vocab presentation, and reading passage)',
+      arcSteps: [
+        'multiple_choice — 4–6 items (one per question), all referring to the reading passage',
+        'grammar_explanation — exactly 1',
+        'gap_fill — exactly 1',
+        'production: ONE of writing_task OR discussion_questions (not both)',
+      ],
+    }
     return {
-      activityCount: '8–10',
+      totalActivityCount: '8–10',
       readingPassageCount: 1,
       productionGuidance: 'Pick ONE production activity at the end: a writing_task OR a final discussion_questions, not both.',
-      arcSteps: [
-        'Lead-in (image_prompt OR discussion_questions)',
-        'vocab_presentation',
-        'reading_passage',
-        'multiple_choice (4–6 comprehension questions)',
-        'grammar_explanation',
-        'gap_fill',
-        'production (writing_task OR discussion_questions — pick one)',
-      ],
+      firstHalf,
+      secondHalf,
+      arcSteps: [...firstHalf.arcSteps, ...secondHalf.arcSteps],
     }
   }
   if (minutes <= 45) {
+    const firstHalf: HalfTargets = {
+      activityCount: '5–7',
+      role: 'first half — lead-in, vocabulary, reading exposure',
+      otherHalfNote: '(the second half will cover comprehension MCQs, grammar/gap-fill, discussion, and writing)',
+      arcSteps: [
+        'Lead-in (image_prompt OR discussion_questions) — exactly 1',
+        'vocab_presentation — exactly 1, 6–10 items',
+        'reading_passage — exactly 1',
+      ],
+    }
+    const secondHalf: HalfTargets = {
+      activityCount: '6–7',
+      role: 'second half — comprehension + language focus + production',
+      otherHalfNote: '(the first half already covered the lead-in, vocab presentation, and reading passage)',
+      arcSteps: [
+        'multiple_choice — 4–6 items',
+        'grammar_explanation — exactly 1',
+        'gap_fill — exactly 1',
+        'discussion_questions — exactly 1',
+        'writing_task — exactly 1',
+      ],
+    }
     return {
-      activityCount: '11–14',
+      totalActivityCount: '11–14',
       readingPassageCount: 1,
       productionGuidance: 'Include BOTH a writing_task and a discussion_questions production activity.',
-      arcSteps: [
-        'Lead-in (image_prompt OR discussion_questions)',
-        'vocab_presentation',
-        'reading_passage',
-        'multiple_choice (4–6 comprehension questions)',
-        'grammar_explanation',
-        'gap_fill',
-        'discussion_questions',
-        'writing_task',
-      ],
+      firstHalf,
+      secondHalf,
+      arcSteps: [...firstHalf.arcSteps, ...secondHalf.arcSteps],
     }
   }
   if (minutes <= 60) {
+    const firstHalf: HalfTargets = {
+      activityCount: '7–9',
+      role: 'first half — lead-in, vocab #1, reading #1, comprehension #1, language focus',
+      otherHalfNote: '(the second half will cover a second vocab set, second reading passage, second comprehension block, discussion, and writing)',
+      arcSteps: [
+        'Lead-in (image_prompt OR discussion_questions) — exactly 1',
+        'vocab_presentation #1 — exactly 1',
+        'reading_passage #1 — exactly 1',
+        'multiple_choice — 4–6 items, on passage #1',
+        'grammar_explanation — exactly 1',
+        'gap_fill — exactly 1',
+      ],
+    }
+    const secondHalf: HalfTargets = {
+      activityCount: '8–9',
+      role: 'second half — vocab #2, reading #2, comprehension #2, discussion, writing',
+      otherHalfNote: '(the first half already covered lead-in, vocab #1, reading #1, comprehension #1, and language focus)',
+      arcSteps: [
+        'vocab_presentation #2 — exactly 1, on a related sub-topic, distinct from vocab #1',
+        'reading_passage #2 — exactly 1, related sub-topic with a contrasting angle',
+        'multiple_choice — 4–6 items, on passage #2',
+        'discussion_questions — exactly 1',
+        'writing_task — exactly 1',
+      ],
+    }
     return {
-      activityCount: '15–18',
+      totalActivityCount: '15–18',
       readingPassageCount: 2,
       productionGuidance: 'Full production phase: discussion_questions AND writing_task.',
-      arcSteps: [
-        'Lead-in (image_prompt OR discussion_questions)',
-        'vocab_presentation #1',
-        'reading_passage #1',
-        'multiple_choice #1 (4–6 comprehension questions on passage 1)',
-        'grammar_explanation + gap_fill',
-        'vocab_presentation #2 (related sub-topic vocab)',
-        'reading_passage #2 (related sub-topic, contrasting angle)',
-        'multiple_choice #2 (4–6 comprehension questions on passage 2)',
-        'discussion_questions',
-        'writing_task',
-      ],
+      firstHalf,
+      secondHalf,
+      arcSteps: [...firstHalf.arcSteps, ...secondHalf.arcSteps],
     }
   }
   // 90+ min
+  const firstHalf: HalfTargets = {
+    activityCount: '10–13',
+    role: 'first half — lead-in through first language focus',
+    otherHalfNote: '(the second half will cover vocab #2, readings #2 and #3, comprehension #2, discussion, and writing)',
+    arcSteps: [
+      'Lead-in (image_prompt OR discussion_questions) — exactly 1',
+      'vocab_presentation #1 — exactly 1',
+      'reading_passage #1 — exactly 1',
+      'multiple_choice — 4–6 items on passage #1',
+      'grammar_explanation — exactly 1',
+      'gap_fill — exactly 1',
+    ],
+  }
+  const secondHalf: HalfTargets = {
+    activityCount: '10–13',
+    role: 'second half — second vocab set, second/third reading passages, comprehension, production',
+    otherHalfNote: '(the first half already covered lead-in, vocab #1, reading #1, comprehension #1, grammar, gap-fill)',
+    arcSteps: [
+      'vocab_presentation #2 — exactly 1, distinct from vocab #1',
+      'reading_passage #2 — exactly 1',
+      'multiple_choice — 4–6 items on passage #2',
+      'second gap_fill OR additional grammar drill',
+      'reading_passage #3 — exactly 1, contrasting perspective',
+      'extended discussion_questions — exactly 1',
+      'writing_task — exactly 1',
+    ],
+  }
   return {
-    activityCount: '20–26',
+    totalActivityCount: '20–26',
     readingPassageCount: 3,
     productionGuidance: 'Extended production: include both extended discussion_questions and a substantial writing_task. You may add a second gap_fill or a second multiple_choice for more practice.',
-    arcSteps: [
-      'Lead-in (image_prompt OR discussion_questions)',
-      'vocab_presentation #1',
-      'reading_passage #1',
-      'multiple_choice #1 (4–6 comprehension questions)',
-      'grammar_explanation + gap_fill',
-      'vocab_presentation #2',
-      'reading_passage #2',
-      'multiple_choice #2 (4–6 comprehension questions)',
-      'second gap_fill OR additional grammar drill',
-      'reading_passage #3 (optional — contrasting perspective)',
-      'extended discussion_questions',
-      'writing_task',
-    ],
+    firstHalf,
+    secondHalf,
+    arcSteps: [...firstHalf.arcSteps, ...secondHalf.arcSteps],
   }
 }
 
@@ -263,10 +343,38 @@ function lengthTargets(minutes: number): LengthTargets {
 // When provided, we tell the model it's converting an existing plan rather
 // than designing from scratch — keeps tone, vocabulary, and progression
 // consistent with what the teacher already saw on the lesson view page.
-function buildPrompt(data: LessonFormData, classContext?: ClassContext | null, plan?: LessonContent | null): string {
+function buildPrompt(
+  data: LessonFormData,
+  classContext?: ClassContext | null,
+  plan?: LessonContent | null,
+  // v3.2: when 'first' or 'second', generate only that half of the lesson.
+  // The two halves run in parallel and are concatenated by the caller.
+  half: 'first' | 'second' | 'all' = 'all',
+): string {
   const targets = lengthTargets(data.length)
-  const arc = `LESSON ARC FOR ${data.length} MINUTES:
-You MUST produce ${targets.activityCount} activities total, including exactly ${targets.readingPassageCount} reading_passage activit${targets.readingPassageCount === 1 ? 'y' : 'ies'}.
+  const halfTargets =
+    half === 'first' ? targets.firstHalf
+    : half === 'second' ? targets.secondHalf
+    : null
+
+  const arc = halfTargets
+    ? `YOU ARE GENERATING THE ${half.toUpperCase()} HALF OF A ${data.length}-MINUTE LESSON.
+
+This is the ${halfTargets.role}.
+You MUST produce ${halfTargets.activityCount} activities, in the order below. ${halfTargets.otherHalfNote}
+
+Stay strictly inside your half's scope. Do not produce activities that belong to the other half — they are being generated by a separate parallel call.
+
+Activities to produce in this half (in order):
+${halfTargets.arcSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+
+Combined arc reference (DO NOT generate the whole arc, only your half):
+${targets.arcSteps.map(s => `  - ${s}`).join('\n')}
+
+${targets.productionGuidance}
+`
+    : `LESSON ARC FOR ${data.length} MINUTES:
+You MUST produce ${targets.totalActivityCount} activities total, including exactly ${targets.readingPassageCount} reading_passage activit${targets.readingPassageCount === 1 ? 'y' : 'ies'}.
 ${targets.productionGuidance}
 
 Recommended order (adapt to the topic, but stay close to this structure):
@@ -371,9 +479,9 @@ TEACHING_GUIDANCE — REQUIRED ON EVERY ACTIVITY
 Every activity must include a teaching_guidance object with these four sections plus a timing_minutes integer. The Tutor Panel in the app renders these so the teacher can run the lesson from your output.
 
   • objective: one sentence, action-oriented, what the student should know / do / produce by the end of this slide.
-  • how_to_run: 2–4 concrete teacher moves in order. Read like a recipe a substitute teacher could follow ("Read question aloud", "Wait for response", "Click 'Show correct answer' and discuss why other options are wrong"). Reference this activity's actual content, not generic advice.
-  • watch_for: 2–4 specific student errors / hesitations / pronunciation issues to listen for. Cite the actual vocabulary, grammar, or concepts in this activity. Mention predictable L1-driven errors for ${data.nationality} students.
-  • if_struggling: 2–4 concrete fallback moves (a simpler example, a scaffolding question, a personal example). Plus an extension prompt for students who nail it. Don't write "explain again" — give the alternative move.
+  • how_to_run: 2–3 concrete teacher moves in order. Read like a recipe a substitute teacher could follow ("Read question aloud", "Wait for response", "Click 'Show correct answer' and discuss why other options are wrong"). Reference this activity's actual content, not generic advice.
+  • watch_for: 2–3 specific student errors / hesitations / pronunciation issues to listen for. Cite the actual vocabulary, grammar, or concepts in this activity. Mention predictable L1-driven errors for ${data.nationality} students.
+  • if_struggling: 2–3 concrete fallback moves (a simpler example, a scaffolding question, a personal example). Don't write "explain again" — give the alternative move.
   • timing_minutes: integer, 1–30. The teacher's rough budget for this slide. Across all activities the sum should approximately equal ${data.length} minutes.
 
 EXAMPLE teaching_guidance for a multiple_choice activity on "binge-watching":
@@ -403,33 +511,24 @@ Call the generate_lesson_activities tool with the resulting array. Do not includ
 
 const MODEL = 'gpt-4o'
 
-// Returns raw, unvalidated activities straight from the model. The endpoint
-// is responsible for the post-processing pipeline (normalize types → resolve
-// images → Zod validate → save). Validation here was order-of-operations
-// wrong: the Unsplash post-processor needs to write image_url BEFORE Zod
-// validation, but this function used to validate first and broke image_prompt.
-//
-// retryHint is appended to the user message on a follow-up attempt so the
-// model has explicit feedback ("previous output had invalid types: …") to
-// correct on retry.
-export async function generateActivitiesRaw(
+// Single-half generation. Internal — used by generateActivitiesRaw which
+// orchestrates the two parallel halves.
+async function generateOneHalf(
   data: LessonFormData,
-  classContext?: ClassContext | null,
-  plan?: LessonContent | null,
+  classContext: ClassContext | null | undefined,
+  plan: LessonContent | null | undefined,
+  half: 'first' | 'second',
   retryHint?: string,
 ): Promise<unknown[]> {
   const client = getOpenAIClient()
-  const userMessage = retryHint
-    ? `${buildPrompt(data, classContext, plan)}\n\nRETRY NOTE: ${retryHint}`
-    : buildPrompt(data, classContext, plan)
+  const base = buildPrompt(data, classContext, plan, half)
+  const userMessage = retryHint ? `${base}\n\nRETRY NOTE: ${retryHint}` : base
   const completion = await client.chat.completions.create({
     model: MODEL,
-    // Lower temperature than the default (1.0) for tighter adherence to the
-    // structured tool schema and the explicit type-string list in the prompt.
     temperature: 0.3,
-    // v2 lessons can be 20+ activities with 150–250 word reading passages and
-    // 3–5 paragraphs of extras — token budget needs headroom.
-    max_tokens: 16000,
+    // Half the prompt = roughly half the output. 9000 is generous for a
+    // single half (~10–13 activities at 90 min) without hitting any wall.
+    max_tokens: 9000,
     messages: [
       { role: 'system', content: SYSTEM },
       { role: 'user', content: userMessage },
@@ -448,10 +547,37 @@ export async function generateActivitiesRaw(
   })
 
   const call = completion.choices[0]?.message?.tool_calls?.[0]
-  if (!call || call.type !== 'function') throw new Error('No tool call in response')
+  if (!call || call.type !== 'function') throw new Error(`No tool call in ${half}-half response`)
   const args = JSON.parse(call.function.arguments || '{}') as { activities?: unknown }
-  if (!Array.isArray(args.activities)) throw new Error('Tool call missing activities')
+  if (!Array.isArray(args.activities)) throw new Error(`Tool call missing activities in ${half}-half`)
   return args.activities as unknown[]
+}
+
+// v3.2: split into two parallel halves. ~Halves total wall-time vs. the
+// previous single sequential call. Concatenate first-half + second-half in
+// arc order and return the raw (un-validated, no images) array. The endpoint
+// runs normalize → resolve images → Zod validate → save afterwards.
+//
+// retryHint is propagated to BOTH halves on retry — they're regenerated in
+// full so the failure context applies uniformly.
+export async function generateActivitiesRaw(
+  data: LessonFormData,
+  classContext?: ClassContext | null,
+  plan?: LessonContent | null,
+  retryHint?: string,
+): Promise<unknown[]> {
+  const t0 = Date.now()
+  const [first, second] = await Promise.all([
+    generateOneHalf(data, classContext, plan, 'first', retryHint),
+    generateOneHalf(data, classContext, plan, 'second', retryHint),
+  ])
+  const t1 = Date.now()
+  console.log('[generate-activities] halves complete', {
+    firstHalfCount: first.length,
+    secondHalfCount: second.length,
+    bothHalvesMs: t1 - t0,
+  })
+  return [...first, ...second]
 }
 
 // Backwards-compat wrapper for callers that want the validated shape directly
