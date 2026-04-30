@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { generateActivities } from '@/lib/activities/generate'
+import { resolveActivityImages } from '@/lib/activities/unsplash'
 import type { LessonFormData, LessonContent } from '@/types'
 
 // Stage 2: on-demand activity generation. The lesson view's "Teach this
@@ -78,11 +79,15 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     }
 
     try {
-      const activities = await generateActivities(
+      const rawActivities = await generateActivities(
         formData,
         null,
         lesson.lesson_content as LessonContent,
       )
+      // Post-process: resolve image_query → image_url via Unsplash. Best
+      // effort — no Unsplash key or per-query failure leaves image_url null
+      // and the frontend renders a placeholder instead of a broken icon.
+      const activities = await resolveActivityImages(rawActivities)
 
       const { error: updateError } = await supabase
         .from('lessons')

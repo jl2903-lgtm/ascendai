@@ -2,17 +2,13 @@
 
 import type { ImagePrompt as TIP } from '@/lib/activities/schema'
 import { TutorReveal } from '../TutorReveal'
+import { ActivityImage } from '../ActivityImage'
 
 export function ImagePrompt({ activity, rehearsal }: { activity: TIP; rehearsal?: boolean }) {
   const elicit = activity.vocabulary_to_elicit ?? []
   return (
     <div className="space-y-5">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={activity.image_url}
-        alt=""
-        className="w-full max-h-[420px] object-cover rounded-xl border border-slate-200"
-      />
+      <ActivityImage src={activity.image_url} aspect="max-h-[420px]" />
       <p className="text-lg text-slate-900 leading-relaxed">{activity.prompt}</p>
       {elicit.length > 0 && (
         <TutorReveal label="Show vocabulary to elicit" hideLabel="Hide vocabulary to elicit" variant="tip" defaultOpen={rehearsal}>

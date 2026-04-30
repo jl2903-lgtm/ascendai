@@ -3,6 +3,7 @@
 import type { Activity } from '@/lib/activities/schema'
 import { activityTypeName } from './ActivityRenderer'
 import { estimateActivityLabel, totalLessonRange } from '@/lib/activity-timing'
+import { ActivityImage } from './ActivityImage'
 
 // Full scrollable read-through of every activity, with all tutor-only content
 // visible by default. This is the teacher's pre-class review surface — not a
@@ -11,7 +12,15 @@ import { estimateActivityLabel, totalLessonRange } from '@/lib/activity-timing'
 // Prints cleanly via a print stylesheet at the bottom of this file: page chrome
 // is hidden and each activity card breaks onto its own page nicely.
 export function LessonPreview({ activities, lessonTitle }: { activities: Activity[]; lessonTitle: string }) {
-  const total = totalLessonRange(activities)
+  // Prefer model-supplied timing_minutes when every activity has one — that's
+  // the teacher's intended budget. Fall back to per-type rough range estimates
+  // for older lessons that don't carry teaching_guidance.
+  const allHaveExplicitTiming = activities.every(a => !!a.teaching_guidance?.timing_minutes)
+  const explicitTotal = activities.reduce((acc, a) => acc + (a.teaching_guidance?.timing_minutes ?? 0), 0)
+  const fallback = totalLessonRange(activities)
+  const total = allHaveExplicitTiming
+    ? { min: explicitTotal, max: explicitTotal }
+    : fallback
   return (
     <div className="space-y-4 lesson-preview-root">
       <div className="hidden print:block mb-4">
@@ -21,25 +30,34 @@ export function LessonPreview({ activities, lessonTitle }: { activities: Activit
       <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 flex items-center justify-between">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Lesson preview</div>
-          <div className="text-sm text-slate-700 mt-0.5">{activities.length} activities · estimated {total.min}–{total.max} min total</div>
+          <div className="text-sm text-slate-700 mt-0.5">
+            {activities.length} activities · {total.min === total.max ? `${total.min} min total` : `estimated ${total.min}–${total.max} min total`}
+          </div>
         </div>
         <div className="text-xs text-slate-500 hidden sm:block">All tutor notes shown — this is your pre-class review.</div>
       </div>
       <ol className="space-y-3">
-        {activities.map((a, i) => (
-          <li key={a.id} className="rounded-xl border border-slate-200 bg-white px-5 py-4 lesson-preview-card">
-            <div className="flex items-baseline justify-between gap-3 flex-wrap">
-              <div className="text-sm font-semibold text-slate-800">
-                <span className="text-slate-400 mr-2">{i + 1}.</span>
-                {activityTypeName(a.type)}
+        {activities.map((a, i) => {
+          const guidance = a.teaching_guidance
+          const timingLabel = guidance?.timing_minutes
+            ? `${guidance.timing_minutes} min`
+            : estimateActivityLabel(a)
+          return (
+            <li key={a.id} className="rounded-xl border border-slate-200 bg-white px-5 py-4 lesson-preview-card">
+              <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                <div className="text-sm font-semibold text-slate-800">
+                  <span className="text-slate-400 mr-2">{i + 1}.</span>
+                  {activityTypeName(a.type)}
+                </div>
+                <div className="text-xs text-slate-500">{timingLabel}</div>
               </div>
-              <div className="text-xs text-slate-500">{estimateActivityLabel(a)}</div>
-            </div>
-            <div className="mt-3">
-              <PreviewBody activity={a} />
-            </div>
-          </li>
-        ))}
+              <div className="mt-3">
+                <PreviewBody activity={a} suppressLegacyTutor={!!guidance} />
+              </div>
+              {guidance && <GuidanceBlock guidance={guidance} />}
+            </li>
+          )
+        })}
       </ol>
 
       <style jsx global>{`
@@ -57,7 +75,11 @@ export function LessonPreview({ activities, lessonTitle }: { activities: Activit
   )
 }
 
-function PreviewBody({ activity }: { activity: Activity }) {
+function PreviewBody({ activity, suppressLegacyTutor }: { activity: Activity; suppressLegacyTutor: boolean }) {
+  // When v3.1 teaching_guidance is present we render that as a structured
+  // block at the bottom of the card and skip the per-field legacy
+  // TutorBlocks here to avoid showing the same content twice.
+  const showLegacy = !suppressLegacyTutor
   switch (activity.type) {
     case 'reading_passage':
       return (
@@ -67,14 +89,14 @@ function PreviewBody({ activity }: { activity: Activity }) {
           {(activity.extra_paragraphs ?? []).map((p, i) => (
             <p key={i} className="text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">{p}</p>
           ))}
-          {activity.comprehension_hooks && activity.comprehension_hooks.length > 0 && (
+          {showLegacy && activity.comprehension_hooks && activity.comprehension_hooks.length > 0 && (
             <TutorBlock title="Mid-read check-ins">
               <ul className="list-disc pl-5 space-y-1">
                 {activity.comprehension_hooks.map((h, i) => <li key={i}>{h}</li>)}
               </ul>
             </TutorBlock>
           )}
-          {activity.tutor_notes && (
+          {showLegacy && activity.tutor_notes && (
             <TutorBlock title="Tutor notes"><p>{activity.tutor_notes}</p></TutorBlock>
           )}
         </div>
@@ -90,7 +112,7 @@ function PreviewBody({ activity }: { activity: Activity }) {
               </li>
             ))}
           </ol>
-          {activity.tutor_explanation && (
+          {showLegacy && activity.tutor_explanation && (
             <TutorBlock title="Tutor explanation"><p>{activity.tutor_explanation}</p></TutorBlock>
           )}
         </div>
@@ -103,7 +125,7 @@ function PreviewBody({ activity }: { activity: Activity }) {
           {activity.word_bank.length > 0 && (
             <div className="text-xs text-slate-600">Word bank: <span className="font-mono">{activity.word_bank.join(' · ')}</span></div>
           )}
-          {activity.tutor_explanation && (
+          {showLegacy && activity.tutor_explanation && (
             <TutorBlock title="Tutor explanation"><p>{activity.tutor_explanation}</p></TutorBlock>
           )}
         </div>
@@ -117,7 +139,7 @@ function PreviewBody({ activity }: { activity: Activity }) {
           <ol className="list-decimal pl-5 text-sm text-slate-800 space-y-1">
             {activity.questions.map((q, i) => <li key={i}>{q}</li>)}
           </ol>
-          {activity.tutor_followups.length > 0 && (
+          {showLegacy && activity.tutor_followups.length > 0 && (
             <TutorBlock title="Suggested follow-ups">
               <ul className="list-disc pl-5 space-y-1">
                 {activity.tutor_followups.map((f, i) => <li key={i}>{f}</li>)}
@@ -131,15 +153,15 @@ function PreviewBody({ activity }: { activity: Activity }) {
         <div className="space-y-3">
           <p className="text-sm text-slate-900">{activity.prompt}</p>
           {activity.min_words ? <div className="text-xs text-slate-500">Minimum: {activity.min_words} words</div> : null}
-          {activity.success_criteria && activity.success_criteria.length > 0 && (
+          {showLegacy && activity.success_criteria && activity.success_criteria.length > 0 && (
             <TutorBlock title="Success criteria">
               <ul className="list-disc pl-5 space-y-1">
                 {activity.success_criteria.map((c, i) => <li key={i}>{c}</li>)}
               </ul>
             </TutorBlock>
           )}
-          {activity.tutor_notes && <TutorBlock title="Tutor notes"><p>{activity.tutor_notes}</p></TutorBlock>}
-          {activity.model_answer && <TutorBlock title="Model answer"><p className="whitespace-pre-wrap">{activity.model_answer}</p></TutorBlock>}
+          {showLegacy && activity.tutor_notes && <TutorBlock title="Tutor notes"><p>{activity.tutor_notes}</p></TutorBlock>}
+          {showLegacy && activity.model_answer && <TutorBlock title="Model answer"><p className="whitespace-pre-wrap">{activity.model_answer}</p></TutorBlock>}
         </div>
       )
     case 'vocab_presentation':
@@ -167,7 +189,7 @@ function PreviewBody({ activity }: { activity: Activity }) {
               {activity.examples.map((e, i) => <li key={i} className="font-mono">{e}</li>)}
             </ul>
           )}
-          {activity.common_errors.length > 0 && (
+          {showLegacy && activity.common_errors.length > 0 && (
             <TutorBlock title="Common errors">
               <ul className="space-y-1.5">
                 {activity.common_errors.map((e, i) => (
@@ -179,7 +201,7 @@ function PreviewBody({ activity }: { activity: Activity }) {
               </ul>
             </TutorBlock>
           )}
-          {activity.practice_prompts && activity.practice_prompts.length > 0 && (
+          {showLegacy && activity.practice_prompts && activity.practice_prompts.length > 0 && (
             <TutorBlock title="Practice prompts">
               <ul className="list-disc pl-5 space-y-1">
                 {activity.practice_prompts.map((p, i) => <li key={i}>{p}</li>)}
@@ -191,17 +213,16 @@ function PreviewBody({ activity }: { activity: Activity }) {
     case 'image_prompt':
       return (
         <div className="space-y-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={activity.image_url} alt="" className="w-full max-h-64 object-cover rounded-lg border border-slate-200" />
+          <ActivityImage src={activity.image_url} aspect="max-h-64" />
           <p className="text-sm text-slate-900">{activity.prompt}</p>
-          {activity.tutor_followups.length > 0 && (
+          {showLegacy && activity.tutor_followups.length > 0 && (
             <TutorBlock title="Follow-ups">
               <ul className="list-disc pl-5 space-y-1">
                 {activity.tutor_followups.map((f, i) => <li key={i}>{f}</li>)}
               </ul>
             </TutorBlock>
           )}
-          {activity.vocabulary_to_elicit && activity.vocabulary_to_elicit.length > 0 && (
+          {showLegacy && activity.vocabulary_to_elicit && activity.vocabulary_to_elicit.length > 0 && (
             <TutorBlock title="Vocabulary to elicit">
               <div className="flex flex-wrap gap-1.5">
                 {activity.vocabulary_to_elicit.map((v, i) => (
@@ -213,6 +234,45 @@ function PreviewBody({ activity }: { activity: Activity }) {
         </div>
       )
   }
+}
+
+// v3.1 structured guidance display in the lesson preview. Mirrors the
+// TutorPanel's four sections but rendered inline (always visible — this is
+// the pre-class review surface, not a screen-share view).
+function GuidanceBlock({ guidance }: { guidance: NonNullable<Activity['teaching_guidance']> }) {
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 space-y-3">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Teaching guidance</div>
+      <div>
+        <div className="text-xs font-semibold text-slate-700 mb-1">🎯 Objective</div>
+        <p className="text-sm text-slate-800 leading-relaxed">{guidance.objective}</p>
+      </div>
+      {guidance.how_to_run.length > 0 && (
+        <div>
+          <div className="text-xs font-semibold text-slate-700 mb-1">📋 How to run</div>
+          <ol className="list-decimal pl-5 text-sm text-slate-800 leading-relaxed space-y-0.5">
+            {guidance.how_to_run.map((s, i) => <li key={i}>{s}</li>)}
+          </ol>
+        </div>
+      )}
+      {guidance.watch_for.length > 0 && (
+        <div>
+          <div className="text-xs font-semibold text-slate-700 mb-1">👂 Watch for</div>
+          <ul className="list-disc pl-5 text-sm text-slate-800 leading-relaxed space-y-0.5">
+            {guidance.watch_for.map((s, i) => <li key={i}>{s}</li>)}
+          </ul>
+        </div>
+      )}
+      {guidance.if_struggling.length > 0 && (
+        <div>
+          <div className="text-xs font-semibold text-slate-700 mb-1">💡 If they struggle</div>
+          <ul className="list-disc pl-5 text-sm text-slate-800 leading-relaxed space-y-0.5">
+            {guidance.if_struggling.map((s, i) => <li key={i}>{s}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function TutorBlock({ title, children }: { title: string; children: React.ReactNode }) {

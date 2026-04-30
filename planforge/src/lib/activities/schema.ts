@@ -6,17 +6,32 @@ import { z } from 'zod'
 // tutor_followups / model_answer / common_errors) are hidden by default in Teach
 // Mode and only revealed when the teacher explicitly clicks Show.
 
+// v3.1: Structured per-slide teaching guidance. Optional for backwards compat
+// with v1/v2/v3 lessons. When present, the Tutor Panel renders the four
+// sections; when absent, it falls back to whatever legacy tutor_* fields the
+// activity has.
+export const TeachingGuidanceSchema = z.object({
+  objective: z.string(),
+  how_to_run: z.array(z.string()).default([]),
+  watch_for: z.array(z.string()).default([]),
+  if_struggling: z.array(z.string()).default([]),
+  timing_minutes: z.number().int().nonnegative().default(0),
+})
+export type TeachingGuidance = z.infer<typeof TeachingGuidanceSchema>
+
 export const ReadingPassageSchema = z.object({
   type: z.literal('reading_passage'),
   id: z.string(),
   title: z.string(),
+  // v3.1: model writes image_query; the Unsplash post-processor writes
+  // image_url. image_url stays optional so backfilled rows still validate.
+  image_query: z.string().optional(),
   image_url: z.string().nullable().optional(),
   body: z.string(),
   extra_paragraphs: z.array(z.string()).default([]),
   tutor_notes: z.string().default(''),
-  // v2: questions the teacher can ask mid-read to check comprehension.
-  // Optional so v1 lessons keep validating.
   comprehension_hooks: z.array(z.string()).optional(),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const MultipleChoiceSchema = z.object({
@@ -26,6 +41,7 @@ export const MultipleChoiceSchema = z.object({
   options: z.array(z.string()).min(2),
   correct_index: z.number().int().nonnegative(),
   tutor_explanation: z.string().default(''),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const GapFillSchema = z.object({
@@ -35,16 +51,19 @@ export const GapFillSchema = z.object({
   word_bank: z.array(z.string()).default([]),
   answers: z.array(z.string()).default([]),
   tutor_explanation: z.string().default(''),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const DiscussionQuestionsSchema = z.object({
   type: z.literal('discussion_questions'),
   id: z.string(),
   title: z.string(),
+  image_query: z.string().optional(),
   image_url: z.string().nullable().optional(),
   intro: z.string().default(''),
   questions: z.array(z.string()).min(1),
   tutor_followups: z.array(z.string()).default([]),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const WritingTaskSchema = z.object({
@@ -54,8 +73,8 @@ export const WritingTaskSchema = z.object({
   min_words: z.number().int().nonnegative().default(50),
   model_answer: z.string().default(''),
   tutor_notes: z.string().default(''),
-  // v2: specific things the teacher should look for in the student's response.
   success_criteria: z.array(z.string()).optional(),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const VocabPresentationSchema = z.object({
@@ -67,9 +86,9 @@ export const VocabPresentationSchema = z.object({
     pronunciation: z.string().default(''),
     definition: z.string(),
     example: z.string().default(''),
-    // v2: a common phrase / collocation for the word.
     collocation: z.string().optional(),
   })).min(1),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const GrammarExplanationSchema = z.object({
@@ -82,18 +101,22 @@ export const GrammarExplanationSchema = z.object({
     wrong: z.string(),
     right: z.string(),
   })).default([]),
-  // v2: quick verbal prompts the teacher can use to drill the structure.
   practice_prompts: z.array(z.string()).optional(),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const ImagePromptSchema = z.object({
   type: z.literal('image_prompt'),
   id: z.string(),
-  image_url: z.string(),
+  // v3.1: image_url was required pre-3.1, but Unsplash failures now flow
+  // through as null and the frontend renders a placeholder. Loosen to
+  // nullable so post-processed rows still validate.
+  image_query: z.string().optional(),
+  image_url: z.string().nullable(),
   prompt: z.string(),
   tutor_followups: z.array(z.string()).default([]),
-  // v2: words the teacher should try to draw out of the student.
   vocabulary_to_elicit: z.array(z.string()).optional(),
+  teaching_guidance: TeachingGuidanceSchema.optional(),
 })
 
 export const ActivitySchema = z.discriminatedUnion('type', [

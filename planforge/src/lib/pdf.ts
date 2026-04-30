@@ -233,9 +233,20 @@ export async function generateLessonPDF(
 
     activities.forEach((a, i) => {
       ctx.chk(14)
-      txt(`Activity ${i + 1}: ${activityHeaderLabel(a)}`, 11, G.dark, true)
+      const timing = a.teaching_guidance?.timing_minutes
+      const heading = timing
+        ? `Activity ${i + 1}: ${activityHeaderLabel(a)}  ·  ${timing} min`
+        : `Activity ${i + 1}: ${activityHeaderLabel(a)}`
+      txt(heading, 11, G.dark, true)
       gap(1)
       renderActivityToPdf(ctx, a)
+      // v3.1: structured guidance block. Falls back to the legacy
+      // per-field "Teacher's notes" lines emitted inside renderActivityToPdf
+      // for activities without teaching_guidance.
+      if (a.teaching_guidance) {
+        gap(2)
+        renderTeachingGuidanceToPdf(ctx, a.teaching_guidance)
+      }
       gap(4)
     })
   }
@@ -350,6 +361,36 @@ function renderActivityToPdf(ctx: ReturnType<typeof makeCtx>, a: Activity): void
         a.tutor_followups.forEach(f => blt(f, 7))
       }
       break
+  }
+}
+
+// v3.1: render the four-section teaching guidance underneath an activity.
+// Uses the same emoji-led headers as the Tutor Panel so the PDF and on-screen
+// view feel like one coherent artifact.
+function renderTeachingGuidanceToPdf(
+  ctx: ReturnType<typeof makeCtx>,
+  g: NonNullable<Activity['teaching_guidance']>,
+): void {
+  const { txt, gap, blt } = ctx
+  txt("Teacher's notes — guidance", 9, G.accent, true, 3)
+  if (g.objective) {
+    txt('Objective:', 9, G.dark, true, 5)
+    txt(g.objective, 9, G.muted, false, 7)
+  }
+  if (g.how_to_run.length) {
+    gap(1)
+    txt('How to run:', 9, G.dark, true, 5)
+    g.how_to_run.forEach((s, i) => txt(`${i + 1}. ${s}`, 9, G.muted, false, 7))
+  }
+  if (g.watch_for.length) {
+    gap(1)
+    txt('Watch for:', 9, G.dark, true, 5)
+    g.watch_for.forEach(s => blt(s, 9))
+  }
+  if (g.if_struggling.length) {
+    gap(1)
+    txt('If they struggle:', 9, G.dark, true, 5)
+    g.if_struggling.forEach(s => blt(s, 9))
   }
 }
 

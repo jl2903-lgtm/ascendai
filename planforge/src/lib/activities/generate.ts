@@ -12,8 +12,25 @@ import {
 import type { LessonFormData, ClassContext, LessonContent } from '@/types'
 
 // JSON Schema for the OpenAI tool. Structurally mirrors Zod schema in ./schema.ts.
-// v2: extra optional fields (comprehension_hooks, success_criteria, collocation,
-// practice_prompts, vocabulary_to_elicit) — old lessons without them still pass.
+//
+// v3.1 changes:
+//   - image_url is gone from the tool schema. The model writes image_query;
+//     a post-processor calls Unsplash and writes image_url itself. Hallucinated
+//     URLs were the cause of broken lead-in images.
+//   - teaching_guidance is required on every activity. Drives the four-section
+//     Tutor Panel layout (Objective / How to run / Watch for / If they struggle).
+const teachingGuidanceJsonSchema = {
+  type: 'object',
+  properties: {
+    objective: { type: 'string' },
+    how_to_run: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 6 },
+    watch_for: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 6 },
+    if_struggling: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 6 },
+    timing_minutes: { type: 'integer', minimum: 1, maximum: 30 },
+  },
+  required: ['objective', 'how_to_run', 'watch_for', 'if_struggling', 'timing_minutes'],
+} as const
+
 const activityJsonSchema = {
   type: 'object',
   properties: {
@@ -27,13 +44,14 @@ const activityJsonSchema = {
               type: { const: 'reading_passage' },
               id: { type: 'string' },
               title: { type: 'string' },
-              image_url: { type: ['string', 'null'] },
+              image_query: { type: 'string' },
               body: { type: 'string' },
               extra_paragraphs: { type: 'array', items: { type: 'string' } },
               tutor_notes: { type: 'string' },
               comprehension_hooks: { type: 'array', items: { type: 'string' } },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'title', 'body'],
+            required: ['type', 'id', 'title', 'body', 'image_query', 'teaching_guidance'],
           },
           {
             type: 'object',
@@ -44,8 +62,9 @@ const activityJsonSchema = {
               options: { type: 'array', items: { type: 'string' }, minItems: 2 },
               correct_index: { type: 'integer', minimum: 0 },
               tutor_explanation: { type: 'string' },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'question', 'options', 'correct_index'],
+            required: ['type', 'id', 'question', 'options', 'correct_index', 'teaching_guidance'],
           },
           {
             type: 'object',
@@ -56,8 +75,9 @@ const activityJsonSchema = {
               word_bank: { type: 'array', items: { type: 'string' } },
               answers: { type: 'array', items: { type: 'string' } },
               tutor_explanation: { type: 'string' },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'sentence_template', 'answers'],
+            required: ['type', 'id', 'sentence_template', 'answers', 'teaching_guidance'],
           },
           {
             type: 'object',
@@ -65,12 +85,13 @@ const activityJsonSchema = {
               type: { const: 'discussion_questions' },
               id: { type: 'string' },
               title: { type: 'string' },
-              image_url: { type: ['string', 'null'] },
+              image_query: { type: 'string' },
               intro: { type: 'string' },
               questions: { type: 'array', items: { type: 'string' }, minItems: 1 },
               tutor_followups: { type: 'array', items: { type: 'string' } },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'title', 'questions'],
+            required: ['type', 'id', 'title', 'questions', 'teaching_guidance'],
           },
           {
             type: 'object',
@@ -82,8 +103,9 @@ const activityJsonSchema = {
               model_answer: { type: 'string' },
               tutor_notes: { type: 'string' },
               success_criteria: { type: 'array', items: { type: 'string' } },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'prompt'],
+            required: ['type', 'id', 'prompt', 'teaching_guidance'],
           },
           {
             type: 'object',
@@ -106,8 +128,9 @@ const activityJsonSchema = {
                   required: ['word', 'definition'],
                 },
               },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'items'],
+            required: ['type', 'id', 'items', 'teaching_guidance'],
           },
           {
             type: 'object',
@@ -126,20 +149,22 @@ const activityJsonSchema = {
                 },
               },
               practice_prompts: { type: 'array', items: { type: 'string' } },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'rule_title', 'rule'],
+            required: ['type', 'id', 'rule_title', 'rule', 'teaching_guidance'],
           },
           {
             type: 'object',
             properties: {
               type: { const: 'image_prompt' },
               id: { type: 'string' },
-              image_url: { type: 'string' },
+              image_query: { type: 'string' },
               prompt: { type: 'string' },
               tutor_followups: { type: 'array', items: { type: 'string' } },
               vocabulary_to_elicit: { type: 'array', items: { type: 'string' } },
+              teaching_guidance: teachingGuidanceJsonSchema,
             },
-            required: ['type', 'id', 'prompt'],
+            required: ['type', 'id', 'prompt', 'image_query', 'teaching_guidance'],
           },
         ],
       },
@@ -327,10 +352,41 @@ ACTIVITY RULES
 - gap_fill: write the sentence_template using {{0}}, {{1}}, etc. The answers array aligns with those indices in order.
 - multiple_choice: correct_index is 0-based. Each activity is ONE question. Produce multiple multiple_choice activities in a row to form a comprehension block of 4–6 questions.
 - vocab_presentation has no tutor-only fields — it's presented openly to the student.
-- image_prompt: image_url is required; if no specific image is mandated, use a stable Unsplash search URL like "https://images.unsplash.com/photo-<id>" or "https://source.unsplash.com/800x600/?<query>".
+- IMAGES: do NOT generate or guess image URLs — they will not work. For reading_passage, discussion_questions, and image_prompt activities, write a short concrete image_query string (3–6 words, e.g. "movies and tv remote control", "popcorn cinema seats", "person streaming laptop"). A separate post-processor will look up a real image on Unsplash from this query.
 - Keep all student-facing copy at CEFR ${data.level}.
 
 ${tutorTone}
+
+TEACHING_GUIDANCE — REQUIRED ON EVERY ACTIVITY
+Every activity must include a teaching_guidance object with these four sections plus a timing_minutes integer. The Tutor Panel in the app renders these so the teacher can run the lesson from your output.
+
+  • objective: one sentence, action-oriented, what the student should know / do / produce by the end of this slide.
+  • how_to_run: 2–4 concrete teacher moves in order. Read like a recipe a substitute teacher could follow ("Read question aloud", "Wait for response", "Click 'Show correct answer' and discuss why other options are wrong"). Reference this activity's actual content, not generic advice.
+  • watch_for: 2–4 specific student errors / hesitations / pronunciation issues to listen for. Cite the actual vocabulary, grammar, or concepts in this activity. Mention predictable L1-driven errors for ${data.nationality} students.
+  • if_struggling: 2–4 concrete fallback moves (a simpler example, a scaffolding question, a personal example). Plus an extension prompt for students who nail it. Don't write "explain again" — give the alternative move.
+  • timing_minutes: integer, 1–30. The teacher's rough budget for this slide. Across all activities the sum should approximately equal ${data.length} minutes.
+
+EXAMPLE teaching_guidance for a multiple_choice activity on "binge-watching":
+{
+  "objective": "Student can correctly identify the meaning of 'binge-watch' from context.",
+  "how_to_run": [
+    "Read the question aloud once at natural pace.",
+    "Ask the student to read each option and think before answering.",
+    "Take their answer, then ask why they chose it before revealing the correct answer.",
+    "Click 'Show correct answer' and discuss why the others are wrong."
+  ],
+  "watch_for": [
+    "Student picking 'a couple' — they may be confusing binge-watching with regular viewing.",
+    "Hesitation on 'many' vs 'a couple' — may signal weak quantifier vocabulary.",
+    "Pronunciation of 'binge' — the soft G is often mispronounced as a hard G."
+  ],
+  "if_struggling": [
+    "Give a personal example: 'Last weekend I watched 8 episodes of...' — then ask them to label it.",
+    "If they pick 'only watch movies', draw their attention to the word 'shows' in the passage.",
+    "If they get it instantly, ask: when does binge-watching become unhealthy?"
+  ],
+  "timing_minutes": 4
+}
 
 Call the generate_lesson_activities tool with the resulting array. Do not include commentary outside the tool call.`
 }

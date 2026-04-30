@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { ReadingPassage as TReading } from '@/lib/activities/schema'
 import { TutorReveal } from '../TutorReveal'
+import { ActivityImage } from '../ActivityImage'
 
 export function ReadingPassage({ activity, rehearsal }: { activity: TReading; rehearsal?: boolean }) {
   const [showExtra, setShowExtra] = useState(!!rehearsal)
@@ -14,10 +15,7 @@ export function ReadingPassage({ activity, rehearsal }: { activity: TReading; re
       <header>
         <h2 className="text-2xl font-bold text-slate-900">{activity.title}</h2>
       </header>
-      {activity.image_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={activity.image_url} alt="" className="w-full max-h-80 object-cover rounded-xl border border-slate-200" />
-      )}
+      <ActivityImage src={activity.image_url} decorative aspect="max-h-80" />
       <p className="text-base leading-relaxed text-slate-800 whitespace-pre-wrap">{activity.body}</p>
       {extras.length > 0 && (
         <div className="space-y-3">
