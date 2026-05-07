@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    const isFree = profile.subscription_status === 'free' || profile.subscription_status === 'cancelled'
-    if (isFree && profile.error_coach_used_this_month >= 3) {
-      return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
+    const hasAccess = profile.subscription_status === 'trialing' || profile.subscription_status === 'pro'
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
     }
 
     const { text, level, nationality, classContext } = await req.json()
@@ -84,9 +84,6 @@ Type must be one of: grammar, vocabulary, punctuation, wordOrder, articleUsage`,
       result = JSON.parse(m[0])
     }
 
-    if (isFree) {
-      await supabase.from('users').update({ error_coach_used_this_month: profile.error_coach_used_this_month + 1 }).eq('id', userId)
-    }
 
     return NextResponse.json(result)
   } catch (error) {

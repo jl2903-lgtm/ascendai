@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { UserProfile, Lesson, Worksheet, ClassProfile } from '@/types'
-import { formatDate, FREE_LIMITS } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { WelcomeModal } from '@/components/onboarding/WelcomeModal'
@@ -106,8 +106,8 @@ export default function DashboardPage() {
     load()
   }, [])
 
-  const isPro = profile?.subscription_status === 'pro'
-  const lessonsLeft = Math.max(0, FREE_LIMITS.lessons - (profile?.lessons_used_this_month ?? 0))
+  const status = profile?.subscription_status
+  const isPro = status === 'pro' || status === 'trialing'
   const firstName = profile?.full_name?.split(' ')[0] ?? ''
   const initial = firstName ? firstName[0].toUpperCase() : '?'
   const timeSavedH = Math.round(((userStats?.total_lessons_created ?? 0) * 20 + (userStats?.total_worksheets_created ?? 0) * 15) / 60)
@@ -150,7 +150,7 @@ export default function DashboardPage() {
               Welcome back{firstName ? `, ${firstName}` : ''}! 👋
             </h1>
             <p className="mt-1" style={{ fontSize: 14, color: '#6B6860' }}>
-              {isPro ? 'You have unlimited access to all tools.' : `${lessonsLeft} free lesson${lessonsLeft !== 1 ? 's' : ''} remaining this month.`}
+              {isPro ? 'You have unlimited access to all tools.' : 'Welcome to Tyoutor Pro.'}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -163,20 +163,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Upgrade banner ── */}
-        {!isPro && lessonsLeft <= 2 && (
-          <div className="rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap mb-6" style={{ background: 'linear-gradient(135deg,rgba(45,106,79,0.1),rgba(82,183,136,0.06))', border: '1px solid rgba(45,106,79,0.2)', animation: 'fadeInUp 0.55s ease both' }}>
-            <div>
-              <div style={{ fontWeight: 700, color: '#2D2D2D', fontSize: 14 }}>
-                {lessonsLeft === 0 ? "You've used all free lessons this month" : `Only ${lessonsLeft} free lesson${lessonsLeft !== 1 ? 's' : ''} left`}
-              </div>
-              <div style={{ fontSize: 12, color: '#6B6860', marginTop: 2 }}>Upgrade to Pro for unlimited lessons, worksheets, and PDF export.</div>
-            </div>
-            <Link href="/pricing" style={{ background: 'linear-gradient(135deg,#2D6A4F,#40916C)', color: 'white', fontWeight: 700, fontSize: 13, padding: '8px 18px', borderRadius: 999, boxShadow: '0 4px 12px rgba(45,106,79,0.2)' }}>
-              Upgrade — $12/mo
-            </Link>
-          </div>
-        )}
 
         {/* ── Stats row ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" style={{ animation: 'fadeInUp 0.6s ease both' }}>

@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    const isFree = profile.subscription_status === 'free' || profile.subscription_status === 'cancelled'
-    if (isFree && profile.job_assistant_used_this_month >= 1) {
-      return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
+    const hasAccess = profile.subscription_status === 'trialing' || profile.subscription_status === 'pro'
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
     }
 
     const { type, schoolType, country, experienceLevel, certifications, motivation, schoolValues, classContext } = await req.json()
@@ -72,10 +72,6 @@ Warm, genuine tone. Show real passion for teaching. No clichés. Return JSON onl
       const m = rawText.match(/\{[\s\S]*\}/)
       if (!m) return NextResponse.json({ error: 'Failed to parse response' }, { status: 500 })
       result = JSON.parse(m[0])
-    }
-
-    if (isFree) {
-      await supabase.from('users').update({ job_assistant_used_this_month: profile.job_assistant_used_this_month + 1 }).eq('id', userId)
     }
 
     return NextResponse.json(result)

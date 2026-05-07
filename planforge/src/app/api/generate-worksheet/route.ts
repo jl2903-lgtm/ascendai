@@ -95,18 +95,17 @@ export async function POST(req: NextRequest) {
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    const isFree = profile.subscription_status === 'free' || profile.subscription_status === 'cancelled'
+    const hasAccess = profile.subscription_status === 'trialing' || profile.subscription_status === 'pro'
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
+    }
 
-    // Query user_stats early — used for both limit check and post-generation upsert
+    // Query user_stats for post-generation upsert
     const { data: existingStats } = await supabase
       .from('user_stats')
       .select('total_worksheets_created, worksheets_this_week, last_weekly_reset')
       .eq('user_id', userId)
       .single()
-
-    if (isFree && (existingStats?.total_worksheets_created ?? 0) >= 5) {
-      return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
-    }
 
     const body: WorksheetFormData & { classContext?: ClassContext } = await req.json()
     if (!body.exerciseTypes?.length || !body.topic || !body.level) {

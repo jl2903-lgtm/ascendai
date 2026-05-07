@@ -100,7 +100,8 @@ export default function SettingsPage() {
     </div>
   )
 
-  const isPro = profile?.subscription_status === 'pro'
+  const isPro = profile?.subscription_status === 'pro' || profile?.subscription_status === 'trialing'
+  const isTrialing = profile?.subscription_status === 'trialing'
 
   return (
     <div className="relative isolate max-w-2xl mx-auto space-y-6">
@@ -187,24 +188,18 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${isPro ? 'bg-teal-600/20 text-teal-400 border border-teal-600/30' : 'bg-[#F0EEE9] text-[#6B6860]'}`}>
-                {isPro ? 'Pro' : 'Free'} Plan
+              <span className={`text-sm font-semibold px-3 py-1 rounded-full ${isTrialing ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : isPro ? 'bg-teal-600/20 text-teal-400 border border-teal-600/30' : 'bg-[#F0EEE9] text-[#6B6860]'}`}>
+                {isTrialing ? 'Free Trial' : isPro ? 'Pro' : 'Inactive'}
               </span>
-              {isPro && <span className="text-xs text-[#6B6860]">Unlimited access to all tools</span>}
+              {isPro && !isTrialing && <span className="text-xs text-[#6B6860]">Unlimited access to all tools</span>}
+              {isTrialing && <span className="text-xs text-[#6B6860]">Full access · converts to Pro after trial</span>}
             </div>
-            {!isPro && (
-              <p className="text-xs text-[#6B6860] mt-1">5 lessons, 5 worksheets per month</p>
-            )}
           </div>
-          {isPro ? (
+          {isPro && (
             <button onClick={openBillingPortal} disabled={portalLoading} className="flex items-center gap-2 border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-white font-medium px-4 py-2.5 rounded-xl text-sm transition-all disabled:opacity-50">
               <ExternalLink className="w-4 h-4" />
-              {portalLoading ? 'Opening...' : 'Manage Billing'}
+              {portalLoading ? 'Opening...' : 'Manage Subscription'}
             </button>
-          ) : (
-            <a href="/pricing" className="bg-teal-600 hover:bg-teal-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-              Upgrade to Pro — $12/mo
-            </a>
           )}
         </div>
         {isPro && (

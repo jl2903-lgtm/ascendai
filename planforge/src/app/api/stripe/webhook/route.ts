@@ -46,15 +46,19 @@ export async function POST(req: NextRequest) {
           break
         }
 
-        // Fetch the subscription to get the current period details
-        // subscription metadata available via subscriptionId
+        // Fetch subscription to get trial_end date
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null
 
         const { error: updateError } = await supabase
           .from('users')
           .update({
-            subscription_status: 'pro',
+            subscription_status: 'trialing',
             subscription_id: subscriptionId,
             stripe_customer_id: customerId,
+            trial_end: trialEnd,
           })
           .eq('id', userId)
 
@@ -63,20 +67,7 @@ export async function POST(req: NextRequest) {
           break
         }
 
-        // Send upgrade confirmation email — fetch user email from Supabase auth
-        const { data: userData } = await supabase.auth.admin.getUserById(userId)
-        if (userData?.user?.email) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('full_name')
-            .eq('id', userId)
-            .single()
-
-          // Email sent via external service after upgrade
-          console.log(`[webhook] Upgrade email should be sent to ${userData.user.email}`)
-        }
-
-        console.log(`[webhook] User ${userId} upgraded to Pro. Subscription: ${subscriptionId}`)
+        console.log(`[webhook] User ${userId} started trial. Sub: ${subscriptionId}, trial_end: ${trialEnd}`)
         break
       }
 
@@ -85,8 +76,16 @@ export async function POST(req: NextRequest) {
 
         const userId = subscription.metadata?.userId
 
+        const resetFields = {
+          subscription_status: 'cancelled' as const,
+          subscription_id: null,
+          trial_end: null,
+          error_coach_used_this_month: 0,
+          demo_lesson_used_this_month: 0,
+          job_assistant_used_this_month: 0,
+        }
+
         if (!userId) {
-          // Fall back to looking up by stripe_customer_id
           const customerId = subscription.customer as string
           const { data: profile } = await supabase
             .from('users')
@@ -99,32 +98,12 @@ export async function POST(req: NextRequest) {
             break
           }
 
-          await supabase
-            .from('users')
-            .update({
-              subscription_status: 'cancelled',
-              subscription_id: null,
-              error_coach_used_this_month: 0,
-              demo_lesson_used_this_month: 0,
-              job_assistant_used_this_month: 0,
-            })
-            .eq('id', profile.id)
-
+          await supabase.from('users').update(resetFields).eq('id', profile.id)
           console.log(`[webhook] Subscription cancelled for customer ${customerId}`)
           break
         }
 
-        await supabase
-          .from('users')
-          .update({
-            subscription_status: 'cancelled',
-            subscription_id: null,
-            error_coach_used_this_month: 0,
-            demo_lesson_used_this_month: 0,
-            job_assistant_used_this_month: 0,
-          })
-          .eq('id', userId)
-
+        await supabase.from('users').update(resetFields).eq('id', userId)
         console.log(`[webhook] User ${userId} subscription cancelled`)
         break
       }
@@ -135,9 +114,10 @@ export async function POST(req: NextRequest) {
         const userId = subscription.metadata?.userId
         const stripeStatus = subscription.status
 
-        // Map Stripe subscription statuses to our internal statuses
-        let internalStatus: 'pro' | 'cancelled' | 'free'
-        if (stripeStatus === 'active' || stripeStatus === 'trialing') {
+        let internalStatus: 'trialing' | 'pro' | 'cancelled'
+        if (stripeStatus === 'trialing') {
+          internalStatus = 'trialing'
+        } else if (stripeStatus === 'active') {
           internalStatus = 'pro'
         } else if (stripeStatus === 'canceled' || stripeStatus === 'unpaid' || stripeStatus === 'incomplete_expired') {
           internalStatus = 'cancelled'
@@ -145,6 +125,26 @@ export async function POST(req: NextRequest) {
           // past_due, incomplete — keep as-is; don't lock out immediately
           console.log(`[webhook] Subscription status changed to ${stripeStatus} — no action taken`)
           break
+        }
+
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null
+
+        const updatePayload: Record<string, unknown> = {
+          subscription_status: internalStatus,
+          subscription_id: internalStatus === 'cancelled' ? null : subscription.id,
+          trial_end: internalStatus === 'pro' ? null : trialEnd,
+        }
+
+        if (internalStatus === 'cancelled') {
+          Object.assign(updatePayload, {
+            lessons_used_this_month: 0,
+            worksheets_used_this_month: 0,
+            error_coach_used_this_month: 0,
+            demo_lesson_used_this_month: 0,
+            job_assistant_used_this_month: 0,
+          })
         }
 
         if (!userId) {
@@ -160,37 +160,9 @@ export async function POST(req: NextRequest) {
             break
           }
 
-          const updatePayload: Record<string, unknown> = {
-            subscription_status: internalStatus,
-            subscription_id: internalStatus === 'cancelled' ? null : subscription.id,
-          }
-
-          if (internalStatus === 'cancelled') {
-            Object.assign(updatePayload, {
-              error_coach_used_this_month: 0,
-              demo_lesson_used_this_month: 0,
-              job_assistant_used_this_month: 0,
-            })
-          }
-
           await supabase.from('users').update(updatePayload).eq('id', profile.id)
           console.log(`[webhook] Updated subscription status to ${internalStatus} for customer ${customerId}`)
           break
-        }
-
-        const updatePayload: Record<string, unknown> = {
-          subscription_status: internalStatus,
-          subscription_id: internalStatus === 'cancelled' ? null : subscription.id,
-        }
-
-        if (internalStatus === 'cancelled') {
-          Object.assign(updatePayload, {
-            lessons_used_this_month: 0,
-            worksheets_used_this_month: 0,
-            error_coach_used_this_month: 0,
-            demo_lesson_used_this_month: 0,
-            job_assistant_used_this_month: 0,
-          })
         }
 
         await supabase.from('users').update(updatePayload).eq('id', userId)

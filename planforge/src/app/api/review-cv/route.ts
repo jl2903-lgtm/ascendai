@@ -20,8 +20,9 @@ export async function POST(req: NextRequest) {
     .eq('id', session.user.id)
     .single()
 
-  if (userProfile?.subscription_status === 'free' && (userProfile?.lessons_used_this_month ?? 0) >= 5) {
-    return NextResponse.json({ error: 'Free limit reached' }, { status: 402 })
+  const hasAccess = userProfile?.subscription_status === 'trialing' || userProfile?.subscription_status === 'pro'
+  if (!hasAccess) {
+    return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
   }
 
   const { cvText, jobTitle, jobDescription, targetCountry, experienceLevel } = await req.json()

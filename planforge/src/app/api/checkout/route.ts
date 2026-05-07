@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    if (profile.subscription_status === 'pro') {
-      return NextResponse.json({ error: 'Already subscribed to Pro' }, { status: 400 })
+    if (profile.subscription_status === 'pro' || profile.subscription_status === 'trialing') {
+      return NextResponse.json({ error: 'Already subscribed' }, { status: 400 })
     }
 
     // Create or reuse Stripe customer
@@ -49,16 +49,18 @@ export async function POST(req: NextRequest) {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
+      payment_method_collection: 'always',
       line_items: [
         {
           price: process.env.STRIPE_PRO_PRICE_ID!,
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/dashboard?upgraded=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/dashboard`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/onboarding`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/trial-setup`,
       metadata: { userId },
       subscription_data: {
+        trial_period_days: 7,
         metadata: { userId },
       },
       allow_promotion_codes: true,

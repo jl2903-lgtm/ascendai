@@ -55,6 +55,34 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(redirectTo, request.url))
   }
 
+  // Enforce trial setup: authenticated users with no active subscription must
+  // complete checkout before accessing any dashboard route.
+  if (session && isProtected && !pathname.startsWith('/trial-setup')) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('subscription_status')
+      .eq('id', session.user.id)
+      .single()
+
+    const status = profile?.subscription_status
+    const hasActiveAccess =
+      status === 'trialing' || status === 'pro'
+
+    // Cancelled/expired users can still view library (read-only), blocked elsewhere
+    const isLibraryRoute = pathname.startsWith('/dashboard/saved') || pathname.startsWith('/dashboard/shared-resources')
+    const blockedStatus = status === 'cancelled' || status === 'expired'
+
+    if (!hasActiveAccess && !isLibraryRoute) {
+      if (!status || status === 'free') {
+        // New user or legacy free user — needs to set up trial
+        return NextResponse.redirect(new URL('/trial-setup', request.url))
+      }
+      if (blockedStatus) {
+        return NextResponse.redirect(new URL('/trial-setup', request.url))
+      }
+    }
+  }
+
   return response
 }
 

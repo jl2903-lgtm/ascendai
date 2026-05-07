@@ -44,7 +44,7 @@ export interface PracticeSession {
   expires_at: string
 }
 
-export type SubscriptionStatus = 'free' | 'pro' | 'cancelled'
+export type SubscriptionStatus = 'free' | 'trialing' | 'pro' | 'cancelled' | 'expired'
 
 export interface UserProfile {
   id: string
@@ -53,6 +53,7 @@ export interface UserProfile {
   stripe_customer_id: string | null
   subscription_status: SubscriptionStatus
   subscription_id: string | null
+  trial_end: string | null
   lessons_used_this_month: number
   worksheets_used_this_month: number
   error_coach_used_this_month: number

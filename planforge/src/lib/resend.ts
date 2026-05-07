@@ -43,16 +43,46 @@ export async function sendEmail({ to, subject, html, replyTo }: EmailPayload): P
 export async function sendWelcomeEmail(email: string, _name: string) {
   return sendEmail({
     to: email,
-    subject: 'Welcome to Tyoutor Pro — your first lesson is waiting',
+    subject: 'Your 7-day free trial has started — welcome to Tyoutor Pro',
     html: `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,sans-serif;">
   <div style="background:linear-gradient(135deg,#2D6A4F,#40916C);padding:24px 32px;border-radius:8px 8px 0 0;">
     <span style="font-size:18px;font-weight:800;color:white;">Tyoutor <span style="color:#FFD4C4;">Pro</span></span>
   </div>
   <div style="background:white;padding:40px;border:1px solid #EEEEE8;border-top:none;border-radius:0 0 8px 8px;">
-    <h1 style="font-size:28px;font-weight:800;color:#1A1A1A;margin:0 0 16px;">Welcome to Tyoutor Pro! ✏️</h1>
-    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 24px;">You're 60 seconds away from your first tailored lesson plan. Set up your class once — Tyoutor Pro remembers everything.</p>
-    <a href="https://tyoutorpro.io/onboarding" style="display:inline-block;background:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Generate my first lesson →</a>
-    <p style="font-size:12px;color:#BBB;margin:16px 0 0;">5 free lessons. No credit card required.</p>
+    <h1 style="font-size:28px;font-weight:800;color:#1A1A1A;margin:0 0 16px;">Your 7-day free trial has started! ✏️</h1>
+    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;">You have full access to all 6 tools for the next 7 days — no restrictions.</p>
+    <ul style="font-size:15px;color:#444;line-height:2;padding-left:20px;margin:0 0 24px;">
+      <li>Unlimited lesson generation</li>
+      <li>Unlimited worksheets with answer keys</li>
+      <li>Error Coach, Demo Lesson Builder, Job Assistant</li>
+      <li>PDF export on everything</li>
+      <li>Saved library &amp; class profiles</li>
+    </ul>
+    <a href="https://tyoutorpro.io/onboarding" style="display:inline-block;background:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Set up my first lesson →</a>
+    <p style="font-size:12px;color:#BBB;margin:16px 0 0;">After 7 days, $19/month. Cancel anytime from settings — no charge if you cancel before day 7.</p>
+  </div>
+  <div style="padding:16px 32px;">
+    <p style="font-size:11px;color:#BBB;">Tyoutor Pro · tyoutorpro.io</p>
+  </div>
+</div>`,
+  })
+}
+
+export async function sendTrialEndingReminderEmail(email: string, name: string, daysLeft: number) {
+  const firstName = name?.split(' ')[0] || 'there'
+  return sendEmail({
+    to: email,
+    subject: `Your Tyoutor Pro trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+    html: `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,sans-serif;">
+  <div style="background:linear-gradient(135deg,#92400E,#B45309);padding:24px 32px;border-radius:8px 8px 0 0;">
+    <span style="font-size:18px;font-weight:800;color:white;">Tyoutor <span style="color:#FFD4C4;">Pro</span></span>
+  </div>
+  <div style="background:white;padding:40px;border:1px solid #EEEEE8;border-top:none;border-radius:0 0 8px 8px;">
+    <h1 style="font-size:24px;font-weight:800;color:#1A1A1A;margin:0 0 16px;">⚠️ Your trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}, ${firstName}</h1>
+    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;">After your trial ends, your card will be charged $19/month automatically and you'll keep full Pro access.</p>
+    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 24px;">If you'd like to cancel, you can do so in one click from your settings page — no charge will be made.</p>
+    <a href="https://tyoutorpro.io/dashboard/settings" style="display:inline-block;background:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;margin-right:12px;">Go to Settings</a>
+    <a href="https://tyoutorpro.io/dashboard" style="display:inline-block;background:#F5F4F0;color:#2D2D2D;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Continue using Pro</a>
   </div>
   <div style="padding:16px 32px;">
     <p style="font-size:11px;color:#BBB;">Tyoutor Pro · tyoutorpro.io</p>
@@ -72,7 +102,7 @@ export async function sendUpgradeConfirmationEmail(email: string, name: string) 
   </div>
   <div style="background:white;padding:40px;border:1px solid #EEEEE8;border-top:none;border-radius:0 0 8px 8px;">
     <h1 style="font-size:24px;font-weight:800;color:#1A1A1A;margin:0 0 16px;">You're all set, ${firstName}! 🎉</h1>
-    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;">Your Pro subscription is now active. Here's what you've unlocked:</p>
+    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;">Your trial has converted to a Pro subscription. Here's what you've unlocked:</p>
     <ul style="font-size:15px;color:#444;line-height:2;padding-left:20px;margin:0 0 24px;">
       <li>Unlimited lesson generation</li>
       <li>Unlimited worksheets</li>
@@ -81,27 +111,6 @@ export async function sendUpgradeConfirmationEmail(email: string, name: string) 
       <li>Full saved library &amp; class profiles</li>
     </ul>
     <a href="https://tyoutorpro.io/dashboard" style="display:inline-block;background:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Go to Dashboard →</a>
-  </div>
-  <div style="padding:16px 32px;">
-    <p style="font-size:11px;color:#BBB;">Tyoutor Pro · tyoutorpro.io</p>
-  </div>
-</div>`,
-  })
-}
-
-export async function sendUsageResetEmail(email: string, name: string) {
-  const firstName = name?.split(' ')[0] || 'there'
-  return sendEmail({
-    to: email,
-    subject: 'Your free lessons have reset for this month',
-    html: `<div style="max-width:600px;margin:0 auto;font-family:-apple-system,sans-serif;">
-  <div style="background:linear-gradient(135deg,#2D6A4F,#40916C);padding:24px 32px;border-radius:8px 8px 0 0;">
-    <span style="font-size:18px;font-weight:800;color:white;">Tyoutor <span style="color:#FFD4C4;">Pro</span></span>
-  </div>
-  <div style="background:white;padding:40px;border:1px solid #EEEEE8;border-top:none;border-radius:0 0 8px 8px;">
-    <h1 style="font-size:24px;font-weight:800;color:#1A1A1A;margin:0 0 16px;">New month, new lessons 📚</h1>
-    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 24px;">Hey ${firstName}, your 5 free lesson generations have just reset. Happy planning!</p>
-    <a href="https://tyoutorpro.io/dashboard/lesson-generator" style="display:inline-block;background:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Generate a Lesson →</a>
   </div>
   <div style="padding:16px 32px;">
     <p style="font-size:11px;color:#BBB;">Tyoutor Pro · tyoutorpro.io</p>
