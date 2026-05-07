@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync-ghl": "npx tsx scripts/sync-users-to-ghl.ts"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
