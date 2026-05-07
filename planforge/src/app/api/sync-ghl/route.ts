@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export const maxDuration = 300
+
 const SECRET = 'sync-existing-2026'
-const DELAY_MS = 500
+const DELAY_MS = 100
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
