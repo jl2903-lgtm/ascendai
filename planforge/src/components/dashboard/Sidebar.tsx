@@ -2,7 +2,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { cn, FREE_LIMITS } from '@/lib/utils'
+import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
 import { UserProfile } from '@/types'
 import {
   BookOpen,
@@ -14,7 +15,6 @@ import {
   Settings,
   Globe,
   Users,
-  Sparkles,
   Wand2,
 } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
@@ -47,8 +47,6 @@ const LIBRARY_LINKS = [
   { label: 'Settings',         href: '/dashboard/settings',         icon: Settings },
 ]
 
-const FREE_LESSON_LIMIT = 5
-
 const SECTION_LABEL_STYLE: React.CSSProperties = {
   fontSize: 9,
   fontWeight: 700,
@@ -57,28 +55,134 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
   textTransform: 'uppercase',
 }
 
-export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) {
-  const pathname = usePathname()
-  const [upgradeLoading, setUpgradeLoading] = useState(false)
-  const isFree = userProfile.subscription_status === 'free'
-  const lessonsUsed = Math.min(userProfile.lessons_used_this_month, FREE_LESSON_LIMIT)
-  const progressPercent = Math.round((lessonsUsed / FREE_LESSON_LIMIT) * 100)
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+function LegacyUpgradeCard({ userProfile }: { userProfile: UserProfile }) {
+  const [loading, setLoading] = useState(false)
+  const used = userProfile.lessons_used_this_month ?? 0
+  const limit = FREE_LIMITS.lessons
+  const remaining = Math.max(0, limit - used)
+  const pct = Math.min(100, Math.round((used / limit) * 100))
+  const isUrgent = remaining <= 1
 
   const handleUpgrade = async () => {
-    setUpgradeLoading(true)
+    setLoading(true)
     try {
-      const res = await fetch('/api/checkout', { method: 'POST' })
+      const res = await fetch('/api/stripe/direct-checkout', { method: 'POST' })
       const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
-      }
-    } catch {
-      // silently fail — user can try again
+      if (data.url) window.location.href = data.url
     } finally {
-      setUpgradeLoading(false)
+      setLoading(false)
     }
   }
+
+  return (
+    <div className="p-4">
+      <div
+        className="rounded-2xl p-4 space-y-2.5"
+        style={{
+          background: isUrgent
+            ? 'linear-gradient(135deg, #92400E, #B45309)'
+            : 'linear-gradient(135deg, #2D2D2D, #4A473E)',
+        }}
+      >
+        <div>
+          <p className="text-white font-extrabold text-sm">Free Plan</p>
+          <p className="mt-0.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            {used} of {limit} free lessons used
+          </p>
+        </div>
+        <div
+          className="h-1.5 w-full overflow-hidden rounded-full"
+          style={{ background: 'rgba(255,255,255,0.2)' }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${pct}%`,
+              background: isUrgent
+                ? 'linear-gradient(90deg, #FBBF24, #F59E0B)'
+                : 'linear-gradient(90deg, #52B788, #95D5B2)',
+              boxShadow: isUrgent
+                ? '0 2px 8px rgba(251,191,36,0.4)'
+                : '0 2px 8px rgba(82,183,136,0.4)',
+            }}
+          />
+        </div>
+        <button
+          onClick={handleUpgrade}
+          disabled={loading}
+          className="w-full text-center text-[12.5px] font-bold py-2 rounded-xl transition-all disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg, #2D6A4F, #40916C)', color: 'white' }}
+        >
+          {loading ? 'Loading...' : 'Upgrade to Pro →'}
+        </button>
+        <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          $19/mo · Unlimited access · Cancel anytime
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function TrialBadge({ trialEnd }: { trialEnd: string | null }) {
+  if (!trialEnd) return null
+
+  const msLeft = new Date(trialEnd).getTime() - Date.now()
+  const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)))
+  const isUrgent = daysLeft <= 2
+  const progressPercent = Math.round(((7 - daysLeft) / 7) * 100)
+
+  return (
+    <div className="p-4">
+      <div
+        className="rounded-2xl p-4 space-y-2.5"
+        style={{
+          background: isUrgent
+            ? 'linear-gradient(135deg, #92400E, #B45309)'
+            : 'linear-gradient(135deg, #1B4332, #2D6A4F)',
+        }}
+      >
+        <div>
+          <p className="text-white font-extrabold text-sm">
+            {isUrgent ? '⚠️ Trial ending soon' : 'Free Trial'}
+          </p>
+          <p className="mt-0.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            {daysLeft === 0
+              ? 'Trial expires today'
+              : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} remaining`}
+          </p>
+        </div>
+        <div
+          className="h-1.5 w-full overflow-hidden rounded-full"
+          style={{ background: 'rgba(255,255,255,0.2)' }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${progressPercent}%`,
+              background: isUrgent
+                ? 'linear-gradient(90deg, #FBBF24, #F59E0B)'
+                : 'linear-gradient(90deg, #52B788, #95D5B2)',
+              boxShadow: isUrgent
+                ? '0 2px 8px rgba(251,191,36,0.4)'
+                : '0 2px 8px rgba(82,183,136,0.4)',
+            }}
+          />
+        </div>
+        <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
+          $19/mo after trial · Cancel anytime
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) {
+  const pathname = usePathname()
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const isLegacyUser = new Date(userProfile.created_at) < FREE_TRIAL_CUTOFF
+  const isPro = userProfile.subscription_status === 'pro'
+  const isTrialing = userProfile.subscription_status === 'trialing'
+  const showLegacyCard = isLegacyUser && !isPro && !isTrialing
 
   const navItem = (href: string, Icon: React.ElementType, label: string) => {
     const active = isActive(href)
@@ -152,62 +256,10 @@ export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) 
         </div>
       </nav>
 
-      {/* Upgrade card — free users only */}
-      {isFree && (
-        <div className="p-4">
-          <div
-            className="relative overflow-hidden rounded-2xl p-4 space-y-3"
-            style={{ background: 'linear-gradient(135deg, #2D6A4F, #1B4332)' }}
-          >
-            {/* Decorative circle */}
-            <div
-              style={{
-                position: 'absolute',
-                top: -20,
-                right: -20,
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.05)',
-              }}
-            />
-            <div>
-              <p className="text-white font-extrabold text-sm">Go Pro ✨</p>
-              <p className="mt-0.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                {lessonsUsed}/{FREE_LESSON_LIMIT} free lessons used
-              </p>
-            </div>
-            <div
-              className="h-1.5 w-full overflow-hidden rounded-full"
-              style={{ background: 'rgba(255,255,255,0.2)' }}
-            >
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #52B788, #95D5B2)',
-                  boxShadow: '0 2px 8px rgba(82,183,136,0.4)',
-                }}
-              />
-            </div>
-            <button
-              onClick={handleUpgrade}
-              disabled={upgradeLoading}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white bg-white/15 hover:bg-white/25 transition-colors disabled:opacity-60"
-            >
-              {upgradeLoading ? (
-                <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" />
-              )}
-              {upgradeLoading ? 'Redirecting...' : 'Upgrade to Pro'}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Trial countdown — new trialing users only */}
+      {isTrialing && <TrialBadge trialEnd={userProfile.trial_end} />}
+      {/* Free usage counter — legacy users who haven't upgraded */}
+      {showLegacyCard && <LegacyUpgradeCard userProfile={userProfile} />}
     </aside>
     </>
   )

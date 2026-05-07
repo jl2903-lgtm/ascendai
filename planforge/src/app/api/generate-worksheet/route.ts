@@ -3,6 +3,8 @@ import { createRouteClient } from '@/lib/supabase/route-handler'
 
 import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { FREE_LIMITS } from '@/lib/utils'
+import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
 import type { WorksheetFormData, WorksheetContent, ClassContext } from '@/types'
 
 
@@ -89,24 +91,31 @@ export async function POST(req: NextRequest) {
 
     const { data: profile } = await supabase
       .from('users')
-      .select('subscription_status')
+      .select('subscription_status, created_at, worksheets_used_this_month')
       .eq('id', userId)
       .single()
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    const isFree = profile.subscription_status === 'free' || profile.subscription_status === 'cancelled'
+    const isLegacyUser = new Date(profile.created_at) < FREE_TRIAL_CUTOFF
+    if (isLegacyUser) {
+      const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+      if (!isPaid && (profile.worksheets_used_this_month ?? 0) >= FREE_LIMITS.worksheets) {
+        return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
+      }
+    } else {
+      const hasAccess = profile.subscription_status === 'trialing' || profile.subscription_status === 'pro'
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
+      }
+    }
 
-    // Query user_stats early — used for both limit check and post-generation upsert
+    // Query user_stats for post-generation upsert
     const { data: existingStats } = await supabase
       .from('user_stats')
       .select('total_worksheets_created, worksheets_this_week, last_weekly_reset')
       .eq('user_id', userId)
       .single()
-
-    if (isFree && (existingStats?.total_worksheets_created ?? 0) >= 5) {
-      return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
-    }
 
     const body: WorksheetFormData & { classContext?: ClassContext } = await req.json()
     if (!body.exerciseTypes?.length || !body.topic || !body.level) {
@@ -142,6 +151,17 @@ export async function POST(req: NextRequest) {
       worksheets_this_week: weekExpired ? 1 : (existingStats?.worksheets_this_week ?? 0) + 1,
       ...(weekExpired ? { last_weekly_reset: now.toISOString(), lessons_this_week: 0 } : {}),
     }, { onConflict: 'user_id' })
+
+    // Increment monthly counter for legacy free users
+    if (isLegacyUser) {
+      const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+      if (!isPaid) {
+        await supabase
+          .from('users')
+          .update({ worksheets_used_this_month: (profile.worksheets_used_this_month ?? 0) + 1 })
+          .eq('id', userId)
+      }
+    }
 
     return NextResponse.json(worksheetContent)
   } catch (error) {

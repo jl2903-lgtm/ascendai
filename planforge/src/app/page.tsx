@@ -37,7 +37,7 @@ const HOMEPAGE_FAQS = [
   },
   {
     q: 'Is Tyoutor Pro free?',
-    a: 'Yes — the free tier includes 5 lesson plans, 5 worksheets, basic Error Coach access, and unlimited Class Profiles, with no credit card required. Pro is $19/month and unlocks unlimited generation across all 6 tools, PDF export, saved library, and priority generation.',
+    a: 'Tyoutor Pro offers a 7-day free trial with full access to all 6 tools. After the trial it\'s $19/month. Cancel before day 7 and you won\'t be charged anything.',
   },
   {
     q: 'What types of lessons can I generate?',
@@ -73,8 +73,7 @@ export default function LandingPage() {
     url: SITE_URL,
     description: 'Generate complete, L1-aware lesson plans in 60 seconds. Worksheets, error coaching, demo lessons, and class profiles built for ESL & TEFL teachers.',
     offers: [
-      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', description: '5 free lesson plans, 5 free worksheets, class profiles' },
-      { '@type': 'Offer', name: 'Pro',  price: '12', priceCurrency: 'USD', description: 'Unlimited lessons and worksheets, all 6 tools, PDF export, priority generation' },
+      { '@type': 'Offer', name: 'Pro', price: '19', priceCurrency: 'USD', description: '7-day free trial, then $19/month. Unlimited lessons, worksheets, all 6 tools, PDF export, priority generation.' },
     ],
     aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.9', reviewCount: '120' },
   }
@@ -124,7 +123,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/signup" className="btn-primary w-full sm:w-auto inline-flex items-center justify-center px-8 py-4" style={{ fontSize:15, fontWeight:800 }}>
-              Start Free Today →
+              Start 7-Day Free Trial →
             </Link>
             <a href="#how-it-works" className="w-full sm:w-auto inline-flex items-center justify-center font-bold px-8 py-4 rounded-full transition-all" style={{ background:'rgba(255,255,255,0.80)', backdropFilter:'blur(12px)', border:'1px solid #E8E4DE', color:'#2D2D2D', fontSize:15 }}>
               See How It Works
@@ -312,52 +311,26 @@ export default function LandingPage() {
         <div className="relative max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>Pricing</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>Simple, Honest Pricing</h2>
-            <p className="text-lg font-medium" style={{ color:'#6B6860' }}>Start free. Upgrade when you&apos;re ready.</p>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>7 days free, then $19/month</h2>
+            <p className="text-lg font-medium" style={{ color:'#6B6860' }}>Full access from day one. No charge during trial. Cancel anytime.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Free */}
-            <div className="bg-white rounded-2xl p-8 card-lift flex flex-col" style={{ border:'1px solid #E8E4DE' }}>
-              <div className="h-7 mb-4 flex-shrink-0" />
-              <div className="mb-6">
-                <h3 className="text-xl font-extrabold mb-1" style={{ color:'#2D2D2D' }}>Free</h3>
-                <div className="text-4xl font-extrabold" style={{ color:'#2D2D2D' }}>$0</div>
-                <div className="text-sm mt-1 font-medium" style={{ color:'#8C8880' }}>Forever free</div>
-              </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {['5 lessons free', '5 worksheets free', 'Basic lesson generator', 'Error Coach (3 uses)', 'Demo Lesson (1 use)', 'Class Profiles (unlimited)'].map(f => (
-                  <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color:'#4A473E' }}>
-                    <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color:'#2D6A4F' }} />
-                    {f}
-                  </li>
-                ))}
-                {['PDF export', 'Save to library'].map(f => (
-                  <li key={f} className="flex items-center gap-3 text-sm font-medium line-through" style={{ color:'#C4C0BA' }}>
-                    <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ border:'1px solid #E8E4DE' }} />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/auth/signup" className="block w-full text-center font-bold px-6 py-3 rounded-xl transition-all hover:border-[#2D6A4F] hover:text-[#2D6A4F]" style={{ border:'1.5px solid #E8E4DE', color:'#4A473E' }}>
-                Get Started Free
-              </Link>
-            </div>
+          <div className="max-w-md mx-auto">
             {/* Pro — dark forest card */}
             <div className="rounded-2xl p-8 card-lift flex flex-col" style={{ background:'#1B4332', border:'1.5px solid #2D6A4F' }}>
               <div className="flex justify-center mb-4 flex-shrink-0">
                 <span className="text-white text-xs font-extrabold px-4 py-1.5 rounded-full" style={{ background:'#2D6A4F' }}>
-                  MOST POPULAR
+                  7-DAY FREE TRIAL
                 </span>
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-extrabold mb-1 text-white">Pro</h3>
                 <div className="text-4xl font-extrabold" style={{ color:'#52B788' }}>
-                  $12<span className="text-xl font-semibold" style={{ color:'rgba(255,255,255,0.45)' }}>/month</span>
+                  $19<span className="text-xl font-semibold" style={{ color:'rgba(255,255,255,0.45)' }}>/month</span>
                 </div>
-                <div className="text-sm mt-1 font-medium" style={{ color:'rgba(255,255,255,0.45)' }}>Cancel anytime</div>
+                <div className="text-sm mt-1 font-medium" style={{ color:'rgba(255,255,255,0.45)' }}>After 7-day free trial · No charge today</div>
               </div>
               <ul className="space-y-3 mb-8 flex-1">
-                {['Unlimited lessons', 'Unlimited worksheets', 'All 6 tools — unlimited', 'PDF export on everything', 'Save & organise your library', 'Class Profiles — AI auto-fill', 'Priority generation'].map(f => (
+                {['Unlimited lessons', 'Unlimited worksheets', 'All 6 tools — unlimited', 'PDF export on everything', 'Save & organise your library', 'Class Profiles — AI auto-fill', 'Priority generation', 'Cancel anytime'].map(f => (
                   <li key={f} className="flex items-center gap-3 text-sm font-medium" style={{ color:'rgba(255,255,255,0.85)' }}>
                     <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color:'#52B788' }} />
                     {f}
@@ -365,8 +338,9 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link href="/auth/signup" className="block w-full text-center font-bold px-6 py-3.5 rounded-xl transition-all text-white" style={{ background:'#2D6A4F', boxShadow:'0 4px 20px rgba(45,106,79,0.45)' }}>
-                Upgrade to Pro
+                Start 7-Day Free Trial →
               </Link>
+              <p className="text-xs text-center mt-3" style={{ color:'rgba(255,255,255,0.35)' }}>Card required. Cancel before day 7 — no charge.</p>
             </div>
           </div>
         </div>
@@ -399,7 +373,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-xl mb-10 font-medium" style={{ color:'#6B6860' }}>Join thousands of TEFL teachers who plan smarter with Tyoutor Pro.</p>
           <Link href="/auth/signup" className="btn-primary inline-flex items-center gap-2 px-10 py-5 text-xl">
-            Start Free Today
+            Start 7-Day Free Trial
             <Zap className="w-5 h-5" />
           </Link>
         </div>

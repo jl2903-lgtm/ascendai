@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 
 export default function SignupPage() {
@@ -11,7 +11,6 @@ export default function SignupPage() {
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validate = () => {
@@ -31,7 +30,7 @@ export default function SignupPage() {
     setErrors({})
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -41,39 +40,33 @@ export default function SignupPage() {
       })
       if (error) {
         setErrors({ general: error.message })
-      } else {
-        await fetch('/api/send-welcome-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email, name: formData.fullName }),
-        }).catch(() => {})
-        setSuccess(true)
+        return
       }
+
+      // Send welcome email in background
+      fetch('/api/send-welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, name: formData.fullName }),
+      }).catch(() => {})
+
+      // If we have a session (email confirmation not required), go straight to checkout
+      if (data.session) {
+        const res = await fetch('/api/stripe/create-checkout', { method: 'POST' })
+        const json = await res.json()
+        if (json.url) {
+          window.location.href = json.url
+          return
+        }
+      }
+
+      // Fallback: send to trial-setup page (handles both email-confirm and no-checkout cases)
+      window.location.href = '/trial-setup'
     } catch {
       setErrors({ general: 'Something went wrong. Please try again.' })
     } finally {
       setLoading(false)
     }
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
-        <div className="w-full max-w-md text-center">
-          <div className="w-16 h-16 bg-teal-50 border border-teal-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-teal-600" />
-          </div>
-          <h1 className="text-2xl font-bold text-[#2D2D2D] mb-3">Check your email</h1>
-          <p className="text-[#6B6860] mb-6 font-medium">
-            We sent a confirmation link to <strong className="text-[#2D2D2D]">{formData.email}</strong>.
-            Click it to activate your account and start planning lessons.
-          </p>
-          <Link href="/auth/login" className="text-teal-600 hover:text-teal-500 font-bold text-sm transition-colors">
-            Back to login
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -87,8 +80,8 @@ export default function SignupPage() {
           <div className="mb-6 flex justify-center">
             <Logo size="lg" />
           </div>
-          <h1 className="text-2xl font-bold text-[#2D2D2D]">Create your account</h1>
-          <p className="text-[#6B6860] mt-2 font-medium">5 free lessons to get started. No credit card needed.</p>
+          <h1 className="text-2xl font-bold text-[#2D2D2D]">Start your free 7-day trial</h1>
+          <p className="text-[#6B6860] mt-2 font-medium">Full access to all tools. Cancel before day 7 — no charge.</p>
         </div>
 
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">
@@ -151,14 +144,14 @@ export default function SignupPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Creating account...
+                  Setting up your trial...
                 </>
-              ) : 'Create free account'}
+              ) : 'Start free trial →'}
             </button>
           </form>
 
           <p className="text-xs text-[#8C8880] text-center mt-4 font-medium">
-            By signing up you agree to our Terms of Service and Privacy Policy.
+            $19/month after 7 days. Cancel anytime. By signing up you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>
 

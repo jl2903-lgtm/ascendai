@@ -1,17 +1,16 @@
 import Link from 'next/link'
-import { BookOpen, CheckCircle, X } from 'lucide-react'
+import { BookOpen, CheckCircle } from 'lucide-react'
 import type { Metadata } from 'next'
-import { PricingUpgradeButton } from '@/components/pricing/PricingUpgradeButton'
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
 
 export const metadata: Metadata = {
-  title: 'Pricing — Tyoutor Pro | Free & Pro Plans for ESL Teachers',
-  description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools for $19/month. Cancel anytime.',
+  title: 'Pricing — Tyoutor Pro | 7-Day Free Trial for ESL Teachers',
+  description: 'Start your 7-day free trial. Full access to all 6 tools. $19/month after trial. Cancel anytime.',
   alternates: { canonical: `${SITE_URL}/pricing` },
   openGraph: {
-    title: 'Pricing — Tyoutor Pro | Free & Pro Plans for ESL Teachers',
-    description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools for $19/month. Cancel anytime.',
+    title: 'Pricing — Tyoutor Pro | 7-Day Free Trial for ESL Teachers',
+    description: 'Start your 7-day free trial. Full access to all 6 tools. $19/month after trial. Cancel anytime.',
     type: 'website',
     url: `${SITE_URL}/pricing`,
     siteName: 'Tyoutor Pro',
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Pricing — Tyoutor Pro',
-    description: 'Start free with 5 lesson plans. Pro gives you unlimited access to all 6 tools.',
+    description: 'Start your 7-day free trial. $19/month after trial. Cancel anytime.',
     images: ['/og-default.jpg'],
   },
 }
@@ -34,21 +33,12 @@ const PRODUCT_JSON_LD = {
   offers: [
     {
       '@type': 'Offer',
-      name: 'Free',
-      price: '0',
-      priceCurrency: 'USD',
-      url: `${SITE_URL}/auth/signup`,
-      availability: 'https://schema.org/InStock',
-      description: '5 lesson plans, 5 worksheets, basic tools, class profiles',
-    },
-    {
-      '@type': 'Offer',
       name: 'Pro',
-      price: '12',
+      price: '19',
       priceCurrency: 'USD',
       url: `${SITE_URL}/auth/signup`,
       availability: 'https://schema.org/InStock',
-      description: 'Unlimited lessons, unlimited worksheets, all 6 tools, PDF export, priority generation',
+      description: '7-day free trial, then $19/month. Unlimited lessons, worksheets, all 6 tools, PDF export, priority generation.',
     },
   ],
 }
@@ -56,23 +46,23 @@ const PRODUCT_JSON_LD = {
 const PRICING_FAQS = [
   {
     q: 'How much does Tyoutor Pro cost?',
-    a: 'Tyoutor Pro has two plans. The Free plan is $0 forever and includes 5 lesson plans, 5 worksheets, and unlimited Class Profiles. The Pro plan is $12/month and unlocks unlimited lessons and worksheets, all 6 tools, PDF export, saved library, and priority generation.',
+    a: 'Tyoutor Pro is $19/month after a 7-day free trial. During the trial you get full access to all 6 tools with no restrictions. Cancel before day 7 and you won\'t be charged.',
   },
   {
-    q: 'Is there a free trial?',
-    a: 'You don’t need a trial — the Free plan is permanent. You can use the core lesson generator, worksheet builder, and Class Profiles forever without paying. Upgrade to Pro only when you hit the free quota or want PDF export.',
+    q: 'Do I need a credit card for the free trial?',
+    a: 'Yes — we ask for your card details upfront so there\'s no interruption when your trial converts. You won\'t be charged during the 7-day trial. Cancel any time before day 7 and you pay nothing.',
   },
   {
     q: 'Can I cancel anytime?',
-    a: 'Yes. Cancel from your settings page in one click. You keep Pro access until the end of your billing period and your saved lessons remain in your account.',
+    a: 'Yes. Cancel from your settings page in one click before day 7 and you won\'t be charged at all. If you cancel after converting, you keep Pro access until the end of your billing period.',
+  },
+  {
+    q: 'What do I get during the trial?',
+    a: 'Everything — unlimited lesson generation, unlimited worksheets, all 6 tools, PDF export on everything, saved library, class profiles, and priority AI generation.',
   },
   {
     q: 'Do you offer discounts for schools or annual billing?',
     a: 'Yes — annual billing saves about two months versus monthly, and we offer school and language-academy site licenses. Email support@tyoutorpro.io with your team size for a quote.',
-  },
-  {
-    q: 'How does Tyoutor Pro pricing compare to manual lesson planning?',
-    a: 'Manual planning costs roughly 18 hours a month for an active ESL teacher. At even $10/hour of your time, that’s $180 a month in opportunity cost — versus $12 for unlimited Pro access. Most teachers reclaim their Sundays in the first week.',
   },
   {
     q: 'What payment methods do you accept?',
@@ -91,24 +81,12 @@ const PRICING_FAQ_JSON_LD = {
 }
 
 const COMPARISON_ROWS: { label: string; manual: string; tyoutor: string }[] = [
-  { label: 'Time to plan one lesson',         manual: '45–90 minutes',                tyoutor: '60 seconds' },
-  { label: 'L1-aware error prediction',       manual: 'Manual research per class',    tyoutor: 'Automatic' },
-  { label: 'Worksheet creation',              manual: 'Photoshop or Word, 30+ min',   tyoutor: 'Generated with answer key' },
-  { label: 'Demo lesson with methodology',    manual: 'A weekend of prep',            tyoutor: '60 seconds, hiring-panel ready' },
-  { label: 'Cost per month',                  manual: '~18 hours of your time',       tyoutor: '$12 (or $0 on Free)' },
-  { label: 'Reusable across your classes',    manual: 'Rewrite from scratch',         tyoutor: 'Class Profiles auto-fill everything' },
-]
-
-const FREE_FEATURES = [
-  { text: '5 lessons free', included: true },
-  { text: '5 worksheets free', included: true },
-  { text: 'Basic lesson generator', included: true },
-  { text: 'Error Coach (3 uses/month)', included: true },
-  { text: 'Demo Lesson (1 use/month)', included: true },
-  { text: 'PDF export', included: false },
-  { text: 'Save & organise library', included: false },
-  { text: 'L1-aware grammar explainer', included: false },
-  { text: 'Cultural context filter', included: false },
+  { label: 'Time to plan one lesson',         manual: '45–90 minutes',             tyoutor: '60 seconds' },
+  { label: 'L1-aware error prediction',       manual: 'Manual research per class', tyoutor: 'Automatic' },
+  { label: 'Worksheet creation',              manual: 'Photoshop or Word, 30+ min', tyoutor: 'Generated with answer key' },
+  { label: 'Demo lesson with methodology',    manual: 'A weekend of prep',          tyoutor: '60 seconds, hiring-panel ready' },
+  { label: 'Cost per month',                  manual: '~18 hours of your time',     tyoutor: '$19/month (free for 7 days)' },
+  { label: 'Reusable across your classes',    manual: 'Rewrite from scratch',       tyoutor: 'Class Profiles auto-fill everything' },
 ]
 
 const PRO_FEATURES = [
@@ -139,7 +117,7 @@ export default function PricingPage() {
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-[#6B6860] hover:text-white transition-colors px-4 py-2">Log in</Link>
-            <Link href="/auth/signup" className="bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">Start Free</Link>
+            <Link href="/auth/signup" className="bg-teal-600 hover:bg-teal-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">Start Free Trial</Link>
           </div>
         </div>
       </nav>
@@ -148,60 +126,28 @@ export default function PricingPage() {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-            Simple, honest pricing
+            7 days free, then $19/month
           </h1>
           <p className="text-xl text-[#6B6860]">
-            Start free. Upgrade when you need more. Cancel anytime.
+            Full access from day one. No charge during trial. Cancel anytime.
           </p>
         </div>
 
-        {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto items-start">
-
-          {/* Free card */}
-          <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 flex flex-col">
-            {/* invisible spacer so price aligns with Pro card */}
-            <div className="h-8 mb-4" />
-            <div className="mb-8">
-              <div className="text-sm font-semibold text-[#6B6860] uppercase tracking-wider mb-3">Free</div>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-5xl font-extrabold">$0</span>
-              </div>
-              <p className="text-[#6B6860] text-sm">Forever free · No credit card</p>
-            </div>
-
-            <ul className="space-y-3 mb-8 flex-1">
-              {FREE_FEATURES.map(f => (
-                <li key={f.text} className={`flex items-center gap-3 text-sm ${f.included ? 'text-[#4A473E]' : 'text-[#8C8880]'}`}>
-                  {f.included ? (
-                    <CheckCircle className="w-4 h-4 text-teal-500 flex-shrink-0" />
-                  ) : (
-                    <X className="w-4 h-4 text-[#C4C0BA] flex-shrink-0" />
-                  )}
-                  <span className={f.included ? '' : 'line-through'}>{f.text}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Link href="/auth/signup" className="block w-full text-center border border-[#E8E4DE] hover:border-teal-500 text-[#6B6860] hover:text-teal-700 font-semibold px-6 py-3.5 rounded-xl transition-colors">
-              Get Started Free
-            </Link>
-          </div>
-
-          {/* Pro card — badge sits inside the card at the top */}
+        {/* Single plan card */}
+        <div className="max-w-md mx-auto">
           <div className="bg-gradient-to-b from-teal-900/40 via-[#1E293B] to-[#1E293B] border border-teal-600/60 rounded-2xl p-8 shadow-xl shadow-teal-200/60 flex flex-col">
             <div className="flex justify-center mb-4">
               <span className="bg-teal-500 text-white text-xs font-bold px-5 py-1.5 rounded-full tracking-widest uppercase">
-                Most Popular
+                7-Day Free Trial
               </span>
             </div>
             <div className="mb-8">
               <div className="text-sm font-semibold text-teal-400 uppercase tracking-wider mb-3">Pro</div>
               <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-5xl font-extrabold text-white">$12</span>
+                <span className="text-5xl font-extrabold text-white">$19</span>
                 <span className="text-teal-300/70 text-lg">/month</span>
               </div>
-              <p className="text-teal-300/60 text-sm">Cancel anytime · No hidden fees</p>
+              <p className="text-teal-300/60 text-sm">After 7-day free trial · No charge today</p>
             </div>
 
             <ul className="space-y-3 mb-8 flex-1">
@@ -213,18 +159,21 @@ export default function PricingPage() {
               ))}
             </ul>
 
-            <PricingUpgradeButton
-              className="block w-full text-center bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
+            <Link
+              href="/auth/signup"
+              className="block w-full text-center bg-teal-500 hover:bg-teal-400 text-white font-bold px-6 py-3.5 rounded-xl transition-colors shadow-lg shadow-teal-600/25"
             >
-              Upgrade to Pro
-            </PricingUpgradeButton>
+              Start 7-Day Free Trial →
+            </Link>
+            <p className="text-teal-300/50 text-xs text-center mt-3">
+              Card required. Cancel before day 7 — no charge.
+            </p>
           </div>
-
         </div>
 
-        {/* Feature comparison */}
+        {/* Feature breakdown */}
         <div className="mt-20">
-          <h2 className="text-2xl font-bold text-center mb-10">Everything you get with Pro</h2>
+          <h2 className="text-2xl font-bold text-center mb-10">Everything included in your trial</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { title: 'Lesson Generator', items: ['Unlimited lessons', 'All levels A1–C2', 'L1-aware notes', 'Cultural sensitivity flags', 'PDF export'] },
@@ -287,10 +236,10 @@ export default function PricingPage() {
 
         {/* Bottom CTA */}
         <div className="text-center mt-20">
-          <h2 className="text-2xl font-bold mb-4">Still not sure?</h2>
-          <p className="text-[#6B6860] mb-6">Try the free plan. No credit card. No pressure.</p>
+          <h2 className="text-2xl font-bold mb-4">Ready to reclaim your Sundays?</h2>
+          <p className="text-[#6B6860] mb-6">7 days free. No charge today. Cancel before day 7 if it&#39;s not for you.</p>
           <Link href="/auth/signup" className="inline-block bg-teal-600 hover:bg-teal-500 text-white font-bold px-8 py-4 rounded-xl transition-colors shadow-lg shadow-teal-600/25">
-            Start Free Today
+            Start 7-Day Free Trial →
           </Link>
         </div>
       </main>

@@ -44,22 +44,29 @@ export async function POST(req: NextRequest) {
           break
         }
 
+        // Fetch subscription to get trial_end date
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null
+
         const { error } = await supabase
           .from('users')
           .update({
-            subscription_status: 'pro',
-            subscription_tier: 'pro',
+            subscription_status: 'trialing',
+            subscription_tier: 'trialing',
             subscription_id: subscriptionId,
             stripe_customer_id: customerId,
+            trial_end: trialEnd,
           })
           .eq('id', userId)
 
         if (error) {
-          console.error('[webhooks/stripe] Failed to upgrade user:', error)
+          console.error('[webhooks/stripe] Failed to start trial for user:', error)
           break
         }
 
-        console.log(`[webhooks/stripe] User ${userId} upgraded to Pro — sub: ${subscriptionId}`)
+        console.log(`[webhooks/stripe] User ${userId} started trial — sub: ${subscriptionId}, trial_end: ${trialEnd}`)
         break
       }
 
@@ -73,6 +80,7 @@ export async function POST(req: NextRequest) {
           subscription_status: 'cancelled' as const,
           subscription_tier: 'cancelled',
           subscription_id: null,
+          trial_end: null,
           error_coach_used_this_month: 0,
           demo_lesson_used_this_month: 0,
           job_assistant_used_this_month: 0,
@@ -82,7 +90,6 @@ export async function POST(req: NextRequest) {
           await supabase.from('users').update(resetFields).eq('id', userId)
           console.log(`[webhooks/stripe] User ${userId} subscription cancelled`)
         } else {
-          // Fall back to customer ID lookup
           const { data: profile } = await supabase
             .from('users')
             .select('id')
@@ -106,8 +113,10 @@ export async function POST(req: NextRequest) {
         const customerId = subscription.customer as string
         const stripeStatus = subscription.status
 
-        let internalStatus: 'pro' | 'cancelled' | 'free'
-        if (stripeStatus === 'active' || stripeStatus === 'trialing') {
+        let internalStatus: 'trialing' | 'pro' | 'cancelled'
+        if (stripeStatus === 'trialing') {
+          internalStatus = 'trialing'
+        } else if (stripeStatus === 'active') {
           internalStatus = 'pro'
         } else if (
           stripeStatus === 'canceled' ||
@@ -121,10 +130,15 @@ export async function POST(req: NextRequest) {
           break
         }
 
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null
+
         const updatePayload: Record<string, unknown> = {
           subscription_status: internalStatus,
           subscription_tier: internalStatus,
           subscription_id: internalStatus === 'cancelled' ? null : subscription.id,
+          trial_end: internalStatus === 'pro' ? null : trialEnd,
         }
 
         if (internalStatus === 'cancelled') {

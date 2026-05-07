@@ -7,12 +7,24 @@ export async function POST(request: NextRequest) {
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
     // Fire GHL webhook (fire-and-forget)
-    const ghlWebhookUrl = process.env.GHL_WEBHOOK_URL
-    if (ghlWebhookUrl) {
-      fetch(ghlWebhookUrl, {
+    if (process.env.GHL_WEBHOOK_URL) {
+      const userName = name ?? ''
+      const userEmail = email
+      const nameParts = (userName || '').trim().split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      fetch(process.env.GHL_WEBHOOK_URL!, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: name ?? '', event: 'user_signup' }),
+        body: JSON.stringify({
+          firstName: firstName,
+          lastName: lastName,
+          name: userName || '',
+          email: userEmail,
+          source: 'Tyoutor Pro Signup',
+          tags: ['tyoutor-pro-signup'],
+        }),
       }).catch(() => {})
     }
 
