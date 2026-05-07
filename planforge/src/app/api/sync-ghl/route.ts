@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export const maxDuration = 300
-
 const SECRET = 'sync-existing-2026'
-const DELAY_MS = 100
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
 
 function splitName(fullName: string | null): { firstName: string; lastName: string } {
   const parts = (fullName || '').trim().split(' ')
@@ -37,15 +30,12 @@ export async function GET(req: NextRequest) {
   }
 
   const total = users?.length ?? 0
-  let synced = 0
   const failures: { email: string; error: string }[] = []
 
-  for (let i = 0; i < (users ?? []).length; i++) {
-    const user = users![i]
-    const { firstName, lastName } = splitName(user.full_name)
-
-    try {
-      const res = await fetch(ghlUrl, {
+  const results = await Promise.allSettled(
+    (users ?? []).map(user => {
+      const { firstName, lastName } = splitName(user.full_name)
+      return fetch(ghlUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -56,23 +46,24 @@ export async function GET(req: NextRequest) {
           source: 'Tyoutor Pro - Existing User Sync',
           tags: ['tyoutor-pro-signup', 'existing-user'],
         }),
+      }).then(async res => {
+        if (!res.ok) {
+          const body = await res.text().catch(() => res.statusText)
+          throw new Error(`HTTP ${res.status}: ${body}`)
+        }
+        return user.email
       })
+    })
+  )
 
-      if (!res.ok) {
-        const body = await res.text().catch(() => res.statusText)
-        throw new Error(`HTTP ${res.status}: ${body}`)
-      }
-
+  let synced = 0
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
       synced++
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      failures.push({ email: user.email, error: msg })
+    } else {
+      failures.push({ email: users![i].email, error: result.reason?.message ?? String(result.reason) })
     }
-
-    if (i < (users ?? []).length - 1) {
-      await sleep(DELAY_MS)
-    }
-  }
+  })
 
   return NextResponse.json({
     total,
