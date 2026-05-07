@@ -50,6 +50,23 @@ export async function GET(req: NextRequest) {
     }
 
     const total = users?.length ?? 0
+
+    // Preview mode: return the first 5 payloads without sending to GHL
+    if (req.nextUrl.searchParams.get('preview') === 'true') {
+      const preview = (users ?? []).slice(0, 5).map(user => {
+        const resolvedName = nameByEmail.get(user.email?.toLowerCase()) || user.full_name || ''
+        const { firstName, lastName } = splitName(resolvedName)
+        return {
+          email: user.email,
+          public_full_name: user.full_name,
+          auth_metadata_name: nameByEmail.get(user.email?.toLowerCase()) ?? null,
+          resolved_name: resolvedName,
+          payload: { firstName, lastName, name: resolvedName, email: user.email },
+        }
+      })
+      return NextResponse.json({ total, preview })
+    }
+
     const failures: { email: string; error: string }[] = []
 
     const results = await Promise.allSettled(
