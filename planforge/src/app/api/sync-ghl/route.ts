@@ -9,6 +9,7 @@ function splitName(fullName: string | null): { firstName: string; lastName: stri
 }
 
 export async function GET(req: NextRequest) {
+  try {
   if (req.nextUrl.searchParams.get('secret') !== SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -17,6 +18,11 @@ export async function GET(req: NextRequest) {
   if (!ghlUrl) {
     return NextResponse.json({ error: 'GHL_WEBHOOK_URL not configured' }, { status: 500 })
   }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl) return NextResponse.json({ error: 'NEXT_PUBLIC_SUPABASE_URL not configured' }, { status: 500 })
+  if (!supabaseKey) return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' }, { status: 500 })
 
   const supabase = createAdminClient()
 
@@ -71,4 +77,8 @@ export async function GET(req: NextRequest) {
     failed: failures.length,
     failures,
   })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: 'Unexpected error', detail: msg }, { status: 500 })
+  }
 }
