@@ -1,7 +1,9 @@
 'use client'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import { cn, FREE_LIMITS } from '@/lib/utils'
+import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
 import { UserProfile } from '@/types'
 import {
   BookOpen,
@@ -51,6 +53,74 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
   color: '#8C8880',
   letterSpacing: '1.2px',
   textTransform: 'uppercase',
+}
+
+function LegacyUpgradeCard({ userProfile }: { userProfile: UserProfile }) {
+  const [loading, setLoading] = useState(false)
+  const used = userProfile.lessons_used_this_month ?? 0
+  const limit = FREE_LIMITS.lessons
+  const remaining = Math.max(0, limit - used)
+  const pct = Math.min(100, Math.round((used / limit) * 100))
+  const isUrgent = remaining <= 1
+
+  const handleUpgrade = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/stripe/direct-checkout', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="p-4">
+      <div
+        className="rounded-2xl p-4 space-y-2.5"
+        style={{
+          background: isUrgent
+            ? 'linear-gradient(135deg, #92400E, #B45309)'
+            : 'linear-gradient(135deg, #2D2D2D, #4A473E)',
+        }}
+      >
+        <div>
+          <p className="text-white font-extrabold text-sm">Free Plan</p>
+          <p className="mt-0.5 text-[11px]" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            {used} of {limit} free lessons used
+          </p>
+        </div>
+        <div
+          className="h-1.5 w-full overflow-hidden rounded-full"
+          style={{ background: 'rgba(255,255,255,0.2)' }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${pct}%`,
+              background: isUrgent
+                ? 'linear-gradient(90deg, #FBBF24, #F59E0B)'
+                : 'linear-gradient(90deg, #52B788, #95D5B2)',
+              boxShadow: isUrgent
+                ? '0 2px 8px rgba(251,191,36,0.4)'
+                : '0 2px 8px rgba(82,183,136,0.4)',
+            }}
+          />
+        </div>
+        <button
+          onClick={handleUpgrade}
+          disabled={loading}
+          className="w-full text-center text-[12.5px] font-bold py-2 rounded-xl transition-all disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg, #2D6A4F, #40916C)', color: 'white' }}
+        >
+          {loading ? 'Loading...' : 'Upgrade to Pro →'}
+        </button>
+        <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          $19/mo · Unlimited access · Cancel anytime
+        </p>
+      </div>
+    </div>
+  )
 }
 
 function TrialBadge({ trialEnd }: { trialEnd: string | null }) {
@@ -109,7 +179,10 @@ function TrialBadge({ trialEnd }: { trialEnd: string | null }) {
 export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const isLegacyUser = new Date(userProfile.created_at) < FREE_TRIAL_CUTOFF
+  const isPro = userProfile.subscription_status === 'pro'
   const isTrialing = userProfile.subscription_status === 'trialing'
+  const showLegacyCard = isLegacyUser && !isPro && !isTrialing
 
   const navItem = (href: string, Icon: React.ElementType, label: string) => {
     const active = isActive(href)
@@ -183,8 +256,10 @@ export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) 
         </div>
       </nav>
 
-      {/* Trial status indicator — trialing users only */}
+      {/* Trial countdown — new trialing users only */}
       {isTrialing && <TrialBadge trialEnd={userProfile.trial_end} />}
+      {/* Free usage counter — legacy users who haven't upgraded */}
+      {showLegacyCard && <LegacyUpgradeCard userProfile={userProfile} />}
     </aside>
     </>
   )

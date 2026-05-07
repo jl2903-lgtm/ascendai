@@ -3,6 +3,8 @@ import { createRouteClient } from '@/lib/supabase/route-handler'
 
 import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { FREE_LIMITS } from '@/lib/utils'
+import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
 import type { LessonFormData, LessonContent, ClassContext } from '@/types'
 
 
@@ -124,15 +126,23 @@ export async function POST(req: NextRequest) {
 
     const { data: profile } = await supabase
       .from('users')
-      .select('subscription_status')
+      .select('subscription_status, created_at, lessons_used_this_month')
       .eq('id', userId)
       .single()
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
-    const hasAccess = profile.subscription_status === 'trialing' || profile.subscription_status === 'pro'
-    if (!hasAccess) {
-      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
+    const isLegacyUser = new Date(profile.created_at) < FREE_TRIAL_CUTOFF
+    if (isLegacyUser) {
+      const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+      if (!isPaid && (profile.lessons_used_this_month ?? 0) >= FREE_LIMITS.lessons) {
+        return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
+      }
+    } else {
+      const hasAccess = profile.subscription_status === 'trialing' || profile.subscription_status === 'pro'
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
+      }
     }
 
     // Query user_stats for post-generation upsert
@@ -176,6 +186,17 @@ export async function POST(req: NextRequest) {
       lessons_this_week: weekExpired ? 1 : (existingStats?.lessons_this_week ?? 0) + 1,
       ...(weekExpired ? { last_weekly_reset: now.toISOString(), worksheets_this_week: 0 } : {}),
     }, { onConflict: 'user_id' })
+
+    // Increment monthly counter for legacy free users so the limit tracks correctly
+    if (isLegacyUser) {
+      const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+      if (!isPaid) {
+        await supabase
+          .from('users')
+          .update({ lessons_used_this_month: (profile.lessons_used_this_month ?? 0) + 1 })
+          .eq('id', userId)
+      }
+    }
 
     return NextResponse.json(lessonContent)
   } catch (error) {

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { getOpenAIClient } from '@/lib/openai'
+import { FREE_LIMITS } from '@/lib/utils'
+import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies()
@@ -13,16 +15,23 @@ export async function POST(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  // Check usage limit for free users
   const { data: userProfile } = await supabase
     .from('users')
-    .select('subscription_status, lessons_used_this_month')
+    .select('subscription_status, created_at, lessons_used_this_month')
     .eq('id', session.user.id)
     .single()
 
-  const hasAccess = userProfile?.subscription_status === 'trialing' || userProfile?.subscription_status === 'pro'
-  if (!hasAccess) {
-    return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
+  const isLegacyUser = !!userProfile?.created_at && new Date(userProfile.created_at) < FREE_TRIAL_CUTOFF
+  if (isLegacyUser) {
+    const isPaid = userProfile?.subscription_status === 'pro' || userProfile?.subscription_status === 'trialing'
+    if (!isPaid && (userProfile?.lessons_used_this_month ?? 0) >= FREE_LIMITS.lessons) {
+      return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
+    }
+  } else {
+    const hasAccess = userProfile?.subscription_status === 'trialing' || userProfile?.subscription_status === 'pro'
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
+    }
   }
 
   const { cvText, jobTitle, jobDescription, targetCountry, experienceLevel } = await req.json()
@@ -74,11 +83,16 @@ Be specific and actionable. Focus on ELT-specific requirements like teaching cer
     if (!jsonMatch) throw new Error('Invalid response format')
     const result = JSON.parse(jsonMatch[0])
 
-    // Increment usage counter
-    await supabase
-      .from('users')
-      .update({ lessons_used_this_month: (userProfile?.lessons_used_this_month ?? 0) + 1 })
-      .eq('id', session.user.id)
+    // Increment usage counter for legacy free users only
+    if (isLegacyUser) {
+      const isPaid = userProfile?.subscription_status === 'pro' || userProfile?.subscription_status === 'trialing'
+      if (!isPaid) {
+        await supabase
+          .from('users')
+          .update({ lessons_used_this_month: (userProfile?.lessons_used_this_month ?? 0) + 1 })
+          .eq('id', session.user.id)
+      }
+    }
 
     return NextResponse.json(result)
   } catch (err) {

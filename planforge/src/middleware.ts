@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/auth-helpers-nextjs'
 import { NextResponse, type NextRequest } from 'next/server'
+import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
 
 export async function middleware(request: NextRequest) {
   // www -> apex redirects are handled by Vercel domain settings, not middleware.
@@ -55,29 +56,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(redirectTo, request.url))
   }
 
-  // Enforce trial setup: authenticated users with no active subscription must
-  // complete checkout before accessing any dashboard route.
+  // Enforce trial setup for new users only. Legacy users (signed up before
+  // FREE_TRIAL_CUTOFF) keep the old free-generation system and are never
+  // redirected to /trial-setup — the API routes enforce their per-tool limits.
   if (session && isProtected && !pathname.startsWith('/trial-setup')) {
     const { data: profile } = await supabase
       .from('users')
-      .select('subscription_status')
+      .select('subscription_status, created_at')
       .eq('id', session.user.id)
       .single()
 
     const status = profile?.subscription_status
-    const hasActiveAccess =
-      status === 'trialing' || status === 'pro'
+    const isLegacyUser = !!profile?.created_at && new Date(profile.created_at) < FREE_TRIAL_CUTOFF
+    const hasActiveAccess = status === 'trialing' || status === 'pro'
 
-    // Cancelled/expired users can still view library (read-only), blocked elsewhere
-    const isLibraryRoute = pathname.startsWith('/dashboard/saved') || pathname.startsWith('/dashboard/shared-resources')
-    const blockedStatus = status === 'cancelled' || status === 'expired'
-
-    if (!hasActiveAccess && !isLibraryRoute) {
-      if (!status || status === 'free') {
-        // New user or legacy free user — needs to set up trial
-        return NextResponse.redirect(new URL('/trial-setup', request.url))
-      }
-      if (blockedStatus) {
+    // Legacy users always pass through — their limits are enforced at the API level
+    if (!isLegacyUser && !hasActiveAccess) {
+      const isLibraryRoute =
+        pathname.startsWith('/dashboard/saved') ||
+        pathname.startsWith('/dashboard/shared-resources')
+      if (!isLibraryRoute) {
         return NextResponse.redirect(new URL('/trial-setup', request.url))
       }
     }
