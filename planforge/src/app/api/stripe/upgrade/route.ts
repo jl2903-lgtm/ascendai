@@ -32,6 +32,17 @@ export async function POST(req: NextRequest) {
     const isLegacyUser = new Date(profile.created_at) < FREE_TRIAL_CUTOFF
 
     let customerId = profile.stripe_customer_id
+
+    // Verify the stored customer still exists in Stripe — it may have been
+    // deleted or belong to a different Stripe environment (test vs live).
+    if (customerId) {
+      try {
+        await stripe.customers.retrieve(customerId)
+      } catch {
+        customerId = null
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: userEmail,
