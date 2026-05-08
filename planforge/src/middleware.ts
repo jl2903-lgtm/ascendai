@@ -72,10 +72,14 @@ export async function middleware(request: NextRequest) {
 
     // Legacy users always pass through — their limits are enforced at the API level
     if (!isLegacyUser && !hasActiveAccess) {
-      const isLibraryRoute =
+      // /onboarding is the post-payment landing page — exempting it avoids
+      // a race condition where the Stripe webhook hasn't updated
+      // subscription_status before the user is redirected back from Stripe.
+      const isExemptRoute =
         pathname.startsWith('/dashboard/saved') ||
-        pathname.startsWith('/dashboard/shared-resources')
-      if (!isLibraryRoute) {
+        pathname.startsWith('/dashboard/shared-resources') ||
+        pathname.startsWith('/onboarding')
+      if (!isExemptRoute) {
         return NextResponse.redirect(new URL('/trial-setup', request.url))
       }
     }

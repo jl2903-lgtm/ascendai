@@ -57,6 +57,7 @@ const SECTION_LABEL_STYLE: React.CSSProperties = {
 
 function LegacyUpgradeCard({ userProfile }: { userProfile: UserProfile }) {
   const [loading, setLoading] = useState(false)
+  const [upgradeError, setUpgradeError] = useState<string | null>(null)
   const used = userProfile.lessons_used_this_month ?? 0
   const limit = FREE_LIMITS.lessons
   const remaining = Math.max(0, limit - used)
@@ -65,10 +66,17 @@ function LegacyUpgradeCard({ userProfile }: { userProfile: UserProfile }) {
 
   const handleUpgrade = async () => {
     setLoading(true)
+    setUpgradeError(null)
     try {
-      const res = await fetch('/api/stripe/direct-checkout', { method: 'POST' })
+      const res = await fetch('/api/stripe/upgrade', { method: 'POST' })
       const data = await res.json()
-      if (data.url) window.location.href = data.url
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setUpgradeError(data.error ?? 'Something went wrong. Please try again.')
+      }
+    } catch {
+      setUpgradeError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -107,6 +115,9 @@ function LegacyUpgradeCard({ userProfile }: { userProfile: UserProfile }) {
             }}
           />
         </div>
+        {upgradeError && (
+          <p className="text-[10px] text-red-300">{upgradeError}</p>
+        )}
         <button
           onClick={handleUpgrade}
           disabled={loading}

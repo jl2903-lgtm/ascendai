@@ -29,7 +29,7 @@ export function UpgradeModal({ isOpen, onClose, toolName, limit }: UpgradeModalP
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/stripe/create-checkout', {
+      const res = await fetch('/api/stripe/upgrade', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
