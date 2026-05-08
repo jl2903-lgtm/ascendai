@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
     // deleted or belong to a different Stripe environment (test vs live).
     if (customerId) {
       try {
-        await stripe.customers.retrieve(customerId)
+        const existing = await stripe.customers.retrieve(customerId)
+        if (existing.deleted) customerId = null
       } catch {
         customerId = null
       }
