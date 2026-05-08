@@ -127,7 +127,7 @@ function LegacyUpgradeCard({ userProfile }: { userProfile: UserProfile }) {
           {loading ? 'Loading...' : 'Upgrade to Pro →'}
         </button>
         <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          $19/mo · Unlimited access · Cancel anytime
+          $12/mo · Unlimited access · Cancel anytime
         </p>
       </div>
     </div>
@@ -180,7 +180,7 @@ function TrialBadge({ trialEnd }: { trialEnd: string | null }) {
           />
         </div>
         <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.55)' }}>
-          $19/mo after trial · Cancel anytime
+          $12/mo after trial · Cancel anytime
         </p>
       </div>
     </div>

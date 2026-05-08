@@ -46,7 +46,7 @@ export default function TrialSetupPage() {
           <div className="space-y-3">
             {[
               { icon: Clock, text: '7 days completely free — no charge today' },
-              { icon: CreditCard, text: '$19/month after trial. Cancel anytime before day 7.' },
+              { icon: CreditCard, text: '$12/month after trial. Cancel anytime before day 7.' },
               { icon: Shield, text: 'Secure card capture via Stripe. We never store card details.' },
             ].map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">

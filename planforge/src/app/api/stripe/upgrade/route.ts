@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url }, { status: 200 })
   } catch (error) {
-    console.error('[stripe/upgrade] Error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('[stripe/upgrade] Error:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

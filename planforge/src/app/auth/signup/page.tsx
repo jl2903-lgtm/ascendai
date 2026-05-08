@@ -151,7 +151,7 @@ export default function SignupPage() {
           </form>
 
           <p className="text-xs text-[#8C8880] text-center mt-4 font-medium">
-            $19/month after 7 days. Cancel anytime. By signing up you agree to our Terms of Service and Privacy Policy.
+            $12/month after 7 days. Cancel anytime. By signing up you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>
 

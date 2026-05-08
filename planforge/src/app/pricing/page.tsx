@@ -6,11 +6,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'
 
 export const metadata: Metadata = {
   title: 'Pricing — Tyoutor Pro | 7-Day Free Trial for ESL Teachers',
-  description: 'Start your 7-day free trial. Full access to all 6 tools. $19/month after trial. Cancel anytime.',
+  description: 'Start your 7-day free trial. Full access to all 6 tools. $12/month after trial. Cancel anytime.',
   alternates: { canonical: `${SITE_URL}/pricing` },
   openGraph: {
     title: 'Pricing — Tyoutor Pro | 7-Day Free Trial for ESL Teachers',
-    description: 'Start your 7-day free trial. Full access to all 6 tools. $19/month after trial. Cancel anytime.',
+    description: 'Start your 7-day free trial. Full access to all 6 tools. $12/month after trial. Cancel anytime.',
     type: 'website',
     url: `${SITE_URL}/pricing`,
     siteName: 'Tyoutor Pro',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Pricing — Tyoutor Pro',
-    description: 'Start your 7-day free trial. $19/month after trial. Cancel anytime.',
+    description: 'Start your 7-day free trial. $12/month after trial. Cancel anytime.',
     images: ['/og-default.jpg'],
   },
 }
@@ -34,11 +34,11 @@ const PRODUCT_JSON_LD = {
     {
       '@type': 'Offer',
       name: 'Pro',
-      price: '19',
+      price: '12',
       priceCurrency: 'USD',
       url: `${SITE_URL}/auth/signup`,
       availability: 'https://schema.org/InStock',
-      description: '7-day free trial, then $19/month. Unlimited lessons, worksheets, all 6 tools, PDF export, priority generation.',
+      description: '7-day free trial, then $12/month. Unlimited lessons, worksheets, all 6 tools, PDF export, priority generation.',
     },
   ],
 }
@@ -46,7 +46,7 @@ const PRODUCT_JSON_LD = {
 const PRICING_FAQS = [
   {
     q: 'How much does Tyoutor Pro cost?',
-    a: 'Tyoutor Pro is $19/month after a 7-day free trial. During the trial you get full access to all 6 tools with no restrictions. Cancel before day 7 and you won\'t be charged.',
+    a: 'Tyoutor Pro is $12/month after a 7-day free trial. During the trial you get full access to all 6 tools with no restrictions. Cancel before day 7 and you won\'t be charged.',
   },
   {
     q: 'Do I need a credit card for the free trial?',
@@ -85,7 +85,7 @@ const COMPARISON_ROWS: { label: string; manual: string; tyoutor: string }[] = [
   { label: 'L1-aware error prediction',       manual: 'Manual research per class', tyoutor: 'Automatic' },
   { label: 'Worksheet creation',              manual: 'Photoshop or Word, 30+ min', tyoutor: 'Generated with answer key' },
   { label: 'Demo lesson with methodology',    manual: 'A weekend of prep',          tyoutor: '60 seconds, hiring-panel ready' },
-  { label: 'Cost per month',                  manual: '~18 hours of your time',     tyoutor: '$19/month (free for 7 days)' },
+  { label: 'Cost per month',                  manual: '~18 hours of your time',     tyoutor: '$12/month (free for 7 days)' },
   { label: 'Reusable across your classes',    manual: 'Rewrite from scratch',       tyoutor: 'Class Profiles auto-fill everything' },
 ]
 
@@ -126,7 +126,7 @@ export default function PricingPage() {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-            7 days free, then $19/month
+            7 days free, then $12/month
           </h1>
           <p className="text-xl text-[#6B6860]">
             Full access from day one. No charge during trial. Cancel anytime.

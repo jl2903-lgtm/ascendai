@@ -37,7 +37,7 @@ const HOMEPAGE_FAQS = [
   },
   {
     q: 'Is Tyoutor Pro free?',
-    a: 'Tyoutor Pro offers a 7-day free trial with full access to all 6 tools. After the trial it\'s $19/month. Cancel before day 7 and you won\'t be charged anything.',
+    a: 'Tyoutor Pro offers a 7-day free trial with full access to all 6 tools. After the trial it\'s $12/month. Cancel before day 7 and you won\'t be charged anything.',
   },
   {
     q: 'What types of lessons can I generate?',
@@ -73,7 +73,7 @@ export default function LandingPage() {
     url: SITE_URL,
     description: 'Generate complete, L1-aware lesson plans in 60 seconds. Worksheets, error coaching, demo lessons, and class profiles built for ESL & TEFL teachers.',
     offers: [
-      { '@type': 'Offer', name: 'Pro', price: '19', priceCurrency: 'USD', description: '7-day free trial, then $19/month. Unlimited lessons, worksheets, all 6 tools, PDF export, priority generation.' },
+      { '@type': 'Offer', name: 'Pro', price: '12', priceCurrency: 'USD', description: '7-day free trial, then $12/month. Unlimited lessons, worksheets, all 6 tools, PDF export, priority generation.' },
     ],
     aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.9', reviewCount: '120' },
   }
@@ -311,7 +311,7 @@ export default function LandingPage() {
         <div className="relative max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color:'#2D6A4F' }}>Pricing</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>7 days free, then $19/month</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color:'#2D2D2D', letterSpacing:'-0.5px' }}>7 days free, then $12/month</h2>
             <p className="text-lg font-medium" style={{ color:'#6B6860' }}>Full access from day one. No charge during trial. Cancel anytime.</p>
           </div>
           <div className="max-w-md mx-auto">
@@ -325,7 +325,7 @@ export default function LandingPage() {
               <div className="mb-6">
                 <h3 className="text-xl font-extrabold mb-1 text-white">Pro</h3>
                 <div className="text-4xl font-extrabold" style={{ color:'#52B788' }}>
-                  $19<span className="text-xl font-semibold" style={{ color:'rgba(255,255,255,0.45)' }}>/month</span>
+                  $12<span className="text-xl font-semibold" style={{ color:'rgba(255,255,255,0.45)' }}>/month</span>
                 </div>
                 <div className="text-sm mt-1 font-medium" style={{ color:'rgba(255,255,255,0.45)' }}>After 7-day free trial · No charge today</div>
               </div>

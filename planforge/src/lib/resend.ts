@@ -59,7 +59,7 @@ export async function sendWelcomeEmail(email: string, _name: string) {
       <li>Saved library &amp; class profiles</li>
     </ul>
     <a href="https://tyoutorpro.io/onboarding" style="display:inline-block;background:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Set up my first lesson →</a>
-    <p style="font-size:12px;color:#BBB;margin:16px 0 0;">After 7 days, $19/month. Cancel anytime from settings — no charge if you cancel before day 7.</p>
+    <p style="font-size:12px;color:#BBB;margin:16px 0 0;">After 7 days, $12/month. Cancel anytime from settings — no charge if you cancel before day 7.</p>
   </div>
   <div style="padding:16px 32px;">
     <p style="font-size:11px;color:#BBB;">Tyoutor Pro · tyoutorpro.io</p>
@@ -79,7 +79,7 @@ export async function sendTrialEndingReminderEmail(email: string, name: string, 
   </div>
   <div style="background:white;padding:40px;border:1px solid #EEEEE8;border-top:none;border-radius:0 0 8px 8px;">
     <h1 style="font-size:24px;font-weight:800;color:#1A1A1A;margin:0 0 16px;">⚠️ Your trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}, ${firstName}</h1>
-    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;">After your trial ends, your card will be charged $19/month automatically and you'll keep full Pro access.</p>
+    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;">After your trial ends, your card will be charged $12/month automatically and you'll keep full Pro access.</p>
     <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 24px;">If you'd like to cancel, you can do so in one click from your settings page — no charge will be made.</p>
     <a href="https://tyoutorpro.io/dashboard/settings" style="display:inline-block;background:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;margin-right:12px;">Go to Settings</a>
     <a href="https://tyoutorpro.io/dashboard" style="display:inline-block;background:#F5F4F0;color:#2D2D2D;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;">Continue using Pro</a>
