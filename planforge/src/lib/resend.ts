@@ -1,4 +1,4 @@
-const FROM = 'Tyoutor Pro <info@tyoutorpro.io>'
+const FROM = process.env.RESEND_FROM_EMAIL || 'Tyoutor Pro <info@mail.tyoutorpro.io>'
 
 export interface EmailPayload {
   to: string
