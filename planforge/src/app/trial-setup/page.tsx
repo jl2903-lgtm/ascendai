@@ -17,7 +17,7 @@ export default function TrialSetupPage() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        setError('Could not create checkout session. Please try again.')
+        setError(data.error ?? 'Could not create checkout session. Please try again.')
       }
     } catch {
       setError('Something went wrong. Please try again.')
