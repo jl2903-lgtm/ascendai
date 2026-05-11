@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -14,7 +14,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [showResend, setShowResend] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
+
+  // Surface errors passed via query param (e.g. from /auth/callback on bad token)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlError = params.get('error')
+    if (urlError) setErrors({ general: urlError })
+  }, [])
 
   const validate = () => {
     const errs: typeof errors = {}
@@ -24,16 +33,41 @@ export default function LoginPage() {
     return errs
   }
 
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      setErrors({ general: 'Enter your email address above, then click resend.' })
+      return
+    }
+    setResendLoading(true)
+    try {
+      await supabase.auth.resend({ type: 'signup', email })
+      setErrors({ general: 'Confirmation email sent — check your inbox.' })
+      setShowResend(false)
+    } catch {
+      setErrors({ general: 'Could not resend confirmation email. Please try again.' })
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
+    setShowResend(false)
     setLoading(true)
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
-        setErrors({ general: error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message })
+        if (error.message === 'Email not confirmed') {
+          setErrors({ general: 'Please confirm your email before signing in. Check your inbox for a confirmation link.' })
+          setShowResend(true)
+        } else if (error.message === 'Invalid login credentials') {
+          setErrors({ general: 'Incorrect email or password.' })
+        } else {
+          setErrors({ general: error.message })
+        }
       } else {
         router.push('/dashboard')
         router.refresh()
@@ -62,8 +96,21 @@ export default function LoginPage() {
 
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">
           {errors.general && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm mb-6 font-medium">
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm mb-4 font-medium">
               {errors.general}
+            </div>
+          )}
+
+          {showResend && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={resendLoading}
+                className="w-full text-center text-sm text-teal-700 bg-teal-50 border border-teal-200 rounded-xl px-4 py-2.5 font-semibold hover:bg-teal-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resendLoading ? 'Sending…' : 'Resend confirmation email'}
+              </button>
             </div>
           )}
 

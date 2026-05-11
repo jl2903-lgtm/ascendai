@@ -6,6 +6,7 @@ import type { NextRequest } from 'next/server'
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') ?? '/trial-setup'
 
   if (code) {
     const cookieStore = cookies()
@@ -24,8 +25,16 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-    await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      return NextResponse.redirect(
+        new URL(
+          `/auth/login?error=${encodeURIComponent('Confirmation link expired or invalid. Please sign in and request a new one.')}`,
+          request.url
+        )
+      )
+    }
   }
 
-  return NextResponse.redirect(new URL('/dashboard', request.url))
+  return NextResponse.redirect(new URL(next, request.url))
 }

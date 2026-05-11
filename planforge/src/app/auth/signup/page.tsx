@@ -43,6 +43,13 @@ export default function SignupPage() {
         return
       }
 
+      // Supabase returns {user: null, session: null, error: null} when the email
+      // is already registered (identity deduplication with "Confirm email" ON).
+      if (!data.user || data.user.identities?.length === 0) {
+        setErrors({ general: 'An account with this email already exists. Please sign in instead.' })
+        return
+      }
+
       // Send welcome email in background
       fetch('/api/send-welcome-email', {
         method: 'POST',
