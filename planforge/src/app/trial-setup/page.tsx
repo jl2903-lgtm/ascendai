@@ -1,12 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Logo } from '@/components/ui/Logo'
-import { CreditCard, Shield, Clock } from 'lucide-react'
+import { CreditCard, Shield, Clock, Mail } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function TrialSetupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [hasSession, setHasSession] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session)
+    })
+  }, [])
 
   const handleStartTrial = async () => {
     setLoading(true)
@@ -58,31 +67,45 @@ export default function TrialSetupPage() {
             ))}
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm font-medium">
-              {error}
+          {hasSession === false ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
+              <Mail className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Check your email first</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  We sent you a confirmation link. Click it to verify your account, then come back here to activate your trial.
+                </p>
+              </div>
             </div>
+          ) : (
+            <>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm font-medium">
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={handleStartTrial}
+                disabled={loading || hasSession === null}
+                className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Redirecting to secure checkout...
+                  </>
+                ) : 'Activate my free trial →'}
+              </button>
+
+              <p className="text-xs text-[#8C8880] text-center font-medium">
+                Payments secured by Stripe. You won&#39;t be charged during the trial.
+              </p>
+            </>
           )}
-
-          <button
-            onClick={handleStartTrial}
-            disabled={loading}
-            className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Redirecting to secure checkout...
-              </>
-            ) : 'Activate my free trial →'}
-          </button>
-
-          <p className="text-xs text-[#8C8880] text-center font-medium">
-            Payments secured by Stripe. You won&#39;t be charged during the trial.
-          </p>
         </div>
       </div>
     </div>
