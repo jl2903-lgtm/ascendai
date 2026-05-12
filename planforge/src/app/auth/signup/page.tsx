@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff } from 'lucide-react'
 import { Logo } from '@/components/ui/Logo'
 
 export default function SignupPage() {
+  const router = useRouter()
   const supabase = createClient()
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
@@ -30,46 +32,60 @@ export default function SignupPage() {
     setErrors({})
     setLoading(true)
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: { full_name: formData.fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
-      if (error) {
-        setErrors({ general: error.message })
+
+      if (signUpError) {
+        console.error('[SIGNUP] signUp failed:', {
+          message: signUpError.message,
+          status: signUpError.status,
+          email: formData.email,
+        })
+        setErrors({ general: signUpError.message })
         return
       }
 
-      // Supabase returns {user: null, session: null, error: null} when the email
-      // is already registered (identity deduplication with "Confirm email" ON).
-      if (!data.user || data.user.identities?.length === 0) {
-        setErrors({ general: 'An account with this email already exists. Please sign in instead.' })
+      // Supabase returns user with empty identities when the email is already
+      // registered and "Confirm email" is ON (identity deduplication).
+      if (!signUpData.user || signUpData.user.identities?.length === 0) {
+        setErrors({ general: 'An account with this email already exists. Please sign in.' })
         return
       }
 
-      // Send welcome email in background
+      // Immediately sign in to create a live session — bypasses email confirmation.
+      // Requires "Confirm email" to be OFF in Supabase Auth settings.
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (signInError) {
+        console.error('[SIGNUP] Auto sign-in failed:', {
+          message: signInError.message,
+          status: signInError.status,
+          email: formData.email,
+        })
+        // Account was created but session couldn't be established — send to login
+        router.push('/auth/login?message=' + encodeURIComponent('Account created. Please sign in.'))
+        return
+      }
+
+      // Fire welcome email in background — informational only at this point
       fetch('/api/send-welcome-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email, name: formData.fullName }),
-      }).catch(() => {})
+      }).catch((err) => console.error('[SIGNUP] Welcome email failed:', err))
 
-      // If we have a session (email confirmation not required), go straight to checkout
-      if (data.session) {
-        const res = await fetch('/api/stripe/create-checkout', { method: 'POST' })
-        const json = await res.json()
-        if (json.url) {
-          window.location.href = json.url
-          return
-        }
-      }
-
-      // Fallback: send to trial-setup page (handles both email-confirm and no-checkout cases)
-      window.location.href = '/trial-setup'
-    } catch {
+      // User has a session — go straight to trial setup
+      router.push('/trial-setup')
+    } catch (err) {
+      console.error('[SIGNUP] Unexpected error:', err)
       setErrors({ general: 'Something went wrong. Please try again.' })
     } finally {
       setLoading(false)

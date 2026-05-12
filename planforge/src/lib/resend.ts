@@ -55,14 +55,14 @@ export async function sendEmail({ to, subject, html, replyTo }: EmailPayload): P
 export async function sendWelcomeEmail(email: string, _name: string) {
   return sendEmail({
     to: email,
-    subject: 'Your 7-day free trial has started — welcome to Tyoutor Pro',
+    subject: 'Welcome to Tyoutor Pro — your trial is active',
     html: `<div style="max-width:600px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
   <div style="background-color:#2D6A4F;padding:20px 32px;border-radius:8px 8px 0 0;">
     ${LOGO_HEADER}
   </div>
   <div style="background:white;padding:40px;border:1px solid #EEEEE8;border-top:none;border-radius:0 0 8px 8px;">
-    <h1 style="font-size:26px;font-weight:800;color:#1A1A1A;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">Your 7-day free trial has started!</h1>
-    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">You have full access to all 6 tools for the next 7 days — no restrictions.</p>
+    <h1 style="font-size:26px;font-weight:800;color:#1A1A1A;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">Your account is ready!</h1>
+    <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">Your 7-day free trial is active. You have full access to all 6 tools — no restrictions.</p>
     <ul style="font-size:15px;color:#444;line-height:2;padding-left:20px;margin:0 0 24px;font-family:Arial,Helvetica,sans-serif;">
       <li>Unlimited lesson generation</li>
       <li>Unlimited worksheets with answer keys</li>
@@ -71,7 +71,7 @@ export async function sendWelcomeEmail(email: string, _name: string) {
       <li>Saved library &amp; class profiles</li>
     </ul>
     <p style="margin:0 0 8px;">
-      <a href="${APP_URL}/trial-setup" style="display:inline-block;background-color:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;font-family:Arial,Helvetica,sans-serif;">Activate my free trial &rarr;</a>
+      <a href="${APP_URL}/auth/login" style="display:inline-block;background-color:#2D6A4F;color:white;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;font-family:Arial,Helvetica,sans-serif;">Sign in to Tyoutor Pro &rarr;</a>
     </p>
     <p style="font-size:12px;color:#BBB;margin:16px 0 0;font-family:Arial,Helvetica,sans-serif;">After 7 days, $12/month. Cancel anytime from settings — no charge if you cancel before day 7.</p>
   </div>

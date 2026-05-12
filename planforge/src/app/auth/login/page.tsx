@@ -17,12 +17,15 @@ export default function LoginPage() {
   const [resendLoading, setResendLoading] = useState(false)
   const [showResend, setShowResend] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
+  const [infoMessage, setInfoMessage] = useState('')
 
-  // Surface errors passed via query param (e.g. from /auth/callback on bad token)
+  // Surface error/message query params (from /auth/callback or signup fallback)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const urlError = params.get('error')
+    const urlMessage = params.get('message')
     if (urlError) setErrors({ general: urlError })
+    if (urlMessage) setInfoMessage(urlMessage)
   }, [])
 
   const validate = () => {
@@ -60,6 +63,7 @@ export default function LoginPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
+        console.error('[LOGIN] signInWithPassword failed:', { message: error.message, status: error.status, email })
         if (error.message === 'Email not confirmed') {
           setErrors({ general: 'Please confirm your email before signing in. Check your inbox for a confirmation link.' })
           setShowResend(true)
@@ -72,7 +76,8 @@ export default function LoginPage() {
         router.push('/dashboard')
         router.refresh()
       }
-    } catch {
+    } catch (err) {
+      console.error('[LOGIN] Unexpected error:', err)
       setErrors({ general: 'Something went wrong. Please try again.' })
     } finally {
       setLoading(false)
@@ -95,6 +100,11 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">
+          {infoMessage && (
+            <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-teal-800 text-sm mb-4 font-medium">
+              {infoMessage}
+            </div>
+          )}
           {errors.general && (
             <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm mb-4 font-medium">
               {errors.general}
