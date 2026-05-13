@@ -13,21 +13,21 @@ export async function POST(request: NextRequest) {
     // Fire GHL webhook (fire-and-forget)
     if (process.env.GHL_WEBHOOK_URL) {
       const nameParts = name.trim().split(' ')
-      const firstName = nameParts[0] || ''
+      const firstName = nameParts[0] || 'there'
       const lastName = nameParts.slice(1).join(' ') || ''
 
       fetch(process.env.GHL_WEBHOOK_URL!, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName,
-          lastName,
-          name,
+          first_name: firstName,
+          last_name: lastName,
+          full_name: name,
           email,
           source: 'Tyoutor Pro Signup',
           tags: ['tyoutor-pro-signup'],
         }),
-      }).catch(() => {})
+      }).catch((err) => console.error('[GHL webhook] failed:', err))
     }
 
     // User-facing welcome email

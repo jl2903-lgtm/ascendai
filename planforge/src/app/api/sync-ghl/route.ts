@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
           public_full_name: user.full_name,
           auth_metadata_name: nameByEmail.get(user.email?.toLowerCase()) ?? null,
           resolved_name: resolvedName,
-          payload: { firstName, lastName, name: resolvedName, email: user.email },
+          payload: { first_name: firstName || 'there', last_name: lastName, full_name: resolvedName, email: user.email },
         }
       })
       return NextResponse.json({ total, preview })
@@ -78,9 +78,9 @@ export async function GET(req: NextRequest) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            firstName,
-            lastName,
-            name: resolvedName,
+            first_name: firstName || 'there',
+            last_name: lastName,
+            full_name: resolvedName,
             email: user.email,
             source: 'Tyoutor Pro - Existing User Sync',
             tags: ['tyoutor-pro-signup', 'existing-user'],
