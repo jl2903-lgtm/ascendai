@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
-    if (profile.subscription_status !== 'pro') {
+    if (profile.subscription_status !== 'pro' && profile.subscription_status !== 'trialing') {
       return NextResponse.json(
         { error: 'Pro subscription required to save worksheets' },
         { status: 403 }
