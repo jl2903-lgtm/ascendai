@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
           // Payment Link: userId not in metadata — resolve via customer email
           const email = session.customer_details?.email
           if (email) {
+            // Tier 1: public.users lookup
             const { data: profileByEmail } = await supabase
               .from('users')
               .select('id')
@@ -50,9 +51,72 @@ export async function POST(req: NextRequest) {
             if (profileByEmail) {
               userId = profileByEmail.id
             } else {
+              // Tier 2: auth.users lookup
               const { data: authData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
               const authUser = authData?.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
               if (authUser) userId = authUser.id
+            }
+
+            // Tier 3: auto-create account — user paid via Payment Link with no prior account
+            if (!userId) {
+              const tempPassword = crypto.randomUUID() + '!Aa1'
+              const customerName = session.customer_details?.name || ''
+              const nameParts = customerName.trim().split(' ')
+
+              const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+                email,
+                password: tempPassword,
+                email_confirm: true,
+                user_metadata: {
+                  full_name: customerName,
+                  source: 'stripe_payment_link',
+                },
+              })
+
+              if (newUser?.user) {
+                userId = newUser.user.id
+
+                // Trigger on_auth_user_created already inserted the public.users row;
+                // update it with the name (trigger may have gotten it from metadata already,
+                // but be explicit to be safe).
+                await supabase.from('users').update({
+                  full_name: customerName,
+                  stripe_customer_id: customerId,
+                }).eq('id', userId)
+
+                // Send password-reset link so they can set their own password
+                await supabase.auth.admin.generateLink({ type: 'recovery', email })
+
+                // Welcome email via Resend
+                fetch(
+                  new URL('/api/send-welcome-email', process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io').toString(),
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name: customerName }),
+                  }
+                ).catch(e => console.error('[webhooks/stripe] Welcome email failed for auto-created user:', e))
+
+                // GHL webhook
+                if (process.env.GHL_WEBHOOK_URL) {
+                  fetch(process.env.GHL_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      first_name: nameParts[0] || 'there',
+                      last_name: nameParts.slice(1).join(' ') || '',
+                      full_name: customerName,
+                      email,
+                      source: 'Tyoutor Pro - Payment Link Signup',
+                      tags: ['tyoutor-pro-signup', 'payment-link-user'],
+                    }),
+                  }).catch(() => {})
+                }
+
+                console.log('[webhooks/stripe] Auto-created Supabase account for payment link user:', email)
+              } else {
+                console.error('[webhooks/stripe] Failed to auto-create user for payment link:', createError)
+              }
             }
           }
 
