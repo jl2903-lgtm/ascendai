@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
-
 import type Stripe from 'stripe'
 
-// Required for reading the raw body to verify the Stripe signature
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
@@ -16,7 +14,6 @@ export async function POST(req: NextRequest) {
   }
 
   let event: Stripe.Event
-
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -34,19 +31,37 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-
         if (session.mode !== 'subscription') break
 
-        const userId = session.metadata?.userId
+        let userId = session.metadata?.userId
         const subscriptionId = session.subscription as string
         const customerId = session.customer as string
 
         if (!userId) {
-          console.error('[webhook] checkout.session.completed: missing userId in metadata')
-          break
+          // Payment Link: userId not in metadata — resolve via customer email
+          const email = session.customer_details?.email
+          if (email) {
+            const { data: profileByEmail } = await supabase
+              .from('users')
+              .select('id')
+              .eq('email', email)
+              .single()
+
+            if (profileByEmail) {
+              userId = profileByEmail.id
+            } else {
+              const { data: authData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+              const authUser = authData?.users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+              if (authUser) userId = authUser.id
+            }
+          }
+
+          if (!userId) {
+            console.error('[webhook] checkout.session.completed: could not resolve userId from email', session.customer_details?.email)
+            break
+          }
         }
 
-        // Fetch subscription to get trial_end date
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const trialEnd = subscription.trial_end
           ? new Date(subscription.trial_end * 1000).toISOString()
@@ -56,6 +71,7 @@ export async function POST(req: NextRequest) {
           .from('users')
           .update({
             subscription_status: 'trialing',
+            subscription_tier: 'trialing',
             subscription_id: subscriptionId,
             stripe_customer_id: customerId,
             trial_end: trialEnd,
@@ -73,11 +89,12 @@ export async function POST(req: NextRequest) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
-
         const userId = subscription.metadata?.userId
+        const customerId = subscription.customer as string
 
         const resetFields = {
           subscription_status: 'cancelled' as const,
+          subscription_tier: 'cancelled',
           subscription_id: null,
           trial_end: null,
           error_coach_used_this_month: 0,
@@ -85,33 +102,48 @@ export async function POST(req: NextRequest) {
           job_assistant_used_this_month: 0,
         }
 
-        if (!userId) {
-          const customerId = subscription.customer as string
-          const { data: profile } = await supabase
-            .from('users')
-            .select('id')
-            .eq('stripe_customer_id', customerId)
-            .single()
-
-          if (!profile) {
-            console.error('[webhook] customer.subscription.deleted: could not find user for customer', customerId)
-            break
-          }
-
-          await supabase.from('users').update(resetFields).eq('id', profile.id)
-          console.log(`[webhook] Subscription cancelled for customer ${customerId}`)
+        if (userId) {
+          await supabase.from('users').update(resetFields).eq('id', userId)
+          console.log(`[webhook] User ${userId} subscription cancelled`)
           break
         }
 
-        await supabase.from('users').update(resetFields).eq('id', userId)
-        console.log(`[webhook] User ${userId} subscription cancelled`)
+        const { data: profileByCustomer } = await supabase
+          .from('users')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single()
+
+        if (profileByCustomer) {
+          await supabase.from('users').update(resetFields).eq('id', profileByCustomer.id)
+          console.log(`[webhook] Customer ${customerId} subscription cancelled`)
+          break
+        }
+
+        // Final fallback: resolve user by Stripe customer email
+        const customer = await stripe.customers.retrieve(customerId)
+        if (!customer.deleted && customer.email) {
+          const { data: profileByEmail } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', customer.email)
+            .single()
+
+          if (profileByEmail) {
+            await supabase.from('users').update(resetFields).eq('id', profileByEmail.id)
+            console.log(`[webhook] Customer ${customerId} (email ${customer.email}) subscription cancelled`)
+            break
+          }
+        }
+
+        console.error('[webhook] subscription.deleted: could not resolve user for customer', customerId)
         break
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
-
         const userId = subscription.metadata?.userId
+        const customerId = subscription.customer as string
         const stripeStatus = subscription.status
 
         let internalStatus: 'trialing' | 'pro' | 'cancelled'
@@ -119,10 +151,13 @@ export async function POST(req: NextRequest) {
           internalStatus = 'trialing'
         } else if (stripeStatus === 'active') {
           internalStatus = 'pro'
-        } else if (stripeStatus === 'canceled' || stripeStatus === 'unpaid' || stripeStatus === 'incomplete_expired') {
+        } else if (
+          stripeStatus === 'canceled' ||
+          stripeStatus === 'unpaid' ||
+          stripeStatus === 'incomplete_expired'
+        ) {
           internalStatus = 'cancelled'
         } else {
-          // past_due, incomplete — keep as-is; don't lock out immediately
           console.log(`[webhook] Subscription status changed to ${stripeStatus} — no action taken`)
           break
         }
@@ -133,45 +168,58 @@ export async function POST(req: NextRequest) {
 
         const updatePayload: Record<string, unknown> = {
           subscription_status: internalStatus,
+          subscription_tier: internalStatus,
           subscription_id: internalStatus === 'cancelled' ? null : subscription.id,
           trial_end: internalStatus === 'pro' ? null : trialEnd,
         }
 
         if (internalStatus === 'cancelled') {
           Object.assign(updatePayload, {
-            lessons_used_this_month: 0,
-            worksheets_used_this_month: 0,
             error_coach_used_this_month: 0,
             demo_lesson_used_this_month: 0,
             job_assistant_used_this_month: 0,
           })
         }
 
-        if (!userId) {
-          const customerId = subscription.customer as string
-          const { data: profile } = await supabase
-            .from('users')
-            .select('id')
-            .eq('stripe_customer_id', customerId)
-            .single()
-
-          if (!profile) {
-            console.error('[webhook] customer.subscription.updated: could not find user for customer', customerId)
-            break
-          }
-
-          await supabase.from('users').update(updatePayload).eq('id', profile.id)
-          console.log(`[webhook] Updated subscription status to ${internalStatus} for customer ${customerId}`)
+        if (userId) {
+          await supabase.from('users').update(updatePayload).eq('id', userId)
+          console.log(`[webhook] User ${userId} subscription updated to ${internalStatus}`)
           break
         }
 
-        await supabase.from('users').update(updatePayload).eq('id', userId)
-        console.log(`[webhook] User ${userId} subscription updated to ${internalStatus}`)
+        const { data: profileByCustomer } = await supabase
+          .from('users')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single()
+
+        if (profileByCustomer) {
+          await supabase.from('users').update(updatePayload).eq('id', profileByCustomer.id)
+          console.log(`[webhook] Customer ${customerId} updated to ${internalStatus}`)
+          break
+        }
+
+        // Final fallback: resolve user by Stripe customer email
+        const customer = await stripe.customers.retrieve(customerId)
+        if (!customer.deleted && customer.email) {
+          const { data: profileByEmail } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', customer.email)
+            .single()
+
+          if (profileByEmail) {
+            await supabase.from('users').update(updatePayload).eq('id', profileByEmail.id)
+            console.log(`[webhook] Customer ${customerId} (email ${customer.email}) updated to ${internalStatus}`)
+            break
+          }
+        }
+
+        console.error('[webhook] subscription.updated: could not resolve user for customer', customerId)
         break
       }
 
       default:
-        // Ignore unhandled event types
         console.log(`[webhook] Unhandled event type: ${event.type}`)
     }
   } catch (error) {
