@@ -1,25 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/ui/Logo'
-import { CreditCard, Shield, Clock, Mail } from 'lucide-react'
+import { CreditCard, Shield, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function TrialSetupPage() {
-  const [loading, setLoading] = useState(false)
+  const router = useRouter()
   const [error, setError] = useState('')
-  const [hasSession, setHasSession] = useState<boolean | null>(null)
+  const [redirecting, setRedirecting] = useState(true)
 
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setHasSession(!!session)
-    })
-  }, [])
-
-  const handleStartTrial = async () => {
-    setLoading(true)
+  const startCheckout = async () => {
     setError('')
+    setRedirecting(true)
     try {
       const res = await fetch('/api/stripe/create-checkout', { method: 'POST' })
       const data = await res.json()
@@ -27,13 +21,44 @@ export default function TrialSetupPage() {
         window.location.href = data.url
       } else {
         setError(data.error ?? 'Could not create checkout session. Please try again.')
+        setRedirecting(false)
       }
     } catch {
       setError('Something went wrong. Please try again.')
-    } finally {
-      setLoading(false)
+      setRedirecting(false)
     }
   }
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
+        router.push('/auth/login')
+        return
+      }
+
+      // Already has an active subscription — skip straight to dashboard
+      const { data: profile } = await supabase
+        .from('users')
+        .select('subscription_status')
+        .eq('id', session.user.id)
+        .single()
+
+      if (profile?.subscription_status === 'trialing' || profile?.subscription_status === 'pro') {
+        router.push('/dashboard')
+        return
+      }
+
+      // No subscription yet — auto-initiate Stripe checkout
+      startCheckout()
+    })
+  }, [])
+
+  const FEATURES = [
+    { icon: Clock, text: '7 days completely free — no charge today' },
+    { icon: CreditCard, text: '$12/month after trial. Cancel anytime before day 7.' },
+    { icon: Shield, text: 'Secure card capture via Stripe. We never store card details.' },
+  ]
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
@@ -53,11 +78,7 @@ export default function TrialSetupPage() {
 
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft space-y-6">
           <div className="space-y-3">
-            {[
-              { icon: Clock, text: '7 days completely free — no charge today' },
-              { icon: CreditCard, text: '$12/month after trial. Cancel anytime before day 7.' },
-              { icon: Shield, text: 'Secure card capture via Stripe. We never store card details.' },
-            ].map(({ icon: Icon, text }) => (
+            {FEATURES.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-teal-50 border border-teal-100 flex items-center justify-center flex-shrink-0">
                   <Icon className="w-4 h-4 text-teal-600" />
@@ -67,45 +88,40 @@ export default function TrialSetupPage() {
             ))}
           </div>
 
-          {hasSession === false ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
-              <Mail className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-amber-800">Check your email first</p>
-                <p className="text-xs text-amber-700 mt-0.5">
-                  We sent you a confirmation link. Click it to verify your account, then come back here to activate your trial.
-                </p>
+          {error ? (
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm font-medium">
+                {error}
               </div>
-            </div>
-          ) : (
-            <>
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm font-medium">
-                  {error}
-                </div>
-              )}
-
               <button
-                onClick={handleStartTrial}
-                disabled={loading || hasSession === null}
+                onClick={startCheckout}
+                disabled={redirecting}
                 className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? (
+                {redirecting ? (
                   <>
                     <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Redirecting to secure checkout...
+                    Redirecting...
                   </>
-                ) : 'Activate my free trial →'}
+                ) : 'Try again →'}
               </button>
-
-              <p className="text-xs text-[#8C8880] text-center font-medium">
-                Payments secured by Stripe. You won&#39;t be charged during the trial.
-              </p>
-            </>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-3 py-2">
+              <svg className="animate-spin h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-[#4A473E] font-medium text-sm">Redirecting to secure checkout…</span>
+            </div>
           )}
+
+          <p className="text-xs text-[#8C8880] text-center font-medium">
+            Payments secured by Stripe. You won&#39;t be charged during the trial.
+          </p>
         </div>
       </div>
     </div>
