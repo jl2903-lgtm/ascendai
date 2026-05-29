@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         },
       ],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/onboarding`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/trial-setup`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/trial-setup?cancelled=1`,
       metadata: { userId },
       subscription_data: {
         trial_period_days: 7,
