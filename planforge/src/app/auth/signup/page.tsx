@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('Creating your account...')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validate = () => {
@@ -31,6 +32,7 @@ export default function SignupPage() {
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     setLoading(true)
+    setLoadingMessage('Creating your account...')
     try {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
@@ -82,7 +84,20 @@ export default function SignupPage() {
         body: JSON.stringify({ email: formData.email, name: formData.fullName }),
       }).catch((err) => console.error('[SIGNUP] Welcome email failed:', err))
 
-      // User has a session — go straight to trial setup
+      setLoadingMessage('Redirecting to secure checkout...')
+      try {
+        const checkoutRes = await fetch('/api/stripe/create-checkout', { method: 'POST' })
+        const checkoutData = await checkoutRes.json()
+        if (checkoutData.url) {
+          window.location.href = checkoutData.url
+          return
+        }
+        console.error('[SIGNUP] create-checkout returned no URL:', checkoutData)
+      } catch (checkoutErr) {
+        console.error('[SIGNUP] create-checkout failed:', checkoutErr)
+      }
+
+      // Fallback — /trial-setup will auto-retry the checkout redirect
       router.push('/trial-setup')
     } catch (err) {
       console.error('[SIGNUP] Unexpected error:', err)
@@ -167,9 +182,9 @@ export default function SignupPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Setting up your trial...
+                  {loadingMessage}
                 </>
-              ) : 'Start free trial →'}
+              ) : 'Start 7-Day Free Trial →'}
             </button>
           </form>
 
