@@ -57,10 +57,11 @@ export default function TrialSetupPage() {
         return
       }
     }
-    // 15s elapsed, webhook still hasn't fired — show a recoverable error
+    // 15s elapsed — either webhook is very delayed or user never completed payment.
+    // Offer to restart checkout rather than implying payment was received.
     setErrorMsg(
-      'Your payment was received but your account is still being activated. ' +
-      'Please wait a moment and refresh, or contact support if this persists.'
+      'We couldn\'t confirm your subscription status. If you haven\'t entered your card yet, ' +
+      'click below to complete your trial setup. If you already paid, please contact support.'
     )
     setState('error')
   }
