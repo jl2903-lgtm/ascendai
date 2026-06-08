@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +15,18 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('Creating your account...')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [signedInAs, setSignedInAs] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email) setSignedInAs(session.user.email)
+    })
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setSignedInAs(null)
+  }
 
   const validate = () => {
     const errs: Record<string, string> = {}
@@ -123,6 +135,18 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">
+          {signedInAs && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-800 text-sm mb-6 font-medium flex items-center justify-between gap-3">
+              <span>Signed in as <strong>{signedInAs}</strong> — not you?</span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="text-amber-700 underline hover:text-amber-900 font-semibold whitespace-nowrap transition-colors"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
           {errors.general && (
             <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm mb-6 font-medium">
               {errors.general}

@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [showResend, setShowResend] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
   const [infoMessage, setInfoMessage] = useState('')
+  const [signedInAs, setSignedInAs] = useState<string | null>(null)
 
   // Surface error/message query params (from /auth/callback or signup fallback)
   useEffect(() => {
@@ -26,7 +27,16 @@ export default function LoginPage() {
     const urlMessage = params.get('message')
     if (urlError) setErrors({ general: urlError })
     if (urlMessage) setInfoMessage(urlMessage)
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email) setSignedInAs(session.user.email)
+    })
   }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setSignedInAs(null)
+  }
 
   const validate = () => {
     const errs: typeof errors = {}
@@ -100,6 +110,18 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-8 shadow-soft">
+          {signedInAs && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-800 text-sm mb-4 font-medium flex items-center justify-between gap-3">
+              <span>Signed in as <strong>{signedInAs}</strong> — not you?</span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="text-amber-700 underline hover:text-amber-900 font-semibold whitespace-nowrap transition-colors"
+              >
+                Sign out
+              </button>
+            </div>
+          )}
           {infoMessage && (
             <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-teal-800 text-sm mb-4 font-medium">
               {infoMessage}
