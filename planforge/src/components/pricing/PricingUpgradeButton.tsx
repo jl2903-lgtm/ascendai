@@ -4,13 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface PricingUpgradeButtonProps {
-  trial?: boolean
   className?: string
   children: React.ReactNode
 }
 
 export function PricingUpgradeButton({
-  trial = false,
   className,
   children,
 }: PricingUpgradeButtonProps) {
@@ -20,10 +18,8 @@ export function PricingUpgradeButton({
   const handleClick = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/checkout', {
+      const res = await fetch('/api/stripe/upgrade', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trial }),
       })
 
       if (res.status === 401) {
