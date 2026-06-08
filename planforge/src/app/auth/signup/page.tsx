@@ -89,13 +89,6 @@ export default function SignupPage() {
         return
       }
 
-      // Fire welcome email in background — informational only at this point
-      fetch('/api/send-welcome-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, name: formData.fullName }),
-      }).catch((err) => console.error('[SIGNUP] Welcome email failed:', err))
-
       setLoadingMessage('Redirecting to secure checkout...')
       try {
         const checkoutRes = await fetch('/api/stripe/create-checkout', { method: 'POST' })

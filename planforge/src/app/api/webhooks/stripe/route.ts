@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
         let userId = session.metadata?.userId
         const subscriptionId = session.subscription as string
         const customerId = session.customer as string
+        let autoCreated = false
 
         if (!userId) {
           // Payment Link: userId not in metadata — resolve via customer email
@@ -113,6 +114,7 @@ export async function POST(req: NextRequest) {
                   }).catch(() => {})
                 }
 
+                autoCreated = true
                 console.log('[webhooks/stripe] Auto-created Supabase account for payment link user:', email)
               } else {
                 console.error('[webhooks/stripe] Failed to auto-create user for payment link:', createError)
@@ -148,6 +150,22 @@ export async function POST(req: NextRequest) {
         }
 
         console.log(`[webhooks/stripe] User ${userId} started trial — sub: ${subscriptionId}, trial_end: ${trialEnd}`)
+
+        if (!autoCreated) {
+          const customerEmail = session.customer_details?.email
+          const customerName = session.customer_details?.name || ''
+          if (customerEmail) {
+            fetch(
+              new URL('/api/send-welcome-email', process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io').toString(),
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: customerEmail, name: customerName }),
+              }
+            ).catch(e => console.error('[webhooks/stripe] Welcome email failed:', e))
+          }
+        }
+
         break
       }
 
