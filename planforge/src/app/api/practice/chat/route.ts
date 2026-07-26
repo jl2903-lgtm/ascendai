@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (typeof shareCode !== 'string' || shareCode.length > 32) {
       return NextResponse.json({ error: 'Invalid shareCode' }, { status: 400 })
     }
-    if (!Array.isArray(messages)) {
+    if (!Array.isArray(messages) || messages.length > 100) {
       return NextResponse.json({ error: 'Invalid messages' }, { status: 400 })
     }
     for (const m of messages) {

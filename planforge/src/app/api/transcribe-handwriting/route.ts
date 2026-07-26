@@ -44,6 +44,13 @@ export async function POST(req: NextRequest) {
   const { imageBase64, mediaType } = await req.json()
   if (!imageBase64) return NextResponse.json({ error: 'No image provided' }, { status: 400 })
 
+  // Size cap BEFORE sending to GPT-4o Vision — a 50 MB base64 blob otherwise
+  // becomes ~15 MB of image tokens per call. 8 MB base64 ≈ 6 MB decoded image,
+  // more than enough for a photo of a page.
+  if (typeof imageBase64 !== 'string' || imageBase64.length > 8 * 1024 * 1024) {
+    return NextResponse.json({ error: 'Image too large (8 MB max)' }, { status: 413 })
+  }
+
   const validMediaTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   const type = validMediaTypes.includes(mediaType) ? mediaType : 'image/jpeg'
 

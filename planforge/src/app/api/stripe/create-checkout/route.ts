@@ -92,8 +92,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url }, { status: 200 })
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error)
-    console.error('[create-checkout] Error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    // Log full Stripe error server-side (has price-id / secret hints we do
+    // NOT want to hand to the client). Return a generic message.
+    console.error('[create-checkout] Error:', error)
+    return NextResponse.json({ error: 'Could not start checkout. Please try again.' }, { status: 500 })
   }
 }

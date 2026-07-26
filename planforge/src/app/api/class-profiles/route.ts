@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { boundedString, boundedInt, boundedStringArray } from '@/lib/input-caps'
 import type { ClassProfile } from '@/types'
 
 export async function GET() {
@@ -14,7 +15,10 @@ export async function GET() {
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('[class-profiles GET]', error)
+      return NextResponse.json({ error: 'Failed to load class profiles' }, { status: 500 })
+    }
     return NextResponse.json(data ?? [])
   } catch (error) {
     console.error('[class-profiles GET]', error)
@@ -28,36 +32,31 @@ export async function POST(req: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const body = await req.json()
-    const {
-      class_name,
-      student_nationality,
-      student_age_group,
-      class_size,
-      cefr_level,
-      course_type,
-      textbook,
-      weak_areas,
-      focus_skills,
-      additional_notes,
-    } = body
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
 
-    if (!class_name?.trim()) {
+    // Coerce + cap every field. Previously `class_name.trim()` would 500 if
+    // the client sent `class_name: 123`, and unbounded arrays could inflate
+    // the JSONB row indefinitely.
+    const className = boundedString(body.class_name, 80).trim()
+    if (!className) {
       return NextResponse.json({ error: 'class_name is required' }, { status: 400 })
     }
 
     const insert: Partial<ClassProfile> = {
       user_id: session.user.id,
-      class_name: class_name.trim(),
-      student_nationality: student_nationality ?? 'Chinese (Mandarin)',
-      student_age_group: student_age_group ?? 'adults',
-      class_size: class_size ?? 15,
-      cefr_level: cefr_level ?? 'B1',
-      course_type: course_type ?? 'General English',
-      textbook: textbook ?? null,
-      weak_areas: weak_areas ?? [],
-      focus_skills: focus_skills ?? [],
-      additional_notes: additional_notes ?? null,
+      class_name: className,
+      student_nationality: boundedString(body.student_nationality, 60) || 'Chinese (Mandarin)',
+      student_age_group: boundedString(body.student_age_group, 40) || 'adults',
+      class_size: boundedInt(body.class_size, 1, 200, 15),
+      cefr_level: boundedString(body.cefr_level, 20) || 'B1',
+      course_type: boundedString(body.course_type, 60) || 'General English',
+      textbook: boundedString(body.textbook, 200) || null,
+      weak_areas: boundedStringArray(body.weak_areas, 20, 60),
+      focus_skills: boundedStringArray(body.focus_skills, 20, 60),
+      additional_notes: boundedString(body.additional_notes, 500) || null,
     }
 
     const { data, error } = await supabase
@@ -66,7 +65,10 @@ export async function POST(req: NextRequest) {
       .select('*')
       .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('[class-profiles POST]', error)
+      return NextResponse.json({ error: 'Failed to save class profile' }, { status: 500 })
+    }
     return NextResponse.json(data, { status: 201 })
   } catch (error) {
     console.error('[class-profiles POST]', error)

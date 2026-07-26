@@ -1,20 +1,19 @@
 export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { checkBearerAuth } from '@/lib/auth-utils'
 
 const PRO_PRICE_PER_USER = 12
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization')
-    const adminPassword = process.env.ADMIN_PASSWORD
-
-    if (!adminPassword) {
+    if (!process.env.ADMIN_PASSWORD) {
       console.error('[admin] ADMIN_PASSWORD env var is not set')
       return NextResponse.json({ error: 'Admin access not configured' }, { status: 500 })
     }
 
-    if (!authHeader || authHeader !== `Bearer ${adminPassword}`) {
+    // Constant-time comparison — `===` leaks the length of the matching prefix.
+    if (!checkBearerAuth(req.headers.get('authorization'), process.env.ADMIN_PASSWORD)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

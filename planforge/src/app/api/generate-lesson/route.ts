@@ -6,6 +6,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { FREE_LIMITS } from '@/lib/utils'
 import { isLegacyUser } from '@/lib/constants'
 import { ensureProfile } from '@/lib/supabase/ensure-profile'
+import { boundedString, boundedInt, boundedStringArray } from '@/lib/input-caps'
 import type { LessonFormData, LessonContent, ClassContext } from '@/types'
 
 
@@ -155,9 +156,33 @@ export async function POST(req: NextRequest) {
       .eq('user_id', userId)
       .single()
 
-    const body: LessonFormData & { classContext?: ClassContext } = await req.json()
-    if (!body.level || !body.topic || !body.length || !body.ageGroup || !body.nationality) {
+    const rawBody = await req.json()
+    if (!rawBody?.level || !rawBody?.topic || !rawBody?.length || !rawBody?.ageGroup || !rawBody?.nationality) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Cap every free-form field before it flows into the OpenAI prompt.
+    // Prevents (a) prompt-injection payloads inflating the token budget,
+    // (b) a client sending `length: "999999999"` and having it stored,
+    // (c) arbitrary types crashing string ops downstream.
+    const body: LessonFormData & { classContext?: ClassContext } = {
+      level: boundedString(rawBody.level, 20),
+      topic: boundedString(rawBody.topic, 200),
+      length: boundedInt(rawBody.length, 15, 180, 60),
+      ageGroup: boundedString(rawBody.ageGroup, 40),
+      nationality: boundedString(rawBody.nationality, 60),
+      classSize: String(boundedInt(rawBody.classSize, 1, 200, 15)),
+      specialFocus: boundedStringArray(rawBody.specialFocus, 10, 60),
+      classContext: rawBody.classContext && typeof rawBody.classContext === 'object' ? {
+        className: boundedString(rawBody.classContext.className, 80),
+        cefrLevel: boundedString(rawBody.classContext.cefrLevel, 20),
+        studentAgeGroup: boundedString(rawBody.classContext.studentAgeGroup, 40),
+        studentNationality: boundedString(rawBody.classContext.studentNationality, 60),
+        courseType: boundedString(rawBody.classContext.courseType, 60),
+        weakAreas: boundedStringArray(rawBody.classContext.weakAreas, 10, 60),
+        focusSkills: boundedStringArray(rawBody.classContext.focusSkills, 10, 60),
+        additionalNotes: boundedString(rawBody.classContext.additionalNotes, 500),
+      } as ClassContext : undefined,
     }
 
     // Stage 1 (v3): plan-only generation. We deliberately do NOT call the

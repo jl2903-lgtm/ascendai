@@ -52,7 +52,11 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/auth/signup')
 
   if (isAuthPage && session) {
-    const redirectTo = request.nextUrl.searchParams.get('redirectTo') || '/dashboard'
+    // Only accept relative paths for redirectTo — otherwise
+    // /auth/login?redirectTo=https://evil.com becomes an open redirect that
+    // phishers can wrap in "sign in first" flows.
+    const raw = request.nextUrl.searchParams.get('redirectTo')
+    const redirectTo = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard'
     return NextResponse.redirect(new URL(redirectTo, request.url))
   }
 

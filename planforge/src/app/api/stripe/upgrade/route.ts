@@ -87,8 +87,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: checkoutSession.url }, { status: 200 })
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error)
-    console.error('[stripe/upgrade] Error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    // Full error to logs, generic message to client.
+    console.error('[stripe/upgrade] Error:', error)
+    return NextResponse.json({ error: 'Could not start upgrade. Please try again.' }, { status: 500 })
   }
 }

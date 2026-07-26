@@ -52,13 +52,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Verify the linked lesson (if any) belongs to the caller — otherwise a
+    // user could link their worksheet to someone else's lesson id.
+    let verifiedLessonId: string | null = null
+    if (lessonId) {
+      const { data: ownedLesson } = await supabase
+        .from('lessons')
+        .select('id')
+        .eq('id', lessonId)
+        .eq('user_id', userId)
+        .single()
+      if (!ownedLesson) {
+        return NextResponse.json({ error: 'Invalid lessonId' }, { status: 400 })
+      }
+      verifiedLessonId = ownedLesson.id
+    }
+
     const { data: savedWorksheet, error: insertError } = await supabase
       .from('worksheets')
       .insert({
         user_id: userId,
         title,
         content,
-        lesson_id: lessonId ?? null,
+        lesson_id: verifiedLessonId,
       })
       .select('id')
       .single()

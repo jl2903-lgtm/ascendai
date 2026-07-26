@@ -426,6 +426,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 })
     }
 
+    // Cap the raw paste at 200 KB. Any legitimate article/URL fits comfortably;
+    // this stops a client from streaming multi-MB payloads into the OpenAI
+    // prompt (later code truncates to ~12K, but only after buffering).
+    if (typeof pastedContent === 'string' && pastedContent.length > 200_000) {
+      return NextResponse.json({ error: 'Pasted content too large (200 KB max)' }, { status: 413 })
+    }
+    if (typeof manualTranscript === 'string' && manualTranscript.length > 200_000) {
+      return NextResponse.json({ error: 'Transcript too large (200 KB max)' }, { status: 413 })
+    }
+
     // Resolve nationality from class if provided
     let nationality = 'International'
     if (classId) {
