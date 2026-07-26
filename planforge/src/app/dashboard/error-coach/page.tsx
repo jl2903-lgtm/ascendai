@@ -130,21 +130,44 @@ export default function ErrorCoachPage() {
     }
   }
 
-  const highlightErrors = (text: string, errors: ErrorResult['errors']) => {
+  // Return React nodes rather than an HTML string so prompt-injection in the
+  // model's `original` / `explanation` fields can't execute in the teacher's
+  // browser. We split the source text into a segment list, wrapping each
+  // matched error span in a real <mark> element with `title` handled by React.
+  const highlightErrors = (text: string, errors: ErrorResult['errors']): React.ReactNode => {
     if (!errors?.length) return text
-    let highlighted = text
-    errors.forEach(err => {
-      const colorClass = err.type === 'grammar' ? 'bg-red-100 border-b-2 border-red-400' :
-        err.type === 'vocabulary' ? 'bg-purple-100 border-b-2 border-purple-400' :
-        err.type === 'punctuation' ? 'bg-amber-100 border-b-2 border-amber-400' :
-        err.type === 'wordOrder' ? 'bg-blue-100 border-b-2 border-blue-400' :
-        'bg-orange-100 border-b-2 border-orange-400'
-      highlighted = highlighted.replace(
-        err.original,
-        `<mark class="${colorClass} px-0.5 rounded" title="${err.explanation}">${err.original}</mark>`
-      )
-    })
-    return highlighted
+
+    type Seg = { text: string; error?: ErrorResult['errors'][number] }
+    let segments: Seg[] = [{ text }]
+
+    for (const err of errors) {
+      const next: Seg[] = []
+      for (const seg of segments) {
+        if (seg.error || !err.original || !seg.text.includes(err.original)) {
+          next.push(seg)
+          continue
+        }
+        const idx = seg.text.indexOf(err.original)
+        if (idx > 0) next.push({ text: seg.text.slice(0, idx) })
+        next.push({ text: err.original, error: err })
+        const tail = seg.text.slice(idx + err.original.length)
+        if (tail) next.push({ text: tail })
+      }
+      segments = next
+    }
+
+    const colorFor = (t: string) =>
+      t === 'grammar' ? 'bg-red-100 border-b-2 border-red-400' :
+      t === 'vocabulary' ? 'bg-purple-100 border-b-2 border-purple-400' :
+      t === 'punctuation' ? 'bg-amber-100 border-b-2 border-amber-400' :
+      t === 'wordOrder' ? 'bg-blue-100 border-b-2 border-blue-400' :
+      'bg-orange-100 border-b-2 border-orange-400'
+
+    return segments.map((seg, i) =>
+      seg.error
+        ? <mark key={i} className={`${colorFor(seg.error.type)} px-0.5 rounded`} title={seg.error.explanation}>{seg.text}</mark>
+        : <span key={i}>{seg.text}</span>
+    )
   }
 
   return (
@@ -311,10 +334,9 @@ Yesterday I go to the market and I buyed a lot of food. The weather was very goo
                 <div className="w-2 h-2 rounded-full bg-red-400" />
                 <span className="text-sm font-semibold text-[#2D2D2D]">Original — Errors Highlighted</span>
               </div>
-              <div
-                className="text-sm text-[#4A473E] leading-relaxed whitespace-pre-wrap"
-                dangerouslySetInnerHTML={{ __html: highlightErrors(text, result.errors) }}
-              />
+              <div className="text-sm text-[#4A473E] leading-relaxed whitespace-pre-wrap">
+                {highlightErrors(text, result.errors)}
+              </div>
             </div>
             <div className="bg-white border border-[#E8E4DE] rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-4">

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { isLegacyUser } from '@/lib/constants'
 import { generateActivitiesRaw } from '@/lib/activities/generate'
 import { resolveActivityImages } from '@/lib/activities/unsplash'
 import { shuffleMcqOptions } from '@/lib/activities/shuffle'
@@ -167,6 +169,20 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     const userId = session.user.id
     if (!checkRateLimit(userId, 5, 60_000)) {
       return NextResponse.json({ error: 'Too many requests', requestId }, { status: 429 })
+    }
+
+    // Subscription gate: lapsed Pro / over-limit legacy users still own their
+    // saved lessons and could otherwise hammer this expensive route.
+    const { profile, error: profileErr } = await ensureProfile<{
+      subscription_status: string
+      created_at: string | null
+    }>(supabase, session, 'subscription_status, created_at')
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found', requestId }, { status: 500 })
+    }
+    const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+    if (!isPaid && !isLegacyUser(profile.created_at)) {
+      return NextResponse.json({ error: 'subscription_required', requestId }, { status: 402 })
     }
 
     const { data: lesson, error } = await supabase

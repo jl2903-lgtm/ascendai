@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { FREE_LIMITS } from '@/lib/utils'
+import { isLegacyUser } from '@/lib/constants'
+import { isSafePublicUrl } from '@/lib/net-safety'
 import type { LessonContent } from '@/types'
 
 const USER_AGENT =
@@ -280,6 +284,21 @@ Create a rich, complete lesson that assumes the teacher will play this video in 
 async function extractArticle(url: string): Promise<ExtractionResult> {
   console.log(`[magic-paste] Fetching article: ${url}`)
 
+  // SSRF guard: refuse to fetch URLs that resolve to private / loopback / link-local
+  // ranges (cloud metadata, internal services). Falls through to Method 3
+  // (URL-based generation) so the user still gets a lesson.
+  const safety = await isSafePublicUrl(url)
+  if (!safety.ok) {
+    console.log(`[magic-paste] URL rejected by SSRF guard: ${safety.reason}`)
+    let domain = url
+    try { domain = new URL(url).hostname.replace(/^www\./, '') } catch {}
+    return {
+      content: `ARTICLE SOURCE: ${domain}\nURL: ${url}\nNote: This URL couldn't be fetched. Generate a general ESL lesson on the likely topic suggested by the URL.`,
+      sourceLabel: `Article from ${domain}`,
+      contentNote: "Lesson built from URL — article wasn't accessible",
+    }
+  }
+
   // Single fetch — reused for both Method 1 and Method 2
   let html: string | null = null
   try {
@@ -378,6 +397,26 @@ export async function POST(req: NextRequest) {
     const userId = session.user.id
     if (!checkRateLimit(userId, 5, 60000)) {
       return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 })
+    }
+
+    // Subscription gate — same policy as /api/generate-lesson: legacy users
+    // burn a lesson credit; trial/pro pass through; others get 402.
+    const { profile, error: profileErr } = await ensureProfile<{
+      subscription_status: string
+      created_at: string | null
+      lessons_used_this_month: number | null
+    }>(supabase, session, 'subscription_status, created_at, lessons_used_this_month')
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
+    }
+    const legacy = isLegacyUser(profile.created_at)
+    const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+    if (legacy) {
+      if (!isPaid && (profile.lessons_used_this_month ?? 0) >= FREE_LIMITS.lessons) {
+        return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
+      }
+    } else if (!isPaid) {
+      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
     }
 
     const body = await req.json()

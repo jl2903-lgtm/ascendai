@@ -45,6 +45,13 @@ export async function POST(req: NextRequest) {
   const file = formData.get('file') as File | null
   if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
 
+  // Reject oversized files BEFORE we buffer them into memory. A 500MB "CV"
+  // otherwise blows the function's memory budget.
+  const MAX_BYTES = 10 * 1024 * 1024 // 10 MB — a real CV is ≤2MB
+  if (typeof file.size === 'number' && file.size > MAX_BYTES) {
+    return NextResponse.json({ error: 'File too large (10 MB max)' }, { status: 413 })
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer())
   const name = file.name.toLowerCase()
   const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf'

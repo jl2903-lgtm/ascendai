@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import { getOpenAIClient } from '@/lib/openai'
 
+// share_code doubles as a capability token — anyone who has it can chat with
+// the practice session. Math.random() is guessable; use a CSPRNG and enough
+// bits (12 chars of base64url ≈ 72 bits) to make scanning infeasible.
 function generateShareCode(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-  return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  return randomBytes(9).toString('base64url')
 }
 
 export async function POST(req: NextRequest) {

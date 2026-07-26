@@ -1,17 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const SECRET = 'sync-existing-2026'
-
 function splitName(fullName: string | null): { firstName: string; lastName: string } {
   const parts = (fullName || '').trim().split(' ')
   return { firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || '' }
 }
 
+// Constant-time-ish equality so a timing attack can't leak the secret.
+function safeEq(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
 export async function GET(req: NextRequest) {
   try {
-    if (req.nextUrl.searchParams.get('secret') !== SECRET) {
+    // Secret lives in env now (was hardcoded, exposed in every log/history that
+    // saw ?secret=). Prefer Authorization header; still accept query for old
+    // bookmarks but issue a warning.
+    const expected = process.env.SYNC_GHL_SECRET
+    if (!expected) {
+      return NextResponse.json({ error: 'SYNC_GHL_SECRET not configured' }, { status: 500 })
+    }
+    const authHeader = req.headers.get('authorization') || ''
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+    const queryParam = req.nextUrl.searchParams.get('secret') || ''
+    const provided = bearer || queryParam
+    if (!provided || !safeEq(provided, expected)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!bearer && queryParam) {
+      console.warn('[sync-ghl] Secret passed via query string — prefer Authorization: Bearer header')
     }
 
     const ghlUrl = process.env.GHL_WEBHOOK_URL
