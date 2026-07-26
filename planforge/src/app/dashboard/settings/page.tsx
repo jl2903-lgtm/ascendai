@@ -81,7 +81,9 @@ export default function SettingsPage() {
       const res = await fetch('/api/create-portal-session', { method: 'POST' })
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else toast.error('Failed to open billing portal.')
+      // Surface the actual error (e.g. "No billing account found — please subscribe first")
+      // instead of a generic message that gives users nothing to act on.
+      else toast.error(data.error || 'Failed to open billing portal.')
     } catch {
       toast.error('Failed to open billing portal.')
     } finally {
@@ -90,8 +92,20 @@ export default function SettingsPage() {
   }
 
   const deleteAccount = async () => {
-    toast.error('Please contact support to delete your account.')
-    setDeleteConfirm(false)
+    try {
+      const res = await fetch('/api/delete-account', { method: 'POST' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(data.error || 'Could not delete account. Please contact support.')
+        setDeleteConfirm(false)
+        return
+      }
+      // Account is gone. Bounce to landing — auth state is already cleared.
+      window.location.href = '/'
+    } catch {
+      toast.error('Network error. Please try again or contact support.')
+      setDeleteConfirm(false)
+    }
   }
 
   if (loading) return (

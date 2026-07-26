@@ -21,6 +21,19 @@ export async function POST(req: NextRequest) {
     if (!subject)          return NextResponse.json({ error: 'Subject is required' }, { status: 400 })
     if (!resource_type)    return NextResponse.json({ error: 'Resource type is required' }, { status: 400 })
 
+    // Prevent phishing / malware links: only accept URLs served from our own
+    // Supabase Storage bucket. NEXT_PUBLIC_SUPABASE_URL is a full origin
+    // (e.g. https://abc.supabase.co), so any file_url must start with
+    // "<origin>/storage/v1/object/public/shared-resources/".
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl) {
+      return NextResponse.json({ error: 'Storage not configured' }, { status: 500 })
+    }
+    const allowedPrefix = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/shared-resources/`
+    if (typeof file_url !== 'string' || !file_url.startsWith(allowedPrefix)) {
+      return NextResponse.json({ error: 'Invalid file URL — files must be uploaded through the app' }, { status: 400 })
+    }
+
     // Look up the uploader's display name from their profile
     const { data: userRow } = await supabase
       .from('users')

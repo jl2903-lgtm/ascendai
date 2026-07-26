@@ -147,16 +147,19 @@ export default function SavedPage() {
       // Get user name
       const { data: profile } = await supabase.from('users').select('full_name, email').eq('id', session.user.id).single()
 
-      // Save record
+      // Save record. Column names match the current schema (migration 008
+      // renamed `level` → `cefr_level` and `uploaded_by_name` → `uploader_name`).
       const { error: dbErr } = await supabase.from('shared_resources').insert({
         user_id: session.user.id,
         title: upload.title.trim(),
         subject: upload.subject.trim() || null,
-        level: upload.level,
+        cefr_level: upload.level,
         file_url: publicUrl,
         file_name: upload.file.name,
+        file_type: upload.file.type || 'application/pdf',
+        file_size_bytes: upload.file.size,
         is_public: upload.isPublic,
-        uploaded_by_name: profile?.full_name || profile?.email || 'Anonymous',
+        uploader_name: profile?.full_name || profile?.email || 'Anonymous',
       })
       if (dbErr) throw dbErr
 

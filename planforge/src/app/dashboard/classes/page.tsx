@@ -270,11 +270,23 @@ export default function ClassesPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<ClassProfile | null>(null)
 
+  const [loadError, setLoadError] = useState<string | null>(null)
+
   useEffect(() => {
     fetch('/api/class-profiles')
-      .then(r => r.json())
-      .then(data => { setClasses(Array.isArray(data) ? data : []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then(async r => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}))
+          throw new Error(body.error || `Failed to load classes (HTTP ${r.status})`)
+        }
+        return r.json()
+      })
+      .then(data => {
+        setClasses(Array.isArray(data) ? data : [])
+        setLoadError(null)
+      })
+      .catch(err => setLoadError(err.message || 'Failed to load classes'))
+      .finally(() => setLoading(false))
   }, [])
 
   const openNew = () => { setEditing(null); setModalOpen(true) }
@@ -317,6 +329,17 @@ export default function ClassesPage() {
           {[1, 2, 3].map(i => (
             <div key={i} className="bg-white border border-[#E8E4DE] rounded-2xl p-5 animate-pulse h-40" />
           ))}
+        </div>
+      ) : loadError ? (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+          <p className="text-sm font-semibold text-red-700 mb-3">Couldn&apos;t load your classes</p>
+          <p className="text-xs text-red-600 mb-4">{loadError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-xl transition-colors"
+          >
+            Try again
+          </button>
         </div>
       ) : classes.length === 0 ? (
         <div className="bg-white border border-[#E8E4DE] rounded-2xl p-12 text-center">
