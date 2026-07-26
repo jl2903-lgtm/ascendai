@@ -93,8 +93,13 @@ export async function POST(req: NextRequest) {
                   new URL('/api/send-welcome-email', process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io').toString(),
                   {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, name: customerName }),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'x-api-key': process.env.INTERNAL_API_SECRET ?? '',
+                    },
+                    // skipGhl: Tier-3 auto-create already fired GHL below,
+                    // don't duplicate the contact.
+                    body: JSON.stringify({ email, name: customerName, skipGhl: true }),
                   }
                 ).catch(e => console.error('[webhook] Welcome email failed for auto-created user:', e))
 
@@ -159,7 +164,10 @@ export async function POST(req: NextRequest) {
               new URL('/api/send-welcome-email', process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io').toString(),
               {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-api-key': process.env.INTERNAL_API_SECRET ?? '',
+                },
                 body: JSON.stringify({ email: customerEmail, name: customerName }),
               }
             ).catch(e => console.error('[webhook] Welcome email failed:', e))

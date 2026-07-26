@@ -2,16 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sendWelcomeEmail, sendEmail } from '@/lib/resend'
 
 export async function POST(request: NextRequest) {
+  const secret = process.env.INTERNAL_API_SECRET
+  if (!secret || request.headers.get('x-api-key') !== secret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
-    const { email, name } = await request.json()
+    const { email, name, skipGhl } = await request.json()
 
     if (!email || !name) {
       console.error('[send-welcome-email] Missing fields:', { email, name })
       return NextResponse.json({ error: 'Missing email or name' }, { status: 400 })
     }
 
-    // Fire GHL webhook (fire-and-forget)
-    if (process.env.GHL_WEBHOOK_URL) {
+    // Fire GHL webhook (fire-and-forget). Callers that already fired GHL
+    // directly (e.g. Payment Link auto-create) should pass skipGhl: true
+    // to avoid a duplicate contact.
+    if (process.env.GHL_WEBHOOK_URL && !skipGhl) {
       const nameParts = name.trim().split(' ')
       const firstName = nameParts[0] || 'there'
       const lastName = nameParts.slice(1).join(' ') || ''
