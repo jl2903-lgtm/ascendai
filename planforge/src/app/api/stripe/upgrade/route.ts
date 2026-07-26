@@ -34,13 +34,24 @@ export async function POST(req: NextRequest) {
     const legacy = isLegacyUser(profile.created_at)
 
     let customerId = profile.stripe_customer_id
+    let allowTrial = !legacy // legacy users never get the trial
 
     // Verify the stored customer still exists in Stripe — it may have been
     // deleted or belong to a different Stripe environment (test vs live).
     if (customerId) {
       try {
         const existing = await stripe.customers.retrieve(customerId)
-        if (existing.deleted) customerId = null
+        if (existing.deleted) {
+          customerId = null
+        } else if (allowTrial) {
+          // Prevent trial farming: cancellers who come back don't get another trial.
+          const priorSubs = await stripe.subscriptions.list({
+            customer: customerId,
+            limit: 1,
+            status: 'all',
+          })
+          if (priorSubs.data.length > 0) allowTrial = false
+        }
       } catch {
         customerId = null
       }
@@ -68,7 +79,7 @@ export async function POST(req: NextRequest) {
       cancel_url: legacy ? `${BASE}/pricing` : `${BASE}/trial-setup`,
       metadata: { userId },
       subscription_data: {
-        ...(legacy ? {} : { trial_period_days: 7 }),
+        ...(allowTrial ? { trial_period_days: 7 } : {}),
         metadata: { userId },
       },
       allow_promotion_codes: true,

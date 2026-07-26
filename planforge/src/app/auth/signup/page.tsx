@@ -98,12 +98,17 @@ export default function SignupPage() {
           return
         }
         console.error('[SIGNUP] create-checkout returned no URL:', checkoutData)
+        // Bubble the error message up so the user knows why they didn't reach
+        // Stripe. /trial-setup can retry, but they need to see this first.
+        setErrors({ general: checkoutData.error ?? 'Could not start checkout. Redirecting so you can retry…' })
       } catch (checkoutErr) {
         console.error('[SIGNUP] create-checkout failed:', checkoutErr)
+        setErrors({ general: 'Connection error starting checkout. Redirecting so you can retry…' })
       }
 
-      // Fallback — /trial-setup will auto-retry the checkout redirect
-      router.push('/trial-setup')
+      // Fallback — /trial-setup will re-attempt the checkout redirect. Small
+      // delay so the user sees the error banner before we navigate away.
+      setTimeout(() => router.push('/trial-setup'), 1500)
     } catch (err) {
       console.error('[SIGNUP] Unexpected error:', err)
       setErrors({ general: 'Something went wrong. Please try again.' })

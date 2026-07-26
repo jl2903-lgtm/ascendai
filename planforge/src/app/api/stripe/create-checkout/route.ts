@@ -29,11 +29,23 @@ export async function POST(req: NextRequest) {
     }
 
     let customerId = profile.stripe_customer_id
+    let allowTrial = true
 
     if (customerId) {
       try {
         const existing = await stripe.customers.retrieve(customerId)
-        if (existing.deleted) customerId = null
+        if (existing.deleted) {
+          customerId = null
+        } else {
+          // Prevent trial farming: if this customer has any prior subscription
+          // (cancelled / paid), skip the free 7-day trial on this checkout.
+          const priorSubs = await stripe.subscriptions.list({
+            customer: customerId,
+            limit: 1,
+            status: 'all',
+          })
+          if (priorSubs.data.length > 0) allowTrial = false
+        }
       } catch { customerId = null }
     }
 
@@ -72,7 +84,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/trial-setup?cancelled=1`,
       metadata: { userId },
       subscription_data: {
-        trial_period_days: 7,
+        ...(allowTrial ? { trial_period_days: 7 } : {}),
         metadata: { userId },
       },
       allow_promotion_codes: true,

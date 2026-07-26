@@ -33,12 +33,12 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
-  // Redirect unauthenticated users away from protected routes
+  // Redirect unauthenticated users away from protected routes.
+  // /lessons/[id] and /practice/[code] handle their own auth (the latter is
+  // publicly shareable), so they're not listed here.
   const isProtected =
     pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/generator') ||
-    pathname.startsWith('/library')
+    pathname.startsWith('/onboarding')
 
   if (isProtected && !session) {
     const loginUrl = new URL('/auth/login', request.url)

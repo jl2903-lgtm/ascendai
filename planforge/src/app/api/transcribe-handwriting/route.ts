@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { getOpenAIClient } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
@@ -12,6 +13,10 @@ export async function POST(req: NextRequest) {
   )
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  if (!checkRateLimit(session.user.id, 10, 60000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
 
   const { imageBase64, mediaType } = await req.json()
   if (!imageBase64) return NextResponse.json({ error: 'No image provided' }, { status: 400 })
