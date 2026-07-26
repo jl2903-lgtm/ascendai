@@ -24,7 +24,7 @@ export async function ensureProfile<T extends Record<string, unknown>>(
     .eq('id', userId)
     .single()
 
-  if (data) return { profile: data as T, error: null }
+  if (data) return { profile: data as unknown as T, error: null }
 
   // PGRST116 = row not found. Anything else is a real DB error.
   if (error?.code !== 'PGRST116') {
@@ -48,5 +48,5 @@ export async function ensureProfile<T extends Record<string, unknown>>(
     return { profile: null, error: 'Could not initialise your profile. Please contact support.' }
   }
 
-  return { profile: created as T, error: null }
+  return { profile: created as unknown as T, error: null }
 }
