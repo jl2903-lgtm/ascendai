@@ -201,6 +201,9 @@ export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) 
       <Link
         key={href}
         href={href}
+        // Close the mobile drawer on navigation — otherwise the drawer stays
+        // open, covering the page the user just navigated to.
+        onClick={() => onClose?.()}
         className={cn(
           'flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13.5px] font-semibold transition-all duration-150',
           active ? 'border text-[#2D6A4F]' : 'text-[#6B6860] hover:bg-[#F4F2EE] hover:text-[#2D2D2D]'

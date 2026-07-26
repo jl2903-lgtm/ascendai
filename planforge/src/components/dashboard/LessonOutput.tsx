@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { QRCodeSVG } from 'qrcode.react'
+import { UpgradeModal } from '@/components/ui/UpgradeModal'
 
 interface Props {
   lesson: LessonContent
@@ -59,6 +60,7 @@ export function LessonOutput({ lesson, activities, formData, onAdjust, adjusting
   const [shareCode, setShareCode] = useState<string | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
@@ -142,6 +144,7 @@ export function LessonOutput({ lesson, activities, formData, onAdjust, adjusting
         }),
       })
       const data = await res.json()
+      if (res.status === 402) { setShowUpgrade(true); return }
       if (!res.ok) { toast.error(data.error || 'Failed to create practice session'); return }
       setShareCode(data.shareCode)
       setShowShareModal(true)
@@ -162,6 +165,12 @@ export function LessonOutput({ lesson, activities, formData, onAdjust, adjusting
 
   return (
     <div className="space-y-4">
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        toolName="practice sessions"
+        limit={0}
+      />
       {/* Title card */}
       <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid #E8E4DE', backdropFilter: 'blur(12px)' }}>
         <div className="flex items-start justify-between gap-4 flex-wrap">

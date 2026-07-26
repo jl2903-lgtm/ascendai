@@ -21,10 +21,19 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(messages) || messages.length > 100) {
       return NextResponse.json({ error: 'Invalid messages' }, { status: 400 })
     }
+    // Validate + sanitize each message. Critically: only accept role='user'
+    // or role='assistant' — otherwise a client could inject role='system'
+    // and override the system prompt to make the model behave however they
+    // like (jailbreak, cost drain, off-topic content).
+    const sanitized: { role: 'user' | 'assistant'; content: string }[] = []
     for (const m of messages) {
       if (typeof m?.content !== 'string' || m.content.length > MAX_MESSAGE_CHARS) {
         return NextResponse.json({ error: 'Message too long' }, { status: 400 })
       }
+      if (m.role !== 'user' && m.role !== 'assistant') {
+        return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+      }
+      sanitized.push({ role: m.role, content: m.content })
     }
 
     // Rate limit by share code + client IP so a scanner can't burn OpenAI
@@ -58,7 +67,7 @@ Only use vocabulary and grammar structures from this lesson. Keep responses shor
       max_tokens: 200,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...messages.slice(-MAX_HISTORY),
+        ...sanitized.slice(-MAX_HISTORY),
       ],
     })
 

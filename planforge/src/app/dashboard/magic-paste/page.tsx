@@ -5,6 +5,7 @@ import { Wand2, ChevronDown, ChevronRight, CheckCircle, AlertCircle, RotateCcw }
 import { ClassSelector } from '@/components/dashboard/ClassSelector'
 import { LessonOutput } from '@/components/dashboard/LessonOutput'
 import { STUDENT_LEVELS, LESSON_LENGTHS, AGE_GROUPS } from '@/lib/utils'
+import { UpgradeModal } from '@/components/ui/UpgradeModal'
 import type { ClassProfile, LessonContent, LessonFormData } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -49,6 +50,7 @@ export default function MagicPastePage() {
   const [sourceExpanded, setSourceExpanded]     = useState(false)
   const [manualTranscript, setManualTranscript] = useState('')
   const [transcriptOpen, setTranscriptOpen]     = useState(false)
+  const [showUpgrade, setShowUpgrade]           = useState(false)
   const intervalRef                             = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const isYouTubeUrl = /^https?:\/\//i.test(pastedContent.trim()) && /youtube\.com|youtu\.be/i.test(pastedContent.trim())
@@ -101,6 +103,7 @@ export default function MagicPastePage() {
         }),
       })
       const data = await res.json()
+      if (res.status === 402) { setShowUpgrade(true); return }
       if (!res.ok) {
         setError(data.error || 'Something went wrong. Please try again.')
         return
@@ -147,6 +150,12 @@ export default function MagicPastePage() {
 
   return (
     <div className="relative max-w-3xl mx-auto pb-16" style={{ zIndex: 30 }}>
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        toolName="lessons this month"
+        limit={5}
+      />
 
       {/* Decorative blobs */}
       <div aria-hidden className="pointer-events-none fixed inset-0 bg-dot-pattern" style={{ zIndex: 0 }} />

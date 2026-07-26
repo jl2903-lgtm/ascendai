@@ -7,7 +7,7 @@ import { FREE_LIMITS } from '@/lib/utils'
 import { isLegacyUser } from '@/lib/constants'
 import { ensureProfile } from '@/lib/supabase/ensure-profile'
 
-
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {

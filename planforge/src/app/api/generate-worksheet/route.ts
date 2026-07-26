@@ -8,7 +8,7 @@ import { isLegacyUser } from '@/lib/constants'
 import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import type { WorksheetFormData, WorksheetContent, ClassContext } from '@/types'
 
-
+export const maxDuration = 60
 
 function buildClassContextNote(ctx: ClassContext): string {
   const lines: string[] = [`\n\nCLASS PROFILE — "${ctx.className}":`]

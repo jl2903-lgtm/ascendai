@@ -22,7 +22,11 @@ export default function SettingsPage() {
   useEffect(() => {
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      if (!session) {
+        setLoading(false)
+        window.location.href = '/auth/login'
+        return
+      }
       const { data: p } = await supabase.from('users').select('*').eq('id', session.user.id).single()
       if (p) {
         setProfile(p)
@@ -43,13 +47,31 @@ export default function SettingsPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
-      await supabase.from('users').update({ full_name: form.full_name, ...prefs }).eq('id', session.user.id)
+
+      // Do the auth email change FIRST — if it fails we don't want the
+      // public.users row to end up with a different email than auth.
       if (form.email !== profile?.email) {
-        await supabase.auth.updateUser({ email: form.email })
-        toast.success('Profile updated. Check your email to confirm the address change.')
-      } else {
-        toast.success('Profile updated!')
+        const { error: authErr } = await supabase.auth.updateUser({ email: form.email })
+        if (authErr) {
+          toast.error(authErr.message || 'Could not update email — try again.')
+          return
+        }
       }
+
+      const { error: updErr } = await supabase.from('users').update({
+        full_name: form.full_name,
+        ...prefs,
+      }).eq('id', session.user.id)
+      if (updErr) {
+        toast.error('Could not save profile — try again.')
+        return
+      }
+
+      toast.success(
+        form.email !== profile?.email
+          ? 'Profile updated. Check your email to confirm the address change.'
+          : 'Profile updated!'
+      )
       setProfile(p => p ? { ...p, ...form, ...prefs } : p)
     } catch {
       toast.error('Failed to save profile.')
@@ -191,7 +213,7 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-[#6B6860] mb-2">Confirm New Password</label>
             <input type="password" value={passwordForm.confirm} onChange={e => setPasswordForm(p => ({ ...p, confirm: e.target.value }))} placeholder="Repeat new password" className="w-full bg-[#F7F6F2] border border-[#E8E4DE] rounded-xl px-4 py-2.5 text-sm text-[#2D2D2D] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-[#8C8880]" />
           </div>
-          <button onClick={changePassword} disabled={savingPassword} className="flex items-center gap-2 bg-[#F0EEE9] hover:bg-[#475569] disabled:opacity-50 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+          <button onClick={changePassword} disabled={savingPassword} className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
             {savingPassword ? 'Updating...' : 'Update Password'}
           </button>
         </div>

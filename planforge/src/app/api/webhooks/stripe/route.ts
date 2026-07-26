@@ -27,6 +27,16 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient()
 
+  // Idempotency: Stripe retries any 2xx-timeout delivery. Without this,
+  // welcome emails, GHL contacts and account creation all double-fire.
+  const { error: dedupErr } = await supabase
+    .from('stripe_events')
+    .insert({ id: event.id })
+  if (dedupErr && dedupErr.code === '23505') {
+    console.log(`[webhooks/stripe] Skipping already-processed event ${event.id}`)
+    return NextResponse.json({ received: true, deduped: true }, { status: 200 })
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {

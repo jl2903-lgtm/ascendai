@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendWelcomeEmail, sendEmail } from '@/lib/resend'
+import { escapeHtml } from '@/lib/html-escape'
 
 export async function POST(request: NextRequest) {
   const secret = process.env.INTERNAL_API_SECRET
@@ -50,11 +51,11 @@ export async function POST(request: NextRequest) {
   <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;">
     <tr>
       <td style="padding:8px 0;font-weight:700;color:#444;width:80px;">Name</td>
-      <td style="padding:8px 0;color:#222;">${name}</td>
+      <td style="padding:8px 0;color:#222;">${escapeHtml(name)}</td>
     </tr>
     <tr>
       <td style="padding:8px 0;font-weight:700;color:#444;">Email</td>
-      <td style="padding:8px 0;color:#222;">${email}</td>
+      <td style="padding:8px 0;color:#222;">${escapeHtml(email)}</td>
     </tr>
   </table>
 </div>`,

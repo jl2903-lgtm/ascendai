@@ -9,7 +9,9 @@ import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import { boundedString, boundedInt, boundedStringArray } from '@/lib/input-caps'
 import type { LessonFormData, LessonContent, ClassContext } from '@/types'
 
-
+// GPT-4o lesson generation typically runs 20-40s. Vercel Pro's default 60s
+// timeout is tight; raise it so slow days don't 504.
+export const maxDuration = 60
 
 const SYSTEM_PROMPT = `You are an expert TEFL/EFL curriculum designer with 15 years of experience teaching English as a Foreign Language across Asia, Europe, and Latin America. You create highly practical, communicative, student-centred lesson plans that follow best practices in ELT methodology. You understand the specific linguistic challenges that learners from different L1 backgrounds face when learning English. Always return your response as a valid JSON object only, with no additional text.`
 

@@ -7,6 +7,8 @@ import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import { isLegacyUser } from '@/lib/constants'
 import { FREE_LIMITS } from '@/lib/utils'
 
+export const maxDuration = 60
+
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
   const supabase = createServerClient(

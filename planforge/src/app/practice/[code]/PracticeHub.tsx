@@ -175,7 +175,10 @@ function PracticeTab({ session }: Props) {
   const current = sentences[index]
   if (!current || sentences.length === 0) return <EmptyState text="No practice sentences for this lesson." />
 
-  const displaySentence = current.sentence.replace('________', '________')
+  // Normalise a range of blank markers ("_____", "____", "________", etc.)
+  // into the display placeholder. Previous no-op `.replace('________', '________')`
+  // meant sentences without exactly eight underscores rendered with no blank.
+  const displaySentence = current.sentence.replace(/_{3,}/g, '________')
 
   const checkAnswer = () => {
     const correct = answer.trim().toLowerCase() === current.blank_word.toLowerCase()
@@ -331,9 +334,16 @@ function ChatTab({ session }: Props) {
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
         }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (res.ok && data.reply) {
         setMessages(m => [...m, { role: 'assistant', content: data.reply }])
+      } else {
+        // Was swallowing both !res.ok and missing data.reply — student saw
+        // typing dots then nothing, forever. Surface a friendly retry hint.
+        setMessages(m => [...m, {
+          role: 'assistant',
+          content: "Sorry, I couldn't reply just now. Try sending your message again!",
+        }])
       }
     } catch {
       setMessages(m => [...m, { role: 'assistant', content: "Sorry, I couldn't connect. Please try again!" }])

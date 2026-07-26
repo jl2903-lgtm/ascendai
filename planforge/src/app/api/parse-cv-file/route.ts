@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import mammoth from 'mammoth'
 
+export const maxDuration = 60
+
 const PASTE_FALLBACK = {
   error: 'We had trouble reading your PDF. Please paste your CV content in the text box below.',
   isImageBased: true,

@@ -5,6 +5,9 @@ import { getOpenAIClient } from '@/lib/openai'
 import { FREE_LIMITS } from '@/lib/utils'
 import { isLegacyUser } from '@/lib/constants'
 import { ensureProfile } from '@/lib/supabase/ensure-profile'
+import { checkRateLimit } from '@/lib/rate-limit'
+
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies()
@@ -15,6 +18,10 @@ export async function POST(req: NextRequest) {
   )
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  if (!checkRateLimit(session.user.id, 10, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
 
   // CV review is part of the Job Assistant tool, so it shares that counter.
   // Previously it burned a lesson slot, which double-charged legacy users

@@ -45,7 +45,13 @@ export default function SavedPage() {
 
   const load = async () => {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
+    if (!session) {
+      // Missing session was leaving the page stuck on the skeleton forever.
+      // Fall through: clear loading and bounce to login.
+      setLoading(false)
+      window.location.href = '/auth/login'
+      return
+    }
     const [{ data: l }, { data: w }, { data: p }, { data: profile }] = await Promise.all([
       supabase.from('lessons').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
       supabase.from('worksheets').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
@@ -63,25 +69,37 @@ export default function SavedPage() {
 
   const deleteLesson = async (id: string) => {
     setDeleting(id)
-    await supabase.from('lessons').delete().eq('id', id)
-    setLessons(p => p.filter(l => l.id !== id))
-    toast.success('Lesson deleted')
+    const { error } = await supabase.from('lessons').delete().eq('id', id)
+    if (error) {
+      toast.error('Failed to delete lesson')
+    } else {
+      setLessons(p => p.filter(l => l.id !== id))
+      toast.success('Lesson deleted')
+    }
     setDeleting(null)
   }
 
   const deleteWorksheet = async (id: string) => {
     setDeleting(id)
-    await supabase.from('worksheets').delete().eq('id', id)
-    setWorksheets(p => p.filter(w => w.id !== id))
-    toast.success('Worksheet deleted')
+    const { error } = await supabase.from('worksheets').delete().eq('id', id)
+    if (error) {
+      toast.error('Failed to delete worksheet')
+    } else {
+      setWorksheets(p => p.filter(w => w.id !== id))
+      toast.success('Worksheet deleted')
+    }
     setDeleting(null)
   }
 
   const deletePracticeSession = async (id: string) => {
     setDeleting(id)
-    await supabase.from('practice_sessions').delete().eq('id', id)
-    setPracticeSessions(p => p.filter(s => s.id !== id))
-    toast.success('Practice session deleted')
+    const { error } = await supabase.from('practice_sessions').delete().eq('id', id)
+    if (error) {
+      toast.error('Failed to delete practice session')
+    } else {
+      setPracticeSessions(p => p.filter(s => s.id !== id))
+      toast.success('Practice session deleted')
+    }
     setDeleting(null)
   }
 
@@ -132,7 +150,11 @@ export default function SavedPage() {
     setUpload(u => ({ ...u, uploading: true }))
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { toast.error('Not authenticated'); return }
+      if (!session) {
+        toast.error('Not authenticated')
+        setUpload(u => ({ ...u, uploading: false }))
+        return
+      }
 
       // Upload to Supabase Storage
       const fileName = `${session.user.id}/${Date.now()}-${upload.file.name}`

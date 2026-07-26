@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import { sendEmail } from '@/lib/resend'
+import { escapeHtml } from '@/lib/html-escape'
+import { boundedString } from '@/lib/input-caps'
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,6 +12,9 @@ export async function POST(req: NextRequest) {
 
     const { resource_id, reason } = await req.json()
     if (!resource_id) return NextResponse.json({ error: 'Resource ID required' }, { status: 400 })
+    // Cap the reason so an attacker can't email a 10MB "reason" string to the
+    // admin inbox, and so we don't store multi-MB JSONB rows for reports.
+    const cappedReason = boundedString(reason, 2000)
 
     // Fetch resource details for the notification email
     const { data: resource } = await supabase
@@ -24,7 +29,7 @@ export async function POST(req: NextRequest) {
       .insert({
         resource_id,
         reporter_id: session.user.id,
-        reason: reason || null,
+        reason: cappedReason || null,
       })
     if (error) throw error
 
@@ -36,13 +41,14 @@ export async function POST(req: NextRequest) {
       .single()
     const reporterName = reporter?.full_name || session.user.email?.split('@')[0] || 'Unknown'
 
-    const safeReason = reason
-      ? String(reason).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      : null
+    // Every field going into the admin-inbox HTML is escaped — resource
+    // title, uploader name, reporter name/email, resource id, and reason
+    // are all attacker-influenced strings.
+    const safeReason = cappedReason ? escapeHtml(cappedReason) : null
 
     try { await sendEmail({
       to: 'info@tyoutorpro.io',
-      subject: `[Report] ${resource?.title ?? resource_id}`,
+      subject: `[Report] ${resource?.title ?? resource_id}`.slice(0, 200),
       html: `
         <div style="font-family: Inter, sans-serif; max-width: 600px; margin: 0 auto; background: #FFFFFF; color: #2D2D2D; padding: 40px; border-radius: 16px; border: 1px solid #E5E7EB;">
           <div style="text-align: center; margin-bottom: 24px;">
@@ -54,15 +60,15 @@ export async function POST(req: NextRequest) {
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
             <tr>
               <td style="padding: 8px 0; color: #6B7280; width: 130px; vertical-align: top;">Resource</td>
-              <td style="padding: 8px 0; font-weight: 600;">${resource?.title ?? resource_id}</td>
+              <td style="padding: 8px 0; font-weight: 600;">${escapeHtml(resource?.title ?? resource_id)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #6B7280; vertical-align: top;">Uploader</td>
-              <td style="padding: 8px 0;">${resource?.uploader_name ?? '—'}</td>
+              <td style="padding: 8px 0;">${escapeHtml(resource?.uploader_name ?? '—')}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #6B7280; vertical-align: top;">Reported by</td>
-              <td style="padding: 8px 0;">${reporterName} (${session.user.email})</td>
+              <td style="padding: 8px 0;">${escapeHtml(reporterName)} (${escapeHtml(session.user.email)})</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #6B7280; vertical-align: top;">Reason</td>
@@ -70,7 +76,7 @@ export async function POST(req: NextRequest) {
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #6B7280; vertical-align: top;">Resource ID</td>
-              <td style="padding: 8px 0; font-size: 12px; color: #9CA3AF;">${resource_id}</td>
+              <td style="padding: 8px 0; font-size: 12px; color: #9CA3AF;">${escapeHtml(resource_id)}</td>
             </tr>
           </table>
           <p style="color: #9CA3AF; font-size: 12px; margin-top: 32px; border-top: 1px solid #F3F4F6; padding-top: 16px;">

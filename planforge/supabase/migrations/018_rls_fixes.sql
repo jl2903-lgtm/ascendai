@@ -204,3 +204,45 @@ create policy "Authenticated users can upload to shared-resources"
     bucket_id = 'shared-resources'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 10. Atomic download_count increment. Was `select` then `update` — two
+--     concurrent downloads both read N, both wrote N+1, and the count was
+--     racy. The download route calls this via RPC.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create or replace function public.increment_download_count(resource_id uuid)
+returns void
+language sql
+security definer set search_path = public
+as $$
+  update public.shared_resources
+     set download_count = download_count + 1
+   where id = resource_id;
+$$;
+
+grant execute on function public.increment_download_count(uuid) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 11. Report dedup — one report per user per resource, enforced at the DB
+--     level. Prevented spam-reporting flooding the admin inbox.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create unique index if not exists reported_resources_uniq_reporter
+  on public.reported_resources (reporter_id, resource_id);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 12. Stripe event idempotency. Stripe retries any 2xx-timeout delivery, and
+--     both webhook handlers were doing side effects (welcome email, GHL
+--     contact, Tier-3 account creation) on every retry. Insert the event id
+--     into stripe_events first; ON CONFLICT DO NOTHING short-circuits the
+--     retry.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists public.stripe_events (
+  id          text        primary key,
+  received_at timestamptz not null default now()
+);
+
+alter table public.stripe_events enable row level security;
+-- No RLS policies — only the service role (admin client) touches this.
