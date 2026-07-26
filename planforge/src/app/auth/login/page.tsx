@@ -83,7 +83,14 @@ export default function LoginPage() {
           setErrors({ general: error.message })
         }
       } else {
-        router.push('/dashboard')
+        // Honor middleware's redirectTo (users deep-linked to protected pages
+        // land back on the page they wanted after signing in).
+        const params = new URLSearchParams(window.location.search)
+        const redirectTo = params.get('redirectTo')
+        const safeRedirect = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+          ? redirectTo
+          : '/dashboard'
+        router.push(safeRedirect)
         router.refresh()
       }
     } catch (err) {

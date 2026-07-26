@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic'
 export default async function LessonViewPage({ params }: { params: { id: string } }) {
   const supabase = createRouteClient()
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/auth/login')
+  if (!session) redirect(`/auth/login?redirectTo=${encodeURIComponent(`/lessons/${params.id}`)}`)
 
   const { data: lesson } = await supabase
     .from('lessons')

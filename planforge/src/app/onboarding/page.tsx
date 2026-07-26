@@ -85,7 +85,7 @@ export default function OnboardingPage() {
       if (!session) { router.push('/auth/login'); return }
 
       // Create the class profile
-      await fetch('/api/class-profiles', {
+      const classRes = await fetch('/api/class-profiles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -95,11 +95,21 @@ export default function OnboardingPage() {
         }),
       })
 
-      // Mark onboarding complete
-      await supabase
-        .from('users')
-        .update({ onboarding_completed: true })
-        .eq('id', session.user.id)
+      if (!classRes.ok) {
+        console.error('[onboarding] class-profiles POST failed:', classRes.status)
+      }
+
+      // Mark onboarding complete via the API so we also set
+      // onboarding_completed_at (validation belongs on the server).
+      const completeRes = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      if (!completeRes.ok) {
+        console.error('[onboarding] complete failed:', completeRes.status)
+      }
 
       confetti({
         particleCount: 150,
@@ -122,10 +132,11 @@ export default function OnboardingPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.push('/auth/login'); return }
-      await supabase
-        .from('users')
-        .update({ onboarding_completed: true })
-        .eq('id', session.user.id)
+      await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
     } catch {
       // best-effort
     }
