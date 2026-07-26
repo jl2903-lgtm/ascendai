@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import { stripe } from '@/lib/stripe'
-import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
+import { isLegacyUser } from '@/lib/constants'
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,41 +16,22 @@ export async function POST(req: NextRequest) {
     const userId = session.user.id
     const userEmail = session.user.email
 
-    let { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('stripe_customer_id, full_name, subscription_status, created_at')
-      .eq('id', userId)
-      .single()
+    const { profile, error: profileErr } = await ensureProfile<{
+      stripe_customer_id: string | null
+      full_name: string | null
+      subscription_status: string
+      created_at: string | null
+    }>(supabase, session, 'stripe_customer_id, full_name, subscription_status, created_at')
 
-    if (profileError && profileError.code === 'PGRST116') {
-      const admin = createAdminClient()
-      const { data: created, error: createErr } = await admin
-        .from('users')
-        .upsert({
-          id: userId,
-          email: userEmail ?? '',
-          full_name: session.user.user_metadata?.full_name ?? '',
-        }, { onConflict: 'id' })
-        .select('stripe_customer_id, full_name, subscription_status, created_at')
-        .single()
-
-      if (createErr || !created) {
-        console.error('[stripe/upgrade] Self-heal failed:', createErr)
-        return NextResponse.json({ error: 'Could not initialise your profile. Please contact support.' }, { status: 500 })
-      }
-      profile = created
-      profileError = null
-    }
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
     }
 
     if (profile.subscription_status === 'pro' || profile.subscription_status === 'trialing') {
       return NextResponse.json({ error: 'Already subscribed' }, { status: 400 })
     }
 
-    const isLegacyUser = new Date(profile.created_at) < FREE_TRIAL_CUTOFF
+    const legacy = isLegacyUser(profile.created_at)
 
     let customerId = profile.stripe_customer_id
 
@@ -84,10 +65,10 @@ export async function POST(req: NextRequest) {
       payment_method_collection: 'always',
       line_items: [{ price: process.env.STRIPE_PRO_PRICE_ID!, quantity: 1 }],
       success_url: `${BASE}/onboarding`,
-      cancel_url: isLegacyUser ? `${BASE}/pricing` : `${BASE}/trial-setup`,
+      cancel_url: legacy ? `${BASE}/pricing` : `${BASE}/trial-setup`,
       metadata: { userId },
       subscription_data: {
-        ...(isLegacyUser ? {} : { trial_period_days: 7 }),
+        ...(legacy ? {} : { trial_period_days: 7 }),
         metadata: { userId },
       },
       allow_promotion_codes: true,

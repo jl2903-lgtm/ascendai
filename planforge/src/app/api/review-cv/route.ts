@@ -3,7 +3,8 @@ import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { getOpenAIClient } from '@/lib/openai'
 import { FREE_LIMITS } from '@/lib/utils'
-import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
+import { isLegacyUser } from '@/lib/constants'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies()
@@ -15,20 +16,24 @@ export async function POST(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { data: userProfile } = await supabase
-    .from('users')
-    .select('subscription_status, created_at, lessons_used_this_month')
-    .eq('id', session.user.id)
-    .single()
+  const { profile: userProfile, error: profileErr } = await ensureProfile<{
+    subscription_status: string
+    created_at: string | null
+    lessons_used_this_month: number | null
+  }>(supabase, session, 'subscription_status, created_at, lessons_used_this_month')
 
-  const isLegacyUser = !!userProfile?.created_at && new Date(userProfile.created_at) < FREE_TRIAL_CUTOFF
-  if (isLegacyUser) {
-    const isPaid = userProfile?.subscription_status === 'pro' || userProfile?.subscription_status === 'trialing'
-    if (!isPaid && (userProfile?.lessons_used_this_month ?? 0) >= FREE_LIMITS.lessons) {
+  if (profileErr || !userProfile) {
+    return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
+  }
+
+  const legacy = isLegacyUser(userProfile.created_at)
+  if (legacy) {
+    const isPaid = userProfile.subscription_status === 'pro' || userProfile.subscription_status === 'trialing'
+    if (!isPaid && (userProfile.lessons_used_this_month ?? 0) >= FREE_LIMITS.lessons) {
       return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
     }
   } else {
-    const hasAccess = userProfile?.subscription_status === 'trialing' || userProfile?.subscription_status === 'pro'
+    const hasAccess = userProfile.subscription_status === 'trialing' || userProfile.subscription_status === 'pro'
     if (!hasAccess) {
       return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
     }
@@ -84,12 +89,12 @@ Be specific and actionable. Focus on ELT-specific requirements like teaching cer
     const result = JSON.parse(jsonMatch[0])
 
     // Increment usage counter for legacy free users only
-    if (isLegacyUser) {
-      const isPaid = userProfile?.subscription_status === 'pro' || userProfile?.subscription_status === 'trialing'
+    if (legacy) {
+      const isPaid = userProfile.subscription_status === 'pro' || userProfile.subscription_status === 'trialing'
       if (!isPaid) {
         await supabase
           .from('users')
-          .update({ lessons_used_this_month: (userProfile?.lessons_used_this_month ?? 0) + 1 })
+          .update({ lessons_used_this_month: (userProfile.lessons_used_this_month ?? 0) + 1 })
           .eq('id', session.user.id)
       }
     }

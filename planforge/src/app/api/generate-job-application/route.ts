@@ -4,7 +4,8 @@ import { createRouteClient } from '@/lib/supabase/route-handler'
 import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { FREE_LIMITS } from '@/lib/utils'
-import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
+import { isLegacyUser } from '@/lib/constants'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 
 
 
@@ -19,16 +20,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('subscription_status, created_at, job_assistant_used_this_month')
-      .eq('id', userId)
-      .single()
+    const { profile, error: profileErr } = await ensureProfile<{
+      subscription_status: string
+      created_at: string | null
+      job_assistant_used_this_month: number | null
+    }>(supabase, session, 'subscription_status, created_at, job_assistant_used_this_month')
 
-    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
+    }
 
-    const isLegacyUser = new Date(profile.created_at) < FREE_TRIAL_CUTOFF
-    if (isLegacyUser) {
+    const legacy = isLegacyUser(profile.created_at)
+    if (legacy) {
       const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
       if (!isPaid && (profile.job_assistant_used_this_month ?? 0) >= FREE_LIMITS.jobAssistant) {
         return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
@@ -85,7 +88,7 @@ Warm, genuine tone. Show real passion for teaching. No clichés. Return JSON onl
     }
 
     // Increment monthly counter for legacy free users
-    if (isLegacyUser) {
+    if (legacy) {
       const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
       if (!isPaid) {
         await supabase

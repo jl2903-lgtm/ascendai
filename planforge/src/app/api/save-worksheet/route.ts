@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 
 import type { WorksheetContent } from '@/types'
 
@@ -24,14 +25,12 @@ export async function POST(req: NextRequest) {
     const userId = session.user.id
 
     // Only Pro users can save worksheets
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('subscription_status')
-      .eq('id', userId)
-      .single()
+    const { profile, error: profileErr } = await ensureProfile<{
+      subscription_status: string
+    }>(supabase, session, 'subscription_status')
 
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
     }
 
     if (profile.subscription_status !== 'pro' && profile.subscription_status !== 'trialing') {

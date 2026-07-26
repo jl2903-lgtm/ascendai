@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import { stripe } from '@/lib/stripe'
 
 // Direct upgrade checkout for legacy (pre-trial) users — no trial period.
@@ -15,14 +16,14 @@ export async function POST(req: NextRequest) {
     const userId = session.user.id
     const userEmail = session.user.email
 
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('stripe_customer_id, full_name, subscription_status')
-      .eq('id', userId)
-      .single()
+    const { profile, error: profileErr } = await ensureProfile<{
+      stripe_customer_id: string | null
+      full_name: string | null
+      subscription_status: string
+    }>(supabase, session, 'stripe_customer_id, full_name, subscription_status')
 
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
     }
 
     if (profile.subscription_status === 'pro' || profile.subscription_status === 'trialing') {

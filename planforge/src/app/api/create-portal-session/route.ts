@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
 import { stripe } from '@/lib/stripe'
 
 export async function POST(req: NextRequest) {
@@ -11,16 +12,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userId = session.user.id
+    const { profile, error: profileErr } = await ensureProfile<{
+      stripe_customer_id: string | null
+    }>(supabase, session, 'stripe_customer_id')
 
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('stripe_customer_id')
-      .eq('id', userId)
-      .single()
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
     }
 
     if (!profile.stripe_customer_id) {
@@ -32,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyoutorpro.io'}/dashboard/settings`,
     })
 
     return NextResponse.json({ url: portalSession.url })
