@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 import { stripe } from '@/lib/stripe'
 
@@ -18,11 +19,33 @@ export async function POST(req: NextRequest) {
     const userId = session.user.id
     const userEmail = session.user.email
 
-    const { data: profile, error: profileError } = await supabase
+    let { data: profile, error: profileError } = await supabase
       .from('users')
       .select('stripe_customer_id, full_name')
       .eq('id', userId)
       .single()
+
+    // Self-heal: profile row missing (trigger failed / legacy account) —
+    // create it from the auth session so the user isn't trapped.
+    if (profileError && profileError.code === 'PGRST116') {
+      const admin = createAdminClient()
+      const { data: created, error: createErr } = await admin
+        .from('users')
+        .upsert({
+          id: userId,
+          email: userEmail ?? '',
+          full_name: session.user.user_metadata?.full_name ?? '',
+        }, { onConflict: 'id' })
+        .select('stripe_customer_id, full_name')
+        .single()
+
+      if (createErr || !created) {
+        console.error('[create-checkout] Self-heal failed:', createErr)
+        return NextResponse.json({ error: 'Could not initialise your profile. Please contact support.' }, { status: 500 })
+      }
+      profile = created
+      profileError = null
+    }
 
     if (profileError || !profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })

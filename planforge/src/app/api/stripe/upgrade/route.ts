@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { stripe } from '@/lib/stripe'
 import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
 
@@ -15,11 +16,31 @@ export async function POST(req: NextRequest) {
     const userId = session.user.id
     const userEmail = session.user.email
 
-    const { data: profile, error: profileError } = await supabase
+    let { data: profile, error: profileError } = await supabase
       .from('users')
       .select('stripe_customer_id, full_name, subscription_status, created_at')
       .eq('id', userId)
       .single()
+
+    if (profileError && profileError.code === 'PGRST116') {
+      const admin = createAdminClient()
+      const { data: created, error: createErr } = await admin
+        .from('users')
+        .upsert({
+          id: userId,
+          email: userEmail ?? '',
+          full_name: session.user.user_metadata?.full_name ?? '',
+        }, { onConflict: 'id' })
+        .select('stripe_customer_id, full_name, subscription_status, created_at')
+        .single()
+
+      if (createErr || !created) {
+        console.error('[stripe/upgrade] Self-heal failed:', createErr)
+        return NextResponse.json({ error: 'Could not initialise your profile. Please contact support.' }, { status: 500 })
+      }
+      profile = created
+      profileError = null
+    }
 
     if (profileError || !profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })

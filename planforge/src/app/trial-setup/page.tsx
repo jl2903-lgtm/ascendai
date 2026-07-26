@@ -20,7 +20,14 @@ export default function TrialSetupPage() {
   const router = useRouter()
   const [state, setState] = useState<PageState>('loading')
   const [errorMsg, setErrorMsg] = useState('')
+  const [signedInAs, setSignedInAs] = useState<string | null>(null)
   const pollingRef = useRef(false)
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
 
   const startCheckout = async () => {
     setState('redirecting')
@@ -75,6 +82,8 @@ export default function TrialSetupPage() {
         router.push('/auth/login')
         return
       }
+
+      if (session.user.email) setSignedInAs(session.user.email)
 
       const { data: profile } = await supabase
         .from('users')
@@ -200,6 +209,20 @@ export default function TrialSetupPage() {
             Payments secured by Stripe. You won&#39;t be charged during the trial.
           </p>
         </div>
+
+        {signedInAs && (
+          <p className="text-center text-xs text-[#8C8880] mt-6 font-medium">
+            Signed in as <span className="text-[#4A473E] font-semibold">{signedInAs}</span>
+            {' · '}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="text-teal-600 hover:text-teal-500 underline font-semibold transition-colors"
+            >
+              Sign out
+            </button>
+          </p>
+        )}
       </div>
     </div>
   )
