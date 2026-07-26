@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { createRouteClient } from '@/lib/supabase/route-handler'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
+import { isLegacyUser } from '@/lib/constants'
 import { getOpenAIClient } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 // share_code doubles as a capability token — anyone who has it can chat with
 // the practice session. Math.random() is guessable; use a CSPRNG and enough
@@ -15,6 +18,25 @@ export async function POST(req: NextRequest) {
     const supabase = createRouteClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Rate-limit + subscription gate. Practice-session creation calls
+    // gpt-4o-mini and would otherwise be spam-callable by any signed-in user.
+    if (!checkRateLimit(session.user.id, 10, 60_000)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+    const { profile, error: profileErr } = await ensureProfile<{
+      subscription_status: string
+      created_at: string | null
+    }>(supabase, session, 'subscription_status, created_at')
+    if (profileErr || !profile) {
+      return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
+    }
+    const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+    // Legacy users get through without a separate counter (this feature
+    // predates limits and is bundled with their lesson access).
+    if (!isPaid && !isLegacyUser(profile.created_at)) {
+      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
+    }
 
     const body = await req.json()
     const { lessonTitle, lessonTopic, lessonLevel, studentNationality, lessonContent } = body

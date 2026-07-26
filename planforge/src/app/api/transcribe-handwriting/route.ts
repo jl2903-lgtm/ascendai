@@ -3,6 +3,9 @@ import { createServerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { getOpenAIClient } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { ensureProfile } from '@/lib/supabase/ensure-profile'
+import { isLegacyUser } from '@/lib/constants'
+import { FREE_LIMITS } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
   const cookieStore = cookies()
@@ -16,6 +19,26 @@ export async function POST(req: NextRequest) {
 
   if (!checkRateLimit(session.user.id, 10, 60000)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
+  // Subscription gate — same policy as correct-writing (this route is the
+  // Error Coach's photo pipeline, so it shares the error_coach counter).
+  const { profile, error: profileErr } = await ensureProfile<{
+    subscription_status: string
+    created_at: string | null
+    error_coach_used_this_month: number | null
+  }>(supabase, session, 'subscription_status, created_at, error_coach_used_this_month')
+  if (profileErr || !profile) {
+    return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
+  }
+  const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+  const legacy = isLegacyUser(profile.created_at)
+  if (legacy) {
+    if (!isPaid && (profile.error_coach_used_this_month ?? 0) >= FREE_LIMITS.errorCoach) {
+      return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
+    }
+  } else if (!isPaid) {
+    return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
   }
 
   const { imageBase64, mediaType } = await req.json()

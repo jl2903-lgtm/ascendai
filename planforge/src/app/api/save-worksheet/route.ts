@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import { ensureProfile } from '@/lib/supabase/ensure-profile'
+import { isLegacyUser } from '@/lib/constants'
 
 import type { WorksheetContent } from '@/types'
 
@@ -24,16 +25,20 @@ export async function POST(req: NextRequest) {
 
     const userId = session.user.id
 
-    // Only Pro users can save worksheets
+    // Access policy mirrors /api/generate-worksheet — if a user was allowed to
+    // generate the worksheet they must be allowed to save it, otherwise the
+    // generate call silently discards their allowed output.
     const { profile, error: profileErr } = await ensureProfile<{
       subscription_status: string
-    }>(supabase, session, 'subscription_status')
+      created_at: string | null
+    }>(supabase, session, 'subscription_status, created_at')
 
     if (profileErr || !profile) {
       return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
     }
 
-    if (profile.subscription_status !== 'pro' && profile.subscription_status !== 'trialing') {
+    const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+    if (!isPaid && !isLegacyUser(profile.created_at)) {
       return NextResponse.json(
         { error: 'Pro subscription required to save worksheets' },
         { status: 403 }

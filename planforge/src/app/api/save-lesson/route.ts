@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/route-handler'
 import { ensureProfile } from '@/lib/supabase/ensure-profile'
+import { isLegacyUser } from '@/lib/constants'
 
 import type { LessonContent } from '@/types'
 import { ActivitiesSchema } from '@/lib/activities/schema'
@@ -30,16 +31,19 @@ export async function POST(req: NextRequest) {
 
     const userId = session.user.id
 
-    // Only Pro users can save lessons
+    // Access policy mirrors /api/generate-lesson — legacy free users get
+    // allowed generations, so they must be allowed to save them too.
     const { profile, error: profileErr } = await ensureProfile<{
       subscription_status: string
-    }>(supabase, session, 'subscription_status')
+      created_at: string | null
+    }>(supabase, session, 'subscription_status, created_at')
 
     if (profileErr || !profile) {
       return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
     }
 
-    if (profile.subscription_status !== 'pro' && profile.subscription_status !== 'trialing') {
+    const isPaid = profile.subscription_status === 'pro' || profile.subscription_status === 'trialing'
+    if (!isPaid && !isLegacyUser(profile.created_at)) {
       return NextResponse.json(
         { error: 'Pro subscription required to save lessons' },
         { status: 403 }

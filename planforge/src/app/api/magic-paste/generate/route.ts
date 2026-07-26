@@ -520,6 +520,16 @@ export async function POST(req: NextRequest) {
       { onConflict: 'user_id' }
     )
 
+    // Increment monthly counter for legacy free users — mirrors generate-lesson.
+    // Without this, the gate check reads a value that never changes, so a
+    // legacy free user could magic-paste unlimited lessons.
+    if (legacy && !isPaid) {
+      await supabase
+        .from('users')
+        .update({ lessons_used_this_month: (profile.lessons_used_this_month ?? 0) + 1 })
+        .eq('id', userId)
+    }
+
     return NextResponse.json({
       lesson: lessonContent,
       sourceLabel,

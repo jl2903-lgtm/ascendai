@@ -16,27 +16,27 @@ export async function POST(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
+  // CV review is part of the Job Assistant tool, so it shares that counter.
+  // Previously it burned a lesson slot, which double-charged legacy users
+  // who used both features.
   const { profile: userProfile, error: profileErr } = await ensureProfile<{
     subscription_status: string
     created_at: string | null
-    lessons_used_this_month: number | null
-  }>(supabase, session, 'subscription_status, created_at, lessons_used_this_month')
+    job_assistant_used_this_month: number | null
+  }>(supabase, session, 'subscription_status, created_at, job_assistant_used_this_month')
 
   if (profileErr || !userProfile) {
     return NextResponse.json({ error: profileErr ?? 'Profile not found' }, { status: 500 })
   }
 
   const legacy = isLegacyUser(userProfile.created_at)
+  const isPaid = userProfile.subscription_status === 'pro' || userProfile.subscription_status === 'trialing'
   if (legacy) {
-    const isPaid = userProfile.subscription_status === 'pro' || userProfile.subscription_status === 'trialing'
-    if (!isPaid && (userProfile.lessons_used_this_month ?? 0) >= FREE_LIMITS.lessons) {
+    if (!isPaid && (userProfile.job_assistant_used_this_month ?? 0) >= FREE_LIMITS.jobAssistant) {
       return NextResponse.json({ error: 'limit_reached' }, { status: 402 })
     }
-  } else {
-    const hasAccess = userProfile.subscription_status === 'trialing' || userProfile.subscription_status === 'pro'
-    if (!hasAccess) {
-      return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
-    }
+  } else if (!isPaid) {
+    return NextResponse.json({ error: 'subscription_required' }, { status: 402 })
   }
 
   const { cvText, jobTitle, jobDescription, targetCountry, experienceLevel } = await req.json()
@@ -88,15 +88,12 @@ Be specific and actionable. Focus on ELT-specific requirements like teaching cer
     if (!jsonMatch) throw new Error('Invalid response format')
     const result = JSON.parse(jsonMatch[0])
 
-    // Increment usage counter for legacy free users only
-    if (legacy) {
-      const isPaid = userProfile.subscription_status === 'pro' || userProfile.subscription_status === 'trialing'
-      if (!isPaid) {
-        await supabase
-          .from('users')
-          .update({ lessons_used_this_month: (userProfile.lessons_used_this_month ?? 0) + 1 })
-          .eq('id', session.user.id)
-      }
+    // Increment job-assistant counter for legacy free users only.
+    if (legacy && !isPaid) {
+      await supabase
+        .from('users')
+        .update({ job_assistant_used_this_month: (userProfile.job_assistant_used_this_month ?? 0) + 1 })
+        .eq('id', session.user.id)
     }
 
     return NextResponse.json(result)

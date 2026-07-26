@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn, FREE_LIMITS } from '@/lib/utils'
-import { FREE_TRIAL_CUTOFF } from '@/lib/constants'
+import { isLegacyUser } from '@/lib/constants'
 import { UserProfile } from '@/types'
 import {
   BookOpen,
@@ -190,10 +190,10 @@ function TrialBadge({ trialEnd }: { trialEnd: string | null }) {
 export function Sidebar({ userProfile, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
-  const isLegacyUser = new Date(userProfile.created_at) < FREE_TRIAL_CUTOFF
+  const legacy = isLegacyUser(userProfile.created_at)
   const isPro = userProfile.subscription_status === 'pro'
   const isTrialing = userProfile.subscription_status === 'trialing'
-  const showLegacyCard = isLegacyUser && !isPro && !isTrialing
+  const showLegacyCard = legacy && !isPro && !isTrialing
 
   const navItem = (href: string, Icon: React.ElementType, label: string) => {
     const active = isActive(href)
