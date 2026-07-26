@@ -89,7 +89,9 @@ export default function DashboardPage() {
       ])
       if (p) {
         setProfile(p)
-        if (p.onboarding_completed === false) setShowWelcome(true)
+        // Treat null the same as false — pre-migration rows never got the flag
+        // set, and we still want them to see onboarding.
+        if (!p.onboarding_completed) setShowWelcome(true)
       }
       if (stats) {
         const lastReset = new Date(stats.last_weekly_reset)

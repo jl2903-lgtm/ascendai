@@ -52,7 +52,8 @@ export async function sendEmail({ to, subject, html, replyTo }: EmailPayload): P
   }
 }
 
-export async function sendWelcomeEmail(email: string, _name: string) {
+export async function sendWelcomeEmail(email: string, name: string) {
+  const firstName = name?.trim().split(/\s+/)[0] || 'there'
   return sendEmail({
     to: email,
     subject: 'Welcome to Tyoutor Pro — your trial is active',
@@ -61,7 +62,7 @@ export async function sendWelcomeEmail(email: string, _name: string) {
     ${LOGO_HEADER}
   </div>
   <div style="background:white;padding:40px;border:1px solid #EEEEE8;border-top:none;border-radius:0 0 8px 8px;">
-    <h1 style="font-size:26px;font-weight:800;color:#1A1A1A;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">Your account is ready!</h1>
+    <h1 style="font-size:26px;font-weight:800;color:#1A1A1A;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">Welcome, ${firstName}!</h1>
     <p style="font-size:15px;color:#666;line-height:1.7;margin:0 0 16px;font-family:Arial,Helvetica,sans-serif;">Your 7-day free trial is active. You have full access to all 6 tools — no restrictions.</p>
     <ul style="font-size:15px;color:#444;line-height:2;padding-left:20px;margin:0 0 24px;font-family:Arial,Helvetica,sans-serif;">
       <li>Unlimited lesson generation</li>

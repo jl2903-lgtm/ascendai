@@ -54,9 +54,14 @@ export function Header({ userProfile, onMenuClick }: HeaderProps) {
 
       {/* Right — badge + logout */}
       <div className="flex items-center gap-3">
-        <Badge variant={userProfile.subscription_status === 'pro' ? 'pro' : 'free'}>
-          {userProfile.subscription_status === 'pro' ? 'Pro' : 'Free'}
-        </Badge>
+        {(() => {
+          const status = userProfile.subscription_status
+          const isPro = status === 'pro' || status === 'trialing'
+          const label = status === 'trialing' ? 'Trial' : status === 'pro' ? 'Pro' : 'Free'
+          return (
+            <Badge variant={isPro ? 'pro' : 'free'}>{label}</Badge>
+          )
+        })()}
         <Button
           variant="ghost"
           size="sm"

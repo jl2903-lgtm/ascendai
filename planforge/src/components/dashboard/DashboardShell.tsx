@@ -65,16 +65,31 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!userProfile) {
+    const handleSignOut = async () => {
+      await supabase.auth.signOut()
+      router.push('/auth/login')
+    }
     return (
-      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-[#6B6860] mb-4">Unable to load your profile.</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="text-teal-600 hover:text-teal-500 text-sm underline"
-          >
-            Try again
-          </button>
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <p className="text-[#2D2D2D] font-semibold mb-2">Unable to load your profile</p>
+          <p className="text-[#6B6860] text-sm mb-6">
+            Something went wrong reading your account. Try again, or sign out and use a different account.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-xl border border-[#E8E4DE] text-[#4A473E] text-sm font-semibold hover:bg-[#F4F2EE] transition-colors"
+            >
+              Try again
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="px-4 py-2 rounded-xl bg-[#2D6A4F] text-white text-sm font-semibold hover:bg-[#245E44] transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     )
