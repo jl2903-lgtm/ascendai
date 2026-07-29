@@ -89,6 +89,15 @@ export default function SignupPage() {
         return
       }
 
+      // Fire GHL / CRM signup notification — fire-and-forget so a slow CRM
+      // never blocks the redirect to Stripe. The server route wraps it in a
+      // 5s timeout and swallows failures.
+      fetch('/api/notify-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, name: formData.fullName }),
+      }).catch(err => console.error('[SIGNUP] notify-signup failed:', err))
+
       setLoadingMessage('Redirecting to secure checkout...')
       try {
         const checkoutRes = await fetch('/api/stripe/create-checkout', { method: 'POST' })
